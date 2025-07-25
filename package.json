@@ -4,9 +4,28 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"npm run tailwind:watch\" \"npm run esbuild:watch\" \"npm run serve\"",
+    "esbuild:watch": "cross-env NODE_ENV=development node frontend/esbuild.config.js --watch",
+    "tailwind:watch": "tailwindcss -i ./frontend/src/style.css -o ./build/frontend/style.css --watch",
+    "build:frontend": "npm run clean && npm run tailwind:build && node frontend/esbuild.config.js && npm run copy:html",
+    "tailwind:build": "tailwindcss -i ./frontend/src/style.css -o ./build/frontend/style.css --minify",
+    "serve": "live-server build/frontend",
+    "copy:html": "copy frontend\\src\\index.html build\\frontend\\",
+    "clean": "rimraf build/frontend",
+    "deploy:github": "npm run build:frontend && gh-pages -d build/frontend"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "esbuild": "^0.25.8",
+    "live-server": "^1.2.0",
+    "npm-run-all": "^4.1.5",
+    "tailwindcss": "^4.1.11",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "lit": "^3.3.1"
+  }
 }
