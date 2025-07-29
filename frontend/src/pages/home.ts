@@ -1,32 +1,55 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
+import '../components/feature-card.ts';
+
 @customElement('page-home')
 export class PageHome extends LitElement {
   createRenderRoot() {
-    return this; // use Light DOM so Tailwind works
+    return this;
   }
 
   render() {
     return html`
-      <div class="p-6">
-        <h1 class="text-2xl font-bold text-green-800 mb-4">
-          🌿 Selamat Datang di TaniVerse
-        </h1>
-        <p class="text-gray-700 mb-4">
-          TaniVerse adalah platform monitoring dan kontrol IoT untuk sistem
-          pertanian pintar seperti:
-        </p>
-        <ul class="list-disc list-inside text-gray-600 space-y-1">
-          <li>🌱 Hidroponik</li>
-          <li>🐟 Akuakultur</li>
-          <li>🐔 Peternakan</li>
-        </ul>
-        <p class="mt-4 text-sm text-gray-500">
-          Gunakan menu navigasi di atas untuk mulai menjelajahi dashboard dan
-          histori data.
-        </p>
-      </div>
+      <section class="p-6 space-y-6">
+        <header>
+          <h1 class="text-2xl font-bold text-green-800 mb-2">
+            🌿 Selamat Datang di TaniVerse
+          </h1>
+          <p class="text-gray-700">
+            TaniVerse adalah platform monitoring dan kontrol berbasis IoT untuk
+            sistem pertanian cerdas di berbagai sektor.
+          </p>
+        </header>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <feature-card
+            title="Hidroponik"
+            icon="🌱"
+            color="green"
+            description="Pantau suhu, pH, dan nutrisi secara real-time untuk mendukung pertumbuhan tanaman optimal tanpa tanah."
+          ></feature-card>
+
+          <feature-card
+            title="Akuakultur"
+            icon="🐟"
+            color="blue"
+            description="Monitor kualitas air, aerator, dan kondisi kolam untuk memastikan kesehatan ikan dan efisiensi budidaya."
+          ></feature-card>
+
+          <feature-card
+            title="Peternakan"
+            icon="🐔"
+            color="yellow"
+            description="Kendalikan suhu kandang, ventilasi, dan pencahayaan agar ternak tumbuh sehat dan produktif."
+          ></feature-card>
+        </div>
+
+        <footer class="text-sm text-gray-500 mt-6">
+          Gunakan menu navigasi di atas untuk menjelajahi dashboard
+          masing-masing sektor.
+        </footer>
+      </section>
     `;
   }
 }
