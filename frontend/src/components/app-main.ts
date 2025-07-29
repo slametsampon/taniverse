@@ -6,6 +6,7 @@ import '../pages/home.ts';
 import '../pages/dashboard.ts';
 import '../pages/histori.ts';
 import '../pages/not-found.ts';
+import '../pages/about.ts';
 
 @customElement('app-main')
 export class AppMain extends LitElement {
@@ -25,6 +26,7 @@ export class AppMain extends LitElement {
       { path: '/', component: 'page-home' },
       { path: '/dashboard', component: 'page-dashboard' },
       { path: '/histori', component: 'page-histori' },
+      { path: '/about', component: 'page-about' },
       { path: '(.*)', component: 'page-not-found' },
     ]);
 
@@ -54,6 +56,9 @@ export class AppMain extends LitElement {
           @click=${this._navigate}
           class=${isActive('/histori')}
           >📈 Histori</a
+        >
+        <a href="/about" @click=${this._navigate} class=${isActive('/about')}
+          >📈 About</a
         >
       </nav>
       <div id="outlet" class="p-4"></div>
