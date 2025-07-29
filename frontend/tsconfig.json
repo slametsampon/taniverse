@@ -2,7 +2,17 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../build/frontend",
-    "rootDir": "src"
+    "rootDir": "src",
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["DOM", "ES2020"],
+    "allowJs": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false, // ✅ penting untuk decorator Lit
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

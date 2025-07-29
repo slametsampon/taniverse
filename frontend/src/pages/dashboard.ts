@@ -1,17 +1,24 @@
-import { LitElement, html, css } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import '../domains/hidroponik/dashboard-hidoponik';
+
+// Import semua komponen domain
+import '../domains/hidroponik/dashboard-hidoponik.ts';
+import '../domains/aquakultur/dashboard-aquakultur.ts';
+import '../domains/peternakan/dashboard-peternakan.ts';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {
   createRenderRoot() {
     return this;
   }
+
   render() {
     return html`
-      <h1 class="text-xl font-bold mb-2">🌱 TaniVerse Dashboard</h1>
-      <dashboard-hidroponik></dashboard-hidroponik>
-      <!-- bisa tambah domain lain di sini -->
+      <section class="space-y-6">
+        <dashboard-hidroponik></dashboard-hidroponik>
+        <dashboard-aquakultur></dashboard-aquakultur>
+        <dashboard-peternakan></dashboard-peternakan>
+      </section>
     `;
   }
 }

@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 @customElement('page-histori')
-export class PageHome extends LitElement {
+export class PageHistori extends LitElement {
   createRenderRoot() {
     return this;
   }
