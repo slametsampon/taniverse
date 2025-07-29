@@ -18,6 +18,11 @@ esbuild
     loader: {
       '.ts': 'ts',
       '.css': 'css',
+      '.png': 'file',
+      '.jpg': 'file',
+      '.svg': 'file',
+      '.ico': 'file', // Loader untuk favicon
+      '.webp': 'file', // Loader WebP
     },
     logLevel: 'info',
   })
