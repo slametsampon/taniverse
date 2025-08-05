@@ -13,16 +13,24 @@ import '../pages/about.ts';
 export class AppMain extends LitElement {
   @state() private currentPath = window.location.pathname;
 
+  // Tentukan basePath untuk local dan GitHub Pages
+  private basePath =
+    window.location.hostname === '127.0.0.1' ? '/' : '/taniverse/';
+
   createRenderRoot() {
+    console.log('window.location.pathname : ', window.location.pathname);
+    console.log('window.location.hostname : ', window.location.hostname);
+
     return this;
   }
 
   firstUpdated() {
-    const outlet =
-      this.shadowRoot?.getElementById('outlet') ||
-      document.getElementById('outlet');
+    const outlet = document.getElementById('outlet');
 
-    const router = new Router(outlet!);
+    const router = new Router(outlet!, {
+      baseUrl: this.basePath,
+    });
+
     router.setRoutes([
       { path: '/', component: 'page-home' },
       { path: '/dashboard', component: 'page-dashboard' },
@@ -37,14 +45,11 @@ export class AppMain extends LitElement {
   }
 
   private _onNavChanged(e: CustomEvent) {
-    console.log('this.currentPath : ', this.currentPath);
-    const newPath = e.detail.path;
-    console.log('newPath : ', newPath);
+    const rawPath = e.detail.path;
+    const newPath = this.basePath + rawPath.replace(/^\/+/, ''); // gabungkan basePath + path
     window.history.pushState({}, '', newPath);
     window.dispatchEvent(new PopStateEvent('popstate'));
     this.currentPath = newPath;
-    const fullUrl = window.location.origin + window.location.pathname;
-    console.log('Full URL:', fullUrl);
   }
 
   render() {
