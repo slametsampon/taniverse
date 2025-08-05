@@ -4,10 +4,6 @@ import { Router } from '@vaadin/router';
 
 import './app-nav.ts'; // import komponen navigasi
 import '../pages/home.ts';
-import '../pages/dashboard.ts';
-import '../pages/histori.ts';
-import '../pages/not-found.ts';
-import '../pages/about.ts';
 
 @customElement('app-main')
 export class AppMain extends LitElement {
@@ -32,11 +28,38 @@ export class AppMain extends LitElement {
     });
 
     router.setRoutes([
-      { path: '/', component: 'page-home' },
-      { path: '/dashboard', component: 'page-dashboard' },
-      { path: '/histori', component: 'page-histori' },
-      { path: '/about', component: 'page-about' },
-      { path: '(.*)', component: 'page-not-found' },
+      {
+        path: '/dashboard',
+        action: async () => {
+          await import('../pages/dashboard');
+        },
+        component: 'page-dashboard',
+      },
+      {
+        path: '/histori',
+        action: async () => {
+          await import('../pages/histori');
+        },
+        component: 'page-histori',
+      },
+      {
+        path: '/about',
+        action: async () => {
+          await import('../pages/about');
+        },
+        component: 'page-about',
+      },
+      {
+        path: '/',
+        component: 'page-home',
+      },
+      {
+        path: '(.*)',
+        action: async () => {
+          await import('../pages/not-found');
+        },
+        component: 'page-not-found',
+      },
     ]);
 
     window.addEventListener('popstate', () => {
