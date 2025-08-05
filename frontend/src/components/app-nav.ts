@@ -11,7 +11,7 @@ export class AppNav extends LitElement {
   }
 
   private isActive(path: string): string {
-    return this.currentPath === path
+    return this.currentPath.endsWith(path)
       ? 'bg-green-300 text-green-900 rounded px-2 py-1'
       : 'hover:bg-green-200 rounded px-2 py-1';
   }
@@ -42,7 +42,7 @@ export class AppNav extends LitElement {
         <div
           class="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center"
         >
-          <a href="/" @click=${this._navigate} class=${this.isActive('/')}>
+          <a href="/" @click=${this._navigate} class=${this.isActive('')}>
             <img
               src="./assets/logo-88x45.png"
               alt="Logo"
@@ -76,16 +76,16 @@ export class AppNav extends LitElement {
       <a
         href="/dashboard"
         @click=${this._navigate}
-        class=${this.isActive('/dashboard')}
+        class=${this.isActive('dashboard')}
         >📊 Dashboard</a
       >
       <a
         href="/histori"
         @click=${this._navigate}
-        class=${this.isActive('/histori')}
+        class=${this.isActive('histori')}
         >📈 Histori</a
       >
-      <a href="/about" @click=${this._navigate} class=${this.isActive('/about')}
+      <a href="/about" @click=${this._navigate} class=${this.isActive('about')}
         >ℹ️ About</a
       >
     `;
