@@ -3100,10 +3100,14 @@ var AppMain = class extends i4 {
     });
   }
   _onNavChanged(e5) {
+    console.log("this.currentPath : ", this.currentPath);
     const newPath = e5.detail.path;
+    console.log("newPath : ", newPath);
     window.history.pushState({}, "", newPath);
     window.dispatchEvent(new PopStateEvent("popstate"));
     this.currentPath = newPath;
+    const fullUrl = window.location.origin + window.location.pathname;
+    console.log("Full URL:", fullUrl);
   }
   render() {
     return x`
