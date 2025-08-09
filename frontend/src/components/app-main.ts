@@ -2,7 +2,8 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
 
-import './app-nav.ts'; // import komponen navigasi
+import './app-header.ts'; // import komponen navigasi
+import './app-footer.ts';
 import '../pages/home.ts';
 
 @customElement('app-main')
@@ -21,7 +22,7 @@ export class AppMain extends LitElement {
   }
 
   firstUpdated() {
-    const outlet = document.getElementById('outlet');
+    const outlet = this.renderRoot.querySelector('#outlet') as HTMLElement;
 
     const router = new Router(outlet!, {
       baseUrl: this.basePath,
@@ -64,6 +65,13 @@ export class AppMain extends LitElement {
 
     window.addEventListener('popstate', () => {
       this.currentPath = window.location.pathname;
+      this.dispatchEvent(
+        new CustomEvent('route-changed', {
+          detail: { path: this.currentPath },
+          bubbles: true,
+          composed: true,
+        })
+      );
     });
   }
 
@@ -77,11 +85,19 @@ export class AppMain extends LitElement {
 
   render() {
     return html`
-      <app-nav
+      <!-- Komponen 1: Header (berisi app-nav) -->
+      <app-header
         .currentPath=${this.currentPath}
         @nav-changed=${this._onNavChanged}
-      ></app-nav>
-      <div id="outlet" class="p-4"></div>
+      ></app-header>
+
+      <!-- Komponen 2: Main -->
+      <main class="max-w-7xl mx-auto px-4 py-6 pb-16">
+        <div id="outlet" class="p-4"></div>
+      </main>
+
+      <!-- Komponen 3: Footer -->
+      <app-footer></app-footer>
     `;
   }
 }

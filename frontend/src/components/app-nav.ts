@@ -38,15 +38,15 @@ export class AppNav extends LitElement {
 
   render() {
     return html`
-      <header class="bg-green-100 text-green-900 font-medium shadow-sm">
+      <header class=" text-green-900 font-medium">
         <div
-          class="max-w-screen-xl mx-auto px-4 py-4 flex justify-between items-center"
+          class="max-w-screen-xl mx-auto px-4 py-2 flex justify-between items-center"
         >
           <a href="/" @click=${this._navigate} class=${this.isActive('')}>
             <img
               src="./assets/logo-88x45.png"
               alt="Logo"
-              class="rounded-xl h-[50px]"
+              class="rounded-xl h-[30px]"
             />
           </a>
           <!-- Hamburger for small screens -->
