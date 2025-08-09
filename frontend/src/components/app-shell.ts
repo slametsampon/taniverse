@@ -1,9 +1,11 @@
+// frontend/src/components/app-shell.ts
 import { LitElement, html } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 
 import './app-header.ts';
 import './app-footer.ts';
 import './app-main.ts';
+import { AuthService } from './auth-service';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -45,11 +47,31 @@ export class AppShell extends LitElement {
     this.appMainEl?.navigate(target);
   };
 
+  // Event dari user-info (dikirim lewat app-header)
+  private _onLoginClick = () => this.appMainEl?.navigate('/login');
+  private _onLogoutClick = () => {
+    AuthService.logout();
+    this.appMainEl?.navigate('/');
+    this.requestUpdate(); // refresh header props
+  };
+  private _onProfileClick = () => this.appMainEl?.navigate('/dashboard');
+
+  // Event dari page-login
+  private _onNavigateTo = (e: CustomEvent<{ path: string }>) =>
+    this.appMainEl?.navigate(e.detail.path);
+  private _onAuthChanged = () => this.requestUpdate();
+
   render() {
     return html`
       <app-header
         .currentPath=${this.currentPath}
+        .username=${AuthService.getUser()?.username ?? 'Guest'}
+        .avatarUrl=${AuthService.getUser()?.avatarUrl ?? ''}
+        .isLoggedIn=${AuthService.isLoggedIn()}
         @nav-changed=${this._onNavChanged}
+        @login-click=${this._onLoginClick}
+        @logout-click=${this._onLogoutClick}
+        @profile-click=${this._onProfileClick}
       >
       </app-header>
 
@@ -58,6 +80,8 @@ export class AppShell extends LitElement {
         @route-changed=${(ev: CustomEvent<{ path: string }>) => {
           this.currentPath = ev.detail.path;
         }}
+        @navigate-to=${this._onNavigateTo}
+        @auth-changed=${this._onAuthChanged}
       >
       </app-main>
 

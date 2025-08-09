@@ -1,3 +1,4 @@
+// frontend/src/components/app-main.ts
 import { LitElement, html } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
@@ -21,6 +22,13 @@ export class AppMain extends LitElement {
     this.router = new Router(this.outletEl, { baseUrl: this.basePath });
 
     this.router.setRoutes([
+      {
+        path: '/login',
+        action: async () => {
+          await import('../pages/login');
+        },
+        component: 'page-login',
+      },
       {
         path: '/dashboard',
         action: async () => {
