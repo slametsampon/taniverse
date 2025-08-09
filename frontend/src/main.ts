@@ -1,1 +1,1 @@
-import './components/app-main.ts';
+import './components/app-shell.ts';

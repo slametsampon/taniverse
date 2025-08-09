@@ -1,34 +1,26 @@
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
 
-import './app-header.ts'; // import komponen navigasi
-import './app-footer.ts';
-import '../pages/home.ts';
+import '../pages/home.ts'; // pre-load halaman home (opsional)
 
 @customElement('app-main')
 export class AppMain extends LitElement {
-  @state() private currentPath = window.location.pathname;
-
-  // Tentukan basePath untuk local dan GitHub Pages
-  private basePath =
-    window.location.hostname === '127.0.0.1' ? '/' : '/taniverse/';
-
+  // light DOM agar styling global (Tailwind) tetap nempel
   createRenderRoot() {
-    console.log('window.location.pathname : ', window.location.pathname);
-    console.log('window.location.hostname : ', window.location.hostname);
-
     return this;
   }
 
+  @property({ type: String }) basePath: string = '/';
+  @state() private currentPath = window.location.pathname;
+
+  @query('#outlet') private outletEl!: HTMLElement;
+  private router!: Router;
+
   firstUpdated() {
-    const outlet = this.renderRoot.querySelector('#outlet') as HTMLElement;
+    this.router = new Router(this.outletEl, { baseUrl: this.basePath });
 
-    const router = new Router(outlet!, {
-      baseUrl: this.basePath,
-    });
-
-    router.setRoutes([
+    this.router.setRoutes([
       {
         path: '/dashboard',
         action: async () => {
@@ -50,10 +42,7 @@ export class AppMain extends LitElement {
         },
         component: 'page-about',
       },
-      {
-        path: '/',
-        component: 'page-home',
-      },
+      { path: '/', component: 'page-home' },
       {
         path: '(.*)',
         action: async () => {
@@ -63,41 +52,40 @@ export class AppMain extends LitElement {
       },
     ]);
 
-    window.addEventListener('popstate', () => {
-      this.currentPath = window.location.pathname;
-      this.dispatchEvent(
-        new CustomEvent('route-changed', {
-          detail: { path: this.currentPath },
-          bubbles: true,
-          composed: true,
-        })
-      );
-    });
+    window.addEventListener('popstate', this._onPopState);
   }
 
-  private _onNavChanged(e: CustomEvent) {
-    const rawPath = e.detail.path;
-    const newPath = this.basePath + rawPath.replace(/^\/+/, ''); // gabungkan basePath + path
-    window.history.pushState({}, '', newPath);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-    this.currentPath = newPath;
+  disconnectedCallback() {
+    window.removeEventListener('popstate', this._onPopState);
+    super.disconnectedCallback();
   }
+
+  private _onPopState = () => {
+    this.currentPath = window.location.pathname;
+    this.dispatchEvent(
+      new CustomEvent('route-changed', {
+        detail: { path: this.currentPath },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  };
+
+  // Dipanggil oleh app-shell saat nav berubah
+  public navigate = (path: string) => {
+    // Router.go akan mengurus pushState + matching
+    const full =
+      this.basePath === '/'
+        ? path
+        : `${this.basePath}${path.replace(/^\/+/, '')}`;
+    Router.go(full);
+  };
 
   render() {
     return html`
-      <!-- Komponen 1: Header (berisi app-nav) -->
-      <app-header
-        .currentPath=${this.currentPath}
-        @nav-changed=${this._onNavChanged}
-      ></app-header>
-
-      <!-- Komponen 2: Main -->
       <main class="max-w-7xl mx-auto px-4 py-6 pb-16">
         <div id="outlet" class="p-4"></div>
       </main>
-
-      <!-- Komponen 3: Footer -->
-      <app-footer></app-footer>
     `;
   }
 }
