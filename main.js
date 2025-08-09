@@ -28,7 +28,7 @@ var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 
 // ../node_modules/@lit/reactive-element/css-tag.js
-var t, e, s, o, n, r, S, c;
+var t, e, s, o, n, r, i, S, c;
 var init_css_tag = __esm({
   "../node_modules/@lit/reactive-element/css-tag.js"() {
     "use strict";
@@ -55,6 +55,14 @@ var init_css_tag = __esm({
       }
     };
     r = (t4) => new n("string" == typeof t4 ? t4 : t4 + "", void 0, s);
+    i = (t4, ...e6) => {
+      const o6 = 1 === t4.length ? t4[0] : e6.reduce((e7, s4, o7) => e7 + ((t5) => {
+        if (true === t5._$cssResult$) return t5.cssText;
+        if ("number" == typeof t5) return t5;
+        throw Error("Value passed to 'css' function must be a 'css' function result: " + t5 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+      })(s4) + t4[o7 + 1], t4[0]);
+      return new n(o6, t4, s);
+    };
     S = (s4, o6) => {
       if (e) s4.adoptedStyleSheets = o6.map((t4) => t4 instanceof CSSStyleSheet ? t4 : t4.styleSheet);
       else for (const e6 of o6) {
@@ -769,6 +777,235 @@ var init_decorators = __esm({
     init_query_async();
     init_query_assigned_elements();
     init_query_assigned_nodes();
+  }
+});
+
+// src/components/auth-service.ts
+var USE_MOCK, BASE_PATH, AuthService;
+var init_auth_service = __esm({
+  "src/components/auth-service.ts"() {
+    "use strict";
+    USE_MOCK = true;
+    BASE_PATH = location.hostname === "127.0.0.1" ? "/" : "/taniverse/";
+    AuthService = class {
+      static async login(username, password) {
+        if (USE_MOCK) {
+          const list = await this._readMockUsers();
+          const found = list.find(
+            (u3) => u3.username?.toLowerCase() === username.toLowerCase() && String(u3.password) === String(password)
+          );
+          await new Promise((r6) => setTimeout(r6, 400));
+          if (!found) {
+            throw new Error("Login gagal (MOCK): username/password salah.");
+          }
+          const token = `mock-${found.username}-${Date.now()}`;
+          const user = {
+            username: found.username,
+            avatarUrl: found.avatarUrl ?? ""
+          };
+          localStorage.setItem(this.KEY, token);
+          localStorage.setItem(this.USER, JSON.stringify(user));
+          return { ...user, token };
+        } else {
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+          });
+          if (!res.ok) {
+            let msg = "Login gagal. Periksa kredensial Anda.";
+            try {
+              const j2 = await res.json();
+              if (j2?.message) msg = j2.message;
+            } catch {
+            }
+            throw new Error(msg);
+          }
+          const data = await res.json();
+          localStorage.setItem(this.KEY, data.token);
+          localStorage.setItem(
+            this.USER,
+            JSON.stringify({
+              username: data.username,
+              avatarUrl: data.avatarUrl ?? ""
+            })
+          );
+          return {
+            username: data.username,
+            avatarUrl: data.avatarUrl ?? "",
+            token: data.token
+          };
+        }
+      }
+      static logout() {
+        localStorage.removeItem(this.KEY);
+        localStorage.removeItem(this.USER);
+      }
+      static getToken() {
+        return localStorage.getItem(this.KEY);
+      }
+      static getUser() {
+        const raw = localStorage.getItem(this.USER);
+        if (!raw) return null;
+        try {
+          const j2 = JSON.parse(raw);
+          return { username: j2.username ?? "Guest", avatarUrl: j2.avatarUrl ?? "" };
+        } catch {
+          return null;
+        }
+      }
+      static isLoggedIn() {
+        return !!this.getToken();
+      }
+      // ===== helpers =====
+      static async _readMockUsers() {
+        const ENV = "development";
+        const BASE = ENV === "pre-release" ? "/taniverse/" : ENV === "production" ? "" : "/";
+        const candidates = [
+          `${BASE}assets/mock/users.json`,
+          `${BASE}src/assets/mock/users.json`
+        ];
+        let lastErr = null;
+        for (const url of candidates) {
+          console.log(`Mencoba membaca ${url}...`);
+          try {
+            const res = await fetch(url, { cache: "no-cache" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return Array.isArray(data.users) ? data.users : [];
+          } catch (e6) {
+            lastErr = e6;
+          }
+        }
+        throw new Error(
+          `Gagal memuat users.json (MOCK). ${lastErr?.message ?? ""}`
+        );
+      }
+    };
+    AuthService.KEY = "auth_token_v1";
+    AuthService.USER = "auth_user_v1";
+  }
+});
+
+// src/pages/login.ts
+var login_exports = {};
+__export(login_exports, {
+  PageLogin: () => PageLogin
+});
+var PageLogin;
+var init_login = __esm({
+  "src/pages/login.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_auth_service();
+    PageLogin = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.username = "";
+        this.password = "";
+        this.loading = false;
+        this.error = "";
+      }
+      firstUpdated() {
+        this.username = "admin";
+        this.password = "admin123";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      // gunakan Tailwind global
+      async onSubmit(e6) {
+        e6.preventDefault();
+        this.error = "";
+        this.loading = true;
+        try {
+          console.log("login", this.username, this.password);
+          const user = await AuthService.login(this.username.trim(), this.password);
+          this.dispatchEvent(
+            new CustomEvent("auth-changed", {
+              detail: { user },
+              bubbles: true,
+              composed: true
+            })
+          );
+          this.dispatchEvent(
+            new CustomEvent("navigate-to", {
+              detail: { path: "/" },
+              bubbles: true,
+              composed: true
+            })
+          );
+        } catch (err) {
+          this.error = err?.message ?? "Login gagal.";
+        } finally {
+          this.loading = false;
+        }
+      }
+      render() {
+        return x`
+      <div class="min-h-[60vh] flex items-center justify-center">
+        <form
+          class="w-full max-w-sm p-6 rounded-2xl border shadow-sm bg-white"
+          @submit=${this.onSubmit}
+        >
+          <h1 class="text-xl font-semibold mb-4">Masuk</h1>
+
+          ${this.error ? x` <div
+                class="mb-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2"
+              >
+                ${this.error}
+              </div>` : null}
+
+          <label class="block mb-2 text-sm font-medium">Username</label>
+          <input
+            class="w-full mb-4 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            autocomplete="username"
+            .value=${this.username}
+            @input=${(e6) => this.username = e6.target.value}
+          />
+
+          <label class="block mb-2 text-sm font-medium">Password</label>
+          <input
+            class="w-full mb-4 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            type="password"
+            autocomplete="current-password"
+            .value=${this.password}
+            @input=${(e6) => this.password = e6.target.value}
+          />
+
+          <button
+            class="w-full py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+            ?disabled=${this.loading || !this.username || !this.password}
+            type="submit"
+          >
+            ${this.loading ? "Memproses\u2026" : "Login"}
+          </button>
+        </form>
+      </div>
+    `;
+      }
+    };
+    PageLogin.styles = i`
+    :host {
+      display: block;
+    }
+  `;
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "username", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "password", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "loading", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "error", 2);
+    PageLogin = __decorateClass([
+      t3("page-login")
+    ], PageLogin);
   }
 });
 
@@ -1494,6 +1731,9 @@ var AppHeader = class extends i4 {
   constructor() {
     super(...arguments);
     this.currentPath = window.location.pathname;
+    this.username = "Guest";
+    this.avatarUrl = "";
+    this.isLoggedIn = false;
   }
   // pakai light DOM agar Tailwind/Global CSS tetap nempel
   createRenderRoot() {
@@ -1508,10 +1748,15 @@ var AppHeader = class extends i4 {
       })
     );
   }
+  _forward(type) {
+    this.dispatchEvent(
+      new CustomEvent(type, { bubbles: true, composed: true })
+    );
+  }
   render() {
     return x`
       <header
-        class="w-full sticky top-0 z-50 bg-green-100 shadow-sd backdrop-blur border-b"
+        class="w-full sticky top-0 z-50 bg-green-100 shadow-sm backdrop-blur border-b"
       >
         <div class="mx-auto px-4 flex items-center justify-between">
           <!-- Kiri: Navigation -->
@@ -1523,9 +1768,12 @@ var AppHeader = class extends i4 {
 
           <!-- Kanan: User Login Info -->
           <user-info
-            username="John Doe"
-            avatarUrl="https://i.pravatar.cc/100"
-            .isLoggedIn=${true}
+            .username=${this.username}
+            .avatarUrl=${this.avatarUrl}
+            .isLoggedIn=${this.isLoggedIn}
+            @login-click=${() => this._forward("login-click")}
+            @logout-click=${() => this._forward("logout-click")}
+            @profile-click=${() => this._forward("profile-click")}
           ></user-info>
         </div>
       </header>
@@ -1535,6 +1783,15 @@ var AppHeader = class extends i4 {
 __decorateClass([
   n4({ type: String })
 ], AppHeader.prototype, "currentPath", 2);
+__decorateClass([
+  n4({ type: String })
+], AppHeader.prototype, "username", 2);
+__decorateClass([
+  n4({ type: String })
+], AppHeader.prototype, "avatarUrl", 2);
+__decorateClass([
+  n4({ type: Boolean })
+], AppHeader.prototype, "isLoggedIn", 2);
 AppHeader = __decorateClass([
   t3("app-header")
 ], AppHeader);
@@ -3287,10 +3544,10 @@ runOnBeforeCallbacks_fn = async function(newContext) {
   });
 };
 runOnBeforeLeaveCallbacks_fn = async function(callbacks, newContext, commands, chainElement) {
-  const location = createLocation(newContext);
+  const location2 = createLocation(newContext);
   let result = await callbacks;
   if (__privateMethod(this, _Router_instances, isLatestRender_fn).call(this, newContext)) {
-    const beforeLeaveFunction = amend("onBeforeLeave", chainElement.element, location, commands, this);
+    const beforeLeaveFunction = amend("onBeforeLeave", chainElement.element, location2, commands, this);
     result = beforeLeaveFunction(result);
   }
   if (!(isObject(result) && "redirect" in result)) {
@@ -3298,10 +3555,10 @@ runOnBeforeLeaveCallbacks_fn = async function(callbacks, newContext, commands, c
   }
 };
 runOnBeforeEnterCallbacks_fn = async function(callbacks, newContext, commands, chainElement) {
-  const location = createLocation(newContext, chainElement.route);
+  const location2 = createLocation(newContext, chainElement.route);
   const result = await callbacks;
   if (__privateMethod(this, _Router_instances, isLatestRender_fn).call(this, newContext)) {
-    const beforeEnterFunction = amend("onBeforeEnter", chainElement.element, location, commands, this);
+    const beforeEnterFunction = amend("onBeforeEnter", chainElement.element, location2, commands, this);
     return beforeEnterFunction(result);
   }
 };
@@ -3410,8 +3667,8 @@ runOnAfterLeaveCallbacks_fn = function(currentContext, targetContext) {
       continue;
     }
     try {
-      const location = createLocation(currentContext);
-      maybeCall(currentComponent.onAfterLeave, currentComponent, location, {}, this);
+      const location2 = createLocation(currentContext);
+      maybeCall(currentComponent.onAfterLeave, currentComponent, location2, {}, this);
     } finally {
       if (__privateGet(this, _disappearingContent)?.includes(currentComponent)) {
         for (const child of currentComponent.children) {
@@ -3431,8 +3688,8 @@ runOnAfterEnterCallbacks_fn = function(currentContext) {
     }
     const currentComponent = currentContext.chain[i5].element;
     if (currentComponent) {
-      const location = createLocation(currentContext, currentContext.chain[i5].route);
-      maybeCall(currentComponent.onAfterEnter, currentComponent, location, {}, this);
+      const location2 = createLocation(currentContext, currentContext.chain[i5].route);
+      maybeCall(currentComponent.onAfterEnter, currentComponent, location2, {}, this);
     }
   }
 };
@@ -3601,6 +3858,13 @@ var AppMain = class extends i4 {
     this.router = new Router(this.outletEl, { baseUrl: this.basePath });
     this.router.setRoutes([
       {
+        path: "/login",
+        action: async () => {
+          await Promise.resolve().then(() => (init_login(), login_exports));
+        },
+        component: "page-login"
+      },
+      {
         path: "/dashboard",
         action: async () => {
           await Promise.resolve().then(() => (init_dashboard(), dashboard_exports));
@@ -3658,6 +3922,7 @@ AppMain = __decorateClass([
 ], AppMain);
 
 // src/components/app-shell.ts
+init_auth_service();
 var AppShell = class extends i4 {
   constructor() {
     super(...arguments);
@@ -3673,6 +3938,17 @@ var AppShell = class extends i4 {
       const target = `/${rawPath}`;
       this.appMainEl?.navigate(target);
     };
+    // Event dari user-info (dikirim lewat app-header)
+    this._onLoginClick = () => this.appMainEl?.navigate("/login");
+    this._onLogoutClick = () => {
+      AuthService.logout();
+      this.appMainEl?.navigate("/");
+      this.requestUpdate();
+    };
+    this._onProfileClick = () => this.appMainEl?.navigate("/dashboard");
+    // Event dari page-login
+    this._onNavigateTo = (e6) => this.appMainEl?.navigate(e6.detail.path);
+    this._onAuthChanged = () => this.requestUpdate();
   }
   // gunakan light DOM agar Tailwind global tetap berlaku
   createRenderRoot() {
@@ -3690,7 +3966,13 @@ var AppShell = class extends i4 {
     return x`
       <app-header
         .currentPath=${this.currentPath}
+        .username=${AuthService.getUser()?.username ?? "Guest"}
+        .avatarUrl=${AuthService.getUser()?.avatarUrl ?? ""}
+        .isLoggedIn=${AuthService.isLoggedIn()}
         @nav-changed=${this._onNavChanged}
+        @login-click=${this._onLoginClick}
+        @logout-click=${this._onLogoutClick}
+        @profile-click=${this._onProfileClick}
       >
       </app-header>
 
@@ -3699,6 +3981,8 @@ var AppShell = class extends i4 {
         @route-changed=${(ev) => {
       this.currentPath = ev.detail.path;
     }}
+        @navigate-to=${this._onNavigateTo}
+        @auth-changed=${this._onAuthChanged}
       >
       </app-main>
 

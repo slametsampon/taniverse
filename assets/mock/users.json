@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin123",
+      "avatarUrl": "https://i.pravatar.cc/100?img=1"
+    },
+    {
+      "username": "jane",
+      "password": "jane123",
+      "avatarUrl": "https://i.pravatar.cc/100?img=2"
+    }
+  ]
+}
