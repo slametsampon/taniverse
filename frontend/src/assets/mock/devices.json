@@ -1,0 +1,206 @@
+[
+  {
+    "tagNumber": "TI-001",
+    "type": "sensor",
+    "description": "Suhu",
+    "unit": "DegC",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 10, "high": 50 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "adc", "pin": null, "address": null, "channel": 0 },
+    "mqtt": {
+      "topic": "taniverse/devices/TI-001",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 0.2 },
+    "display": { "precision": 1 },
+    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 25.4
+  },
+  {
+    "tagNumber": "AI-002",
+    "type": "sensor",
+    "description": "Humidity",
+    "unit": "%",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 30, "high": 90 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/AI-002",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 68
+  },
+  {
+    "tagNumber": "PI-003",
+    "type": "sensor",
+    "description": "Tekanan",
+    "unit": "kPa",
+    "ranges": { "low": 0, "high": 400 },
+    "alarms": { "low": 120, "high": 300 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x76", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/PI-003",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 0.5 },
+    "display": { "precision": 1 },
+    "location": { "area": "greenhouse-a", "position": "line-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 214.6
+  },
+  {
+    "tagNumber": "LI-004",
+    "type": "sensor",
+    "description": "Level Air",
+    "unit": "%",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 30, "high": 90 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x76", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/LI-004",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 0.5 },
+    "display": { "precision": 1 },
+    "location": { "area": "greenhouse-a", "position": "line-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 75.4
+  },
+  {
+    "tagNumber": "AI-005",
+    "type": "sensor",
+    "description": "PH Meter",
+    "unit": "-",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 30, "high": 90 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/AI-005",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 6.8
+  },
+  {
+    "tagNumber": "AI-006",
+    "type": "sensor",
+    "description": "Nutrisi",
+    "unit": "ppm",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 30, "high": 90 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/AI-006",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 975
+  },
+  {
+    "tagNumber": "FAN001",
+    "type": "actuator",
+    "description": "Kipas Pendingin",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "kind": "fan",
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 15, "address": null, "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/FAN001",
+      "readCmd": "state",
+      "writeCmd": "set"
+    },
+    "location": { "area": "greenhouse-a", "position": "vent-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "state": "OFF"
+  },
+  {
+    "tagNumber": "PMP001",
+    "type": "actuator",
+    "description": "Pompa Air",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "kind": "relay",
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/PMP001",
+      "readCmd": "state",
+      "writeCmd": "set"
+    },
+    "location": { "area": "greenhouse-a", "position": "pump-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "state": "OFF"
+  }
+]
