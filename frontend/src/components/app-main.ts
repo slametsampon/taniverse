@@ -2,13 +2,11 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { AuthService } from './auth-service'; // ⬅️ import service
-
-import '../pages/home.ts'; // pre-load halaman home (opsional)
+import { AuthService, PERMS, type Role } from './auth-service';
+import '../pages/home.ts';
 
 @customElement('app-main')
 export class AppMain extends LitElement {
-  // light DOM agar styling global (Tailwind) tetap nempel
   createRenderRoot() {
     return this;
   }
@@ -22,25 +20,31 @@ export class AppMain extends LitElement {
   firstUpdated() {
     this.router = new Router(this.outletEl, { baseUrl: this.basePath });
 
-    // ==== GUARD INLINE (tanpa auth-guard.ts) ====
+    // ==== GUARD INLINE ====
     const requireLogin = (ctx: any, commands: any) => {
       if (!AuthService.isLoggedIn()) {
-        // simpan tujuan (path + query) agar aman dari error router
         sessionStorage.setItem('next_path', ctx.pathname + (ctx.search || ''));
-        return commands.redirect('/login'); // tanpa ?next=
+        return commands.redirect('/login'); // tanpa query string → hindari error router
       }
       return undefined;
     };
 
-    const requireRole = (role: string) => (ctx: any, commands: any) => {
+    const requireRoleAtLeast = (role: Role) => (ctx: any, commands: any) => {
       const g = requireLogin(ctx, commands);
       if (g) return g;
-      if (!AuthService.hasRole(role)) {
+      if (!AuthService.hasRoleAtLeast(role))
         return commands.redirect('/not-authorized');
-      }
       return undefined;
     };
-    // ============================================
+
+    const requirePerm = (perm: string) => (ctx: any, commands: any) => {
+      const g = requireLogin(ctx, commands);
+      if (g) return g;
+      if (!AuthService.can(perm as any))
+        return commands.redirect('/not-authorized');
+      return undefined;
+    };
+    // =======================
 
     this.router.setRoutes([
       {
@@ -51,23 +55,41 @@ export class AppMain extends LitElement {
         component: 'page-login',
       },
       {
-        path: '/dashboard',
+        path: '/dashboard', // minimal operator
         action: async (ctx, commands) => {
-          const g = requireLogin(ctx, commands);
+          const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
           await import('../pages/dashboard');
         },
         component: 'page-dashboard',
       },
       {
-        path: '/histori',
+        path: '/histori', // operator+ bisa
         action: async (ctx, commands) => {
-          const g = requireRole('admin')(ctx, commands);
+          const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
           await import('../pages/histori');
         },
         component: 'page-histori',
       },
+      // {
+      //   path: '/config', // minimal engineer (admin juga boleh)
+      //   action: async (ctx, commands) => {
+      //     const g = requireRoleAtLeast('engineer')(ctx, commands);
+      //     if (g) return g;
+      //     await import('../pages/config');
+      //   },
+      //   component: 'page-config',
+      // },
+      // {
+      //   path: '/control', // perlu permission spesifik operate equipment
+      //   action: async (ctx, commands) => {
+      //     const g = requirePerm(PERMS.OPERATE_EQUIPMENT)(ctx, commands);
+      //     if (g) return g;
+      //     await import('../pages/control');
+      //   },
+      //   component: 'page-control',
+      // },
       {
         path: '/about',
         action: async () => {
@@ -111,9 +133,7 @@ export class AppMain extends LitElement {
     );
   };
 
-  // Dipanggil oleh app-shell saat nav berubah
   public navigate = (path: string) => {
-    // Router.go akan mengurus pushState + matching
     const full =
       this.basePath === '/'
         ? path
