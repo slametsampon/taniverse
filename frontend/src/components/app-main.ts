@@ -2,6 +2,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
+import { AuthService } from './auth-service'; // ⬅️ import service
 
 import '../pages/home.ts'; // pre-load halaman home (opsional)
 
@@ -21,6 +22,26 @@ export class AppMain extends LitElement {
   firstUpdated() {
     this.router = new Router(this.outletEl, { baseUrl: this.basePath });
 
+    // ==== GUARD INLINE (tanpa auth-guard.ts) ====
+    const requireLogin = (ctx: any, commands: any) => {
+      if (!AuthService.isLoggedIn()) {
+        // simpan tujuan (path + query) agar aman dari error router
+        sessionStorage.setItem('next_path', ctx.pathname + (ctx.search || ''));
+        return commands.redirect('/login'); // tanpa ?next=
+      }
+      return undefined;
+    };
+
+    const requireRole = (role: string) => (ctx: any, commands: any) => {
+      const g = requireLogin(ctx, commands);
+      if (g) return g;
+      if (!AuthService.hasRole(role)) {
+        return commands.redirect('/not-authorized');
+      }
+      return undefined;
+    };
+    // ============================================
+
     this.router.setRoutes([
       {
         path: '/login',
@@ -31,14 +52,18 @@ export class AppMain extends LitElement {
       },
       {
         path: '/dashboard',
-        action: async () => {
+        action: async (ctx, commands) => {
+          const g = requireLogin(ctx, commands);
+          if (g) return g;
           await import('../pages/dashboard');
         },
         component: 'page-dashboard',
       },
       {
         path: '/histori',
-        action: async () => {
+        action: async (ctx, commands) => {
+          const g = requireRole('admin')(ctx, commands);
+          if (g) return g;
           await import('../pages/histori');
         },
         component: 'page-histori',
@@ -49,6 +74,13 @@ export class AppMain extends LitElement {
           await import('../pages/about');
         },
         component: 'page-about',
+      },
+      {
+        path: '/not-authorized',
+        action: async () => {
+          await import('../pages/not-authorized');
+        },
+        component: 'page-not-authorized',
       },
       { path: '/', component: 'page-home' },
       {

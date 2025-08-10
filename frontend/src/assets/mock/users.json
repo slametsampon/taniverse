@@ -3,11 +3,13 @@
     {
       "username": "admin",
       "password": "admin123",
+      "role": "admin",
       "avatarUrl": "https://i.pravatar.cc/100?img=1"
     },
     {
       "username": "jane",
       "password": "jane123",
+      "role": "user",
       "avatarUrl": "https://i.pravatar.cc/100?img=2"
     }
   ]

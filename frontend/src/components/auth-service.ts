@@ -1,5 +1,10 @@
 // frontend/src/components/auth-service.ts
-export type AuthUser = { username: string; avatarUrl?: string; token: string };
+export type AuthUser = {
+  username: string;
+  avatarUrl?: string;
+  token: string;
+  role?: string;
+};
 
 /**
  * Set true untuk testing tanpa backend (pakai JSON statis).
@@ -34,6 +39,9 @@ export class AuthService {
       const user = {
         username: found.username,
         avatarUrl: found.avatarUrl ?? '',
+        role: (found as any).role
+          ? String((found as any).role).toLowerCase()
+          : 'user',
       };
 
       localStorage.setItem(this.KEY, token);
@@ -88,15 +96,33 @@ export class AuthService {
     return localStorage.getItem(this.KEY);
   }
 
-  static getUser(): { username: string; avatarUrl: string } | null {
+  static getUser(): {
+    username: string;
+    avatarUrl: string;
+    role?: string;
+  } | null {
     const raw = localStorage.getItem(this.USER);
     if (!raw) return null;
     try {
       const j = JSON.parse(raw);
-      return { username: j.username ?? 'Guest', avatarUrl: j.avatarUrl ?? '' };
+      return {
+        username: j.username ?? 'Guest',
+        avatarUrl: j.avatarUrl ?? '',
+        role: j.role ? String(j.role).toLowerCase() : undefined, // ⬅ penting
+      };
     } catch {
       return null;
     }
+  }
+
+  static hasRole(role: string): boolean {
+    const u = this.getUser();
+    if (!u?.role) return false;
+    return role === '*' || u.role === role.toLowerCase();
+  }
+
+  static requireAuth(): boolean {
+    return this.isLoggedIn();
   }
 
   static isLoggedIn(): boolean {
@@ -124,7 +150,6 @@ export class AuthService {
 
     let lastErr: any = null;
     for (const url of candidates) {
-      console.log(`Mencoba membaca ${url}...`);
       try {
         const res = await fetch(url, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
