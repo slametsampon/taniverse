@@ -5,6 +5,8 @@ import { customElement } from 'lit/decorators.js';
 import '../domains/hidroponik/dashboard-hidoponik.ts';
 import '../domains/aquakultur/dashboard-aquakultur.ts';
 import '../domains/peternakan/dashboard-peternakan.ts';
+// page-dashboard.ts
+import '../components/device-dialog.ts'; // registrasi <device-dialog>
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {

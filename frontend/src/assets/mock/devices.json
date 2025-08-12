@@ -180,7 +180,7 @@
     "state": "OFF"
   },
   {
-    "tagNumber": "PMP001",
+    "tagNumber": "P-001",
     "type": "actuator",
     "description": "Pompa Air",
     "unit": null,
@@ -192,7 +192,7 @@
     "writable": true,
     "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
     "mqtt": {
-      "topic": "taniverse/devices/PMP001",
+      "topic": "taniverse/devices/P-001",
       "readCmd": "state",
       "writeCmd": "set"
     },

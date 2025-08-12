@@ -85,9 +85,6 @@ export class AppNav extends LitElement {
         class=${this.isActive('histori')}
         >📈 Histori</a
       >
-      <a href="/about" @click=${this._navigate} class=${this.isActive('about')}
-        >ℹ️ About</a
-      >
     `;
   }
 }

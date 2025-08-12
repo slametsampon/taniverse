@@ -12,14 +12,14 @@ export type AuthUser = {
  * Set true untuk testing tanpa backend (pakai JSON statis).
  * Saat backend siap, ubah ke false agar pakai /api/login.
  */
-const USE_MOCK = true;
+const USER_MOCK = true;
 
 export class AuthService {
   private static KEY = 'auth_token_v1';
   private static USER = 'auth_user_v1';
 
   static async login(username: string, password: string): Promise<AuthUser> {
-    if (USE_MOCK) {
+    if (USER_MOCK) {
       const list = await this._readMockUsers();
       const found = list.find(
         (u) =>
