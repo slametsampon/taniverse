@@ -816,15 +816,15 @@ var init_roles = __esm({
 });
 
 // src/components/auth-service.ts
-var USE_MOCK, AuthService;
+var USER_MOCK, AuthService;
 var init_auth_service = __esm({
   "src/components/auth-service.ts"() {
     "use strict";
     init_roles();
-    USE_MOCK = true;
+    USER_MOCK = true;
     AuthService = class {
       static async login(username, password) {
-        if (USE_MOCK) {
+        if (USER_MOCK) {
           const list = await this._readMockUsers();
           const found = list.find(
             (u3) => String(u3.username).toLowerCase() === username.toLowerCase() && String(u3.password) === String(password)
@@ -1332,6 +1332,157 @@ var init_login = __esm({
   }
 });
 
+// src/components/devices-service.ts
+function detectBasePath() {
+  const ENV = typeof process !== "undefined" && "development" || "development";
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const m2 = path.match(/^\/([^/]+)\//);
+  const sub = m2 ? `/${m2[1]}/` : "/";
+  if (ENV === "pre-release") return sub;
+  if (ENV === "production") return "";
+  return "/";
+}
+async function readMockDevices() {
+  const BASE = detectBasePath();
+  const candidates = [
+    `${BASE}assets/mock/devices.json`,
+    // hasil build (vite/esbuild)
+    `${BASE}src/assets/mock/devices.json`,
+    // serve source (live-server)
+    `${BASE}mock/devices.json`,
+    // folder publik
+    `${BASE}devices.json`
+    // root fallback
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: "no-cache" });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : Array.isArray(data?.devices) ? data.devices : null;
+      if (Array.isArray(list)) return list;
+    } catch {
+    }
+  }
+  throw new Error(
+    "Tidak menemukan mock devices.json di lokasi kandidat mana pun."
+  );
+}
+function parseValue(s4) {
+  if (/^-?\d+(\.\d+)?$/.test(s4)) return Number(s4);
+  try {
+    const o6 = JSON.parse(s4);
+    if (typeof o6.value === "number") return o6.value;
+  } catch {
+  }
+  return null;
+}
+function parseState(s4) {
+  return s4.toUpperCase() === "ON" ? "ON" : "OFF";
+}
+var DEVICES_MOCK, MQTT_BROKER_URL, TOPIC_PREFIX, DevicesStore, devicesStore;
+var init_devices_service = __esm({
+  "src/components/devices-service.ts"() {
+    "use strict";
+    DEVICES_MOCK = true;
+    MQTT_BROKER_URL = "ws://localhost:8083/mqtt";
+    TOPIC_PREFIX = "taniverse/devices";
+    DevicesStore = class {
+      constructor() {
+        this.devices = /* @__PURE__ */ new Map();
+        this.listeners = /* @__PURE__ */ new Set();
+        this.ready = false;
+        // MQTT (opsional)
+        this.mqttClient = null;
+      }
+      /** Inisialisasi: selalu muat katalog dari mock, lalu opsional sambung MQTT */
+      async init() {
+        if (this.ready) return;
+        await this.loadMock();
+        if (!DEVICES_MOCK) {
+          await this.connectMqtt();
+        }
+        this.ready = true;
+        this.emit();
+      }
+      async loadMock() {
+        try {
+          const list = await readMockDevices();
+          list.forEach((d3) => this.devices.set(d3.tagNumber, d3));
+        } catch (err) {
+          console.error("[devices] loadMock gagal:", err);
+        }
+      }
+      async connectMqtt() {
+        if (DEVICES_MOCK) return;
+        if (!window.mqtt) {
+          console.error(
+            '[devices] MQTT tidak tersedia. Tambahkan <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html'
+          );
+          return;
+        }
+        this.mqttClient = window.mqtt.connect(MQTT_BROKER_URL, {
+          clean: true,
+          reconnectPeriod: 2e3
+        });
+        this.mqttClient.on("connect", () => {
+          this.mqttClient.subscribe(`${TOPIC_PREFIX}/+/value`);
+          this.mqttClient.subscribe(`${TOPIC_PREFIX}/+/state`);
+        });
+        this.mqttClient.on("message", (topic, payload) => {
+          try {
+            const msg = new TextDecoder().decode(payload).trim();
+            const parts = topic.split("/");
+            const tag = parts[2];
+            const leaf = parts[3];
+            const dev = this.devices.get(tag);
+            if (!dev) return;
+            if (dev.type === "sensor" && leaf === "value") {
+              dev.value = parseValue(msg);
+            } else if (dev.type === "actuator" && leaf === "state") {
+              dev.state = parseState(msg);
+            }
+            this.emit();
+          } catch {
+          }
+        });
+      }
+      // ===== API untuk UI =====
+      onChange(cb) {
+        this.listeners.add(cb);
+        return () => this.listeners.delete(cb);
+      }
+      emit() {
+        this.listeners.forEach((cb) => cb());
+      }
+      get(tag) {
+        return this.devices.get(tag);
+      }
+      setActuatorState(tag, next) {
+        const d3 = this.devices.get(tag);
+        if (!d3 || d3.type !== "actuator") return;
+        d3.state = next;
+        this.emit();
+        if (!DEVICES_MOCK && this.mqttClient) {
+          this.mqttClient.publish(`${TOPIC_PREFIX}/${tag}/set`, next);
+        }
+      }
+      /** Untuk demo saat DEVICES_MOCK = true */
+      setSensorValue(tag, value) {
+        const d3 = this.devices.get(tag);
+        if (d3 && d3.type === "sensor") {
+          d3.value = value;
+          this.emit();
+        }
+      }
+      getMode() {
+        return DEVICES_MOCK ? "mock" : "mqtt";
+      }
+    };
+    devicesStore = new DevicesStore();
+  }
+});
+
 // src/domains/hidroponik/dashboard-hidoponik.ts
 var DashboardHidroponik;
 var init_dashboard_hidoponik = __esm({
@@ -1339,54 +1490,133 @@ var init_dashboard_hidoponik = __esm({
     "use strict";
     init_lit();
     init_decorators();
+    init_devices_service();
     DashboardHidroponik = class extends i4 {
       constructor() {
         super(...arguments);
-        this.pompaAktif = false;
+        this.suhuAir = null;
+        this.levelAir = null;
+        this.phAir = null;
+        this.kosentrasiNutrisi = null;
+        this.pompaState = "OFF";
+        this.openDetail = (tag) => {
+          console.debug("[dashboard] openDetail clicked, tag =", tag);
+          const isRegistered = !!customElements.get("device-dialog");
+          console.debug("[dashboard] device-dialog registered =", isRegistered);
+          const dlg = document.querySelector("device-dialog");
+          console.debug("[dashboard] device-dialog instance =", dlg);
+          if (!dlg) {
+            console.error(
+              "[dashboard] <device-dialog> instance NOT found in DOM. Did you add it to index.html?"
+            );
+            return;
+          }
+          if (typeof dlg.open !== "function") {
+            console.error(
+              "[dashboard] dlg.open() is not a function. Check component export/registration."
+            );
+            return;
+          }
+          const dev = devicesStore.get(tag);
+          console.debug("[dashboard] deviceStore.get(tag) =", dev);
+          if (!dev) {
+            console.warn(
+              `[dashboard] Device ${tag} tidak ditemukan di store (cek devices.json)`
+            );
+          }
+          dlg.open(tag);
+        };
+        this.togglePompa = () => {
+          const next = this.pompaState === "ON" ? "OFF" : "ON";
+          devicesStore.setActuatorState("P-001", next);
+        };
       }
       createRenderRoot() {
         return this;
       }
-      togglePompa() {
-        this.pompaAktif = !this.pompaAktif;
+      async connectedCallback() {
+        super.connectedCallback();
+        console.debug("[dashboard] connected");
+        await devicesStore.init();
+        console.debug(
+          "[dashboard] store initialized, mode =",
+          devicesStore.getMode()
+        );
+        this.pull();
+        this.off = devicesStore.onChange(() => {
+          console.debug("[dashboard] store change event");
+          this.pull();
+        });
+      }
+      pull() {
+        const tags = ["TI-001", "LI-004", "AI-006", "P-001"];
+        const snapshot = tags.map((t4) => [t4, devicesStore.get(t4)]);
+        console.debug("[dashboard] pull snapshot =", snapshot);
+        const suhu = devicesStore.get("TI-001");
+        const pmp = devicesStore.get("P-001");
+        const level = devicesStore.get("LI-004");
+        const nutrisi = devicesStore.get("AI-006");
+        this.suhuAir = suhu?.type === "sensor" ? suhu.value : null;
+        this.levelAir = level?.type === "sensor" ? level.value : null;
+        this.kosentrasiNutrisi = nutrisi?.type === "sensor" ? nutrisi.value : null;
+        this.pompaState = pmp?.type === "actuator" ? pmp.state : "OFF";
+      }
+      disconnectedCallback() {
+        this.off?.();
+        super.disconnectedCallback();
       }
       render() {
-        const pompaStatus = this.pompaAktif ? "Aktif" : "Mati";
-        const pompaColor = this.pompaAktif ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+        const aktif = this.pompaState === "ON";
+        const warna = aktif ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+        const suhuTxt = this.suhuAir == null ? "--" : `${this.suhuAir.toFixed(1)} \xB0C`;
+        const levelTxt = this.levelAir == null ? "--" : `${this.levelAir.toFixed(1)} %`;
+        const phTxt = this.phAir == null ? "--" : `${this.phAir.toFixed(1)} pH`;
+        const konsentrasiTxt = this.kosentrasiNutrisi == null ? "--" : `${this.kosentrasiNutrisi.toFixed(0)} ppm`;
+        const card = (label, value, click) => x`
+      <div
+        class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+        role="button"
+        tabindex="0"
+        @click=${click}
+        @keydown=${(e6) => (e6.key === "Enter" || e6.key === " ") && click()}
+      >
+        <div class="text-sm text-gray-500">${label}</div>
+        <div class="text-lg font-bold">${value}</div>
+      </div>
+    `;
         return x`
       <section class="bg-white rounded shadow p-4">
-        <h2 class="text-xl font-semibold text-green-800 mb-4">🌱 Hidroponik</h2>
+        <h2 class="text-xl font-semibold text-green-800 mb-4">
+          🌱 Hidroponik
+          <span class="ml-2 text-xs text-gray-500"
+            >mode: ${devicesStore.getMode()}</span
+          >
+        </h2>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
-          <div class="p-3 border rounded bg-gray-50">
-            <div class="text-sm text-gray-500">Nutrisi</div>
-            <div class="text-lg font-bold text-green-700">950 ppm</div>
-          </div>
-          <div class="p-3 border rounded bg-gray-50">
-            <div class="text-sm text-gray-500">pH</div>
-            <div class="text-lg font-bold text-blue-700">6.2</div>
-          </div>
-          <div class="p-3 border rounded bg-gray-50">
-            <div class="text-sm text-gray-500">Suhu Air</div>
-            <div class="text-lg font-bold text-orange-600">25.4 °C</div>
-          </div>
-          <div class="p-3 border rounded bg-gray-50">
-            <div class="text-sm text-gray-500">Ketinggian Air</div>
-            <div class="text-lg font-bold text-cyan-700">75%</div>
-          </div>
+          ${card("\u{1F4A7} Suhu Air", suhuTxt, () => this.openDetail("TI-001"))}
+          ${card(
+          "\u{1F30A} Ketinggian Air",
+          levelTxt,
+          () => this.openDetail("LI-004")
+        )}
+          ${card("\u{1F9EA} Nutrisi", konsentrasiTxt, () => this.openDetail("AI-006"))}
+          ${card("\u{1F33F} pH Air", phTxt, () => {
+          this.openDetail("AI-005");
+        })}
         </div>
 
         <div class="flex items-center justify-between">
-          <div class="text-sm font-medium">Pompa Nutrisi:</div>
+          <div class="text-sm font-medium">Pompa Nutrisi (P-001):</div>
           <div class="flex items-center gap-2">
-            <span class="text-sm px-2 py-1 rounded ${pompaColor}"
-              >${pompaStatus}</span
+            <span class="text-sm px-2 py-1 rounded ${warna}"
+              >${aktif ? "Aktif" : "Mati"}</span
             >
             <button
-              class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+              class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
               @click=${this.togglePompa}
             >
-              ${this.pompaAktif ? "Matikan" : "Nyalakan"}
+              ${aktif ? "Matikan" : "Nyalakan"}
             </button>
           </div>
         </div>
@@ -1396,7 +1626,19 @@ var init_dashboard_hidoponik = __esm({
     };
     __decorateClass([
       r5()
-    ], DashboardHidroponik.prototype, "pompaAktif", 2);
+    ], DashboardHidroponik.prototype, "suhuAir", 2);
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "levelAir", 2);
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "phAir", 2);
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "kosentrasiNutrisi", 2);
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "pompaState", 2);
     DashboardHidroponik = __decorateClass([
       t3("dashboard-hidroponik")
     ], DashboardHidroponik);
@@ -1515,6 +1757,114 @@ var init_dashboard_peternakan = __esm({
   }
 });
 
+// src/components/device-dialog.ts
+var DeviceDialog;
+var init_device_dialog = __esm({
+  "src/components/device-dialog.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_service();
+    DeviceDialog = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.close = () => {
+          this.dlg?.close();
+        };
+      }
+      // Light DOM supaya class Tailwind aktif
+      createRenderRoot() {
+        return this;
+      }
+      firstUpdated() {
+        this.dlg = this.querySelector("dialog");
+      }
+      async open(tagNumber) {
+        await devicesStore.init();
+        this.dev = devicesStore.get(tagNumber);
+        if (!this.dlg) this.dlg = this.querySelector("dialog");
+        this.dlg?.showModal();
+      }
+      renderRow(label, value) {
+        return x`
+      <div class="flex justify-between items-start gap-4 text-sm py-1">
+        <div class="text-gray-500">${label}</div>
+        <div class="font-medium text-gray-800 text-right">${value ?? "-"}</div>
+      </div>
+    `;
+      }
+      render() {
+        const d3 = this.dev;
+        const typeEmoji = d3?.type === "sensor" ? "\u{1F4DF}" : d3?.type === "actuator" ? "\u2699\uFE0F" : "\u{1F527}";
+        return x`
+      <dialog
+        class="w-full max-w-md border-0 rounded-2xl p-0 
+               [&::backdrop]:bg-black/40 [&::backdrop]:backdrop-blur-sm"
+      >
+        <section
+          class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5
+                 p-5 sm:p-6"
+        >
+          <!-- Tombol X (kanan-atas) -->
+          <button
+            class="absolute top-2.5 right-2.5 inline-flex items-center justify-center
+                   h-8 w-8 rounded-lg text-gray-400 hover:text-red-500
+                   hover:bg-red-50 active:scale-95 transition"
+            @click=${this.close}
+            aria-label="Tutup dialog"
+            title="Tutup"
+          >
+            ✕
+          </button>
+
+          <!-- Header -->
+          <header class="mb-4">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${typeEmoji}</span>
+              <h3 class="text-lg font-semibold text-gray-800">
+                ${d3 ? `${d3.description} (${d3.tagNumber})` : "Device"}
+              </h3>
+            </div>
+            <p class="mt-0.5 text-xs text-gray-400">
+              ${d3?.type === "sensor" ? "Sensor" : d3?.type === "actuator" ? "Aktuator" : "Perangkat"}
+            </p>
+          </header>
+
+          <!-- Body -->
+          ${d3 ? x`
+                <div class="space-y-2">
+                  ${this.renderRow("Kind", d3.kind)}
+                  ${this.renderRow("Unit", d3.unit)}
+                  ${d3.type === "sensor" ? this.renderRow(
+          "Nilai",
+          (d3.value ?? "-") + (d3.unit ? ` ${d3.unit}` : "")
+        ) : this.renderRow("State", d3.state)}
+                  ${d3.ranges ? this.renderRow(
+          "Range",
+          `${d3.ranges.low ?? "-"} .. ${d3.ranges.high ?? "-"}`
+        ) : null}
+                  ${d3.alarms ? this.renderRow(
+          "Alarm",
+          `${d3.alarms.low ?? "-"} / ${d3.alarms.high ?? "-"}`
+        ) : null}
+                </div>
+              ` : x`
+                <div class="text-sm text-gray-500">Device tidak ditemukan.</div>
+              `}
+        </section>
+      </dialog>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DeviceDialog.prototype, "dev", 2);
+    DeviceDialog = __decorateClass([
+      t3("device-dialog")
+    ], DeviceDialog);
+  }
+});
+
 // src/pages/dashboard.ts
 var dashboard_exports = {};
 __export(dashboard_exports, {
@@ -1529,6 +1879,7 @@ var init_dashboard = __esm({
     init_dashboard_hidoponik();
     init_dashboard_aquakultur();
     init_dashboard_peternakan();
+    init_device_dialog();
     PageDashboard = class extends i4 {
       createRenderRoot() {
         return this;
@@ -2048,9 +2399,6 @@ var AppNav = class extends i4 {
         @click=${this._navigate}
         class=${this.isActive("histori")}
         >📈 Histori</a
-      >
-      <a href="/about" @click=${this._navigate} class=${this.isActive("about")}
-        >ℹ️ About</a
       >
     `;
   }
