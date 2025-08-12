@@ -39,10 +39,12 @@ export class DashboardHidroponik extends LitElement {
     const pmp = devicesStore.get('P-001') as Device | undefined;
     const level = devicesStore.get('LI-004') as Device | undefined;
     const nutrisi = devicesStore.get('AI-006') as Device | undefined;
+    const ph = devicesStore.get('AI-005') as Device | undefined;
 
     this.suhuAir = suhu?.type === 'sensor' ? suhu.value : null;
     this.levelAir = level?.type === 'sensor' ? level.value : null;
     this.kosentrasiNutrisi = nutrisi?.type === 'sensor' ? nutrisi.value : null;
+    this.phAir = ph?.type === 'sensor' ? ph.value : null;
     this.pompaState = pmp?.type === 'actuator' ? pmp.state : 'OFF';
   }
 
