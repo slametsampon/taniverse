@@ -2000,6 +2000,929 @@ var init_histori = __esm({
   }
 });
 
+// src/components/devices-config.service.ts
+async function loadDevices() {
+  if (_cache) return _cache;
+  const ls = localStorage.getItem(LS_KEY);
+  if (ls) {
+    _cache = JSON.parse(ls);
+    return _cache;
+  }
+  _cache = await readMockDevicesCfg();
+  localStorage.setItem(LS_KEY, JSON.stringify(_cache));
+  return _cache;
+}
+function getByTag(tag) {
+  return _cache?.find((d3) => d3.tagNumber === tag);
+}
+function upsertDevice(device) {
+  if (!_cache) throw new Error("loadDevices() belum dipanggil");
+  const i5 = _cache.findIndex((d3) => d3.tagNumber === device.tagNumber);
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  if (i5 >= 0) device.meta = { ...device.meta, updatedAt: now };
+  else device.meta = device.meta ?? { createdAt: now, updatedAt: now };
+  if (i5 >= 0) _cache[i5] = device;
+  else _cache.push(device);
+  localStorage.setItem(LS_KEY, JSON.stringify(_cache));
+}
+function validateDevice(d3, isNew) {
+  const errs = [];
+  if (!d3.tagNumber) errs.push({ field: "tagNumber", message: "Tag wajib" });
+  if (isNew && _cache?.some((x2) => x2.tagNumber === d3.tagNumber))
+    errs.push({ field: "tagNumber", message: "Tag sudah dipakai" });
+  if (!d3.type) errs.push({ field: "type", message: "Type wajib" });
+  if (d3.ranges) {
+    const lo = d3.ranges.low ?? null, hi = d3.ranges.high ?? null;
+    if (lo !== null && hi !== null && Number(lo) >= Number(hi))
+      errs.push({ field: "ranges.high", message: "High harus > Low" });
+  }
+  if (d3.alarms && d3.ranges && d3.ranges.low !== null && d3.ranges.high !== null) {
+    const { low: rL, high: rH } = d3.ranges;
+    const { low: aL, high: aH } = d3.alarms;
+    if (aL !== null && (aL < rL || aL > rH))
+      errs.push({ field: "alarms.low", message: "Alarm low di luar range" });
+    if (aH !== null && (aH < rL || aH > rH))
+      errs.push({ field: "alarms.high", message: "Alarm high di luar range" });
+    if (aL !== null && aH !== null && aL >= aH)
+      errs.push({
+        field: "alarms.high",
+        message: "Alarm high harus > alarm low"
+      });
+  }
+  if (!d3.mqtt?.topic)
+    errs.push({ field: "mqtt.topic", message: "MQTT topic wajib" });
+  if (d3.type === "actuator") {
+    if (!d3.allowedStates || d3.allowedStates.length === 0)
+      errs.push({ field: "allowedStates", message: "allowedStates wajib" });
+    if (d3.defaultState && d3.allowedStates && !d3.allowedStates.includes(d3.defaultState))
+      errs.push({
+        field: "defaultState",
+        message: "defaultState harus ada di allowedStates"
+      });
+    if (!d3.writable)
+      errs.push({ field: "writable", message: "Actuator harus writable" });
+  }
+  if (!d3.io?.bus) errs.push({ field: "io.bus", message: "Bus wajib" });
+  if (d3.io.bus === "gpio" && (d3.io.pin === null || Number.isNaN(d3.io.pin)))
+    errs.push({ field: "io.pin", message: "GPIO pin wajib" });
+  if (d3.io.bus === "i2c" && !d3.io.address)
+    errs.push({ field: "io.address", message: "I2C address wajib" });
+  if (d3.io.bus === "adc" && (d3.io.channel === null || Number.isNaN(d3.io.channel)))
+    errs.push({ field: "io.channel", message: "ADC channel wajib" });
+  return errs;
+}
+async function readMockDevicesCfg() {
+  const BASE = detectBasePath2();
+  const candidates = [
+    `${BASE}assets/mock/devices.json`,
+    `${BASE}src/assets/mock/devices.json`,
+    `${BASE}mock/devices.json`,
+    `${BASE}devices.json`
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: "no-cache" });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const list = Array.isArray(data) ? data : Array.isArray(data?.devices) ? data.devices : null;
+      if (Array.isArray(list)) return list;
+    } catch {
+    }
+  }
+  throw new Error("Tidak menemukan mock devices.json untuk CONFIG.");
+}
+function detectBasePath2() {
+  const ENV = typeof process !== "undefined" && "development" || "development";
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const m2 = path.match(/^\/([^/]+)\//);
+  const sub = m2 ? `/${m2[1]}/` : "/";
+  if (ENV === "pre-release") return sub;
+  if (ENV === "production") return "";
+  return "/";
+}
+var LS_KEY, _cache;
+var init_devices_config_service = __esm({
+  "src/components/devices-config.service.ts"() {
+    "use strict";
+    LS_KEY = "mock.devices.config";
+    _cache = null;
+  }
+});
+
+// src/pages/views/ui-tabs.ts
+var UiTabs;
+var init_ui_tabs = __esm({
+  "src/pages/views/ui-tabs.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    UiTabs = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.tabs = [];
+        this.active = "general";
+        this.badges = {};
+      }
+      // Tailwind global → light DOM
+      createRenderRoot() {
+        return this;
+      }
+      onClick(id) {
+        this.dispatchEvent(
+          new CustomEvent("dev-tab-change", {
+            detail: { id },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        return x`
+      <nav class="border-b border-slate-200 bg-white rounded-t-md">
+        <ul class="flex gap-2 -mb-px px-2">
+          ${this.tabs.map((t4) => {
+          const is = t4.id === this.active;
+          const badge = this.badges[t4.id] ?? 0;
+          return x`
+              <li>
+                <button
+                  class="px-4 py-2 text-sm rounded-t-md border transition
+                         ${is ? "bg-white border-slate-300 border-b-white" : "border-transparent hover:bg-slate-50"}
+                         inline-flex items-center gap-2"
+                  @click=${() => this.onClick(t4.id)}
+                >
+                  ${t4.icon ? x`<span>${t4.icon}</span>` : null}
+                  <span>${t4.label}</span>
+                  ${badge > 0 ? x`<span
+                        class="ml-1 grid place-items-center w-5 h-5 rounded-full bg-red-500 text-white text-xs"
+                        >${badge}</span
+                      >` : null}
+                </button>
+              </li>
+            `;
+        })}
+        </ul>
+      </nav>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "tabs", 2);
+    __decorateClass([
+      n4()
+    ], UiTabs.prototype, "active", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "badges", 2);
+    UiTabs = __decorateClass([
+      t3("ui-tabs")
+    ], UiTabs);
+  }
+});
+
+// src/pages/views/dev-config-general.ts
+var DevConfigGeneral;
+var init_dev_config_general = __esm({
+  "src/pages/views/dev-config-general.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    DevConfigGeneral = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.errors = {};
+        this.mode = "new";
+        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+        this.e = (f3) => this.errors[f3];
+        this.num = (v2) => v2 === "" ? null : Number(v2);
+      }
+      createRenderRoot() {
+        return this;
+      }
+      emit(path, value) {
+        this.dispatchEvent(
+          new CustomEvent("dev-field-change", {
+            detail: { path, value },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        const d3 = this.model;
+        const statesCsv = (d3.allowedStates ?? []).join(",");
+        return x`
+      <section class="p-4 space-y-6">
+        <!-- Identitas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Tag Number</span>
+            <input
+              class="${this.inputCls}"
+              .value=${d3.tagNumber ?? ""}
+              ?disabled=${this.mode === "edit"}
+              @input=${(e6) => this.emit("tagNumber", e6.target.value)}
+            />
+            ${this.e("tagNumber") ? x`<p class="text-xs text-red-600 mt-1">
+                  ${this.e("tagNumber")}
+                </p>` : null}
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Type</span>
+            <select
+              class="${this.inputCls}"
+              .value=${d3.type}
+              @change=${(e6) => this.emit("type", e6.target.value)}
+            >
+              <option value="sensor">sensor</option>
+              <option value="actuator">actuator</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Description</span>
+            <input
+              class="${this.inputCls}"
+              .value=${d3.description ?? ""}
+              @input=${(e6) => this.emit("description", e6.target.value)}
+            />
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Unit</span>
+            <input
+              class="${this.inputCls}"
+              .value=${d3.unit ?? ""}
+              placeholder="DegC, %, kPa, ..."
+              @input=${(e6) => this.emit("unit", e6.target.value)}
+            />
+          </label>
+        </div>
+
+        ${d3.type === "sensor" ? x`
+              <!-- Pengukuran -->
+              <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-slate-700">Pengukuran</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Range Low</span
+                    >
+                    <input
+                      type="number"
+                      class="${this.inputCls}"
+                      .value=${String(d3.ranges?.low ?? "")}
+                      @input=${(e6) => this.emit("ranges.low", this.num(e6.target.value))}
+                    />
+                  </label>
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Range High</span
+                    >
+                    <input
+                      type="number"
+                      class="${this.inputCls}"
+                      .value=${String(d3.ranges?.high ?? "")}
+                      @input=${(e6) => this.emit("ranges.high", this.num(e6.target.value))}
+                    />
+                    ${this.e("ranges.high") ? x`<p class="text-xs text-red-600 mt-1">
+                          ${this.e("ranges.high")}
+                        </p>` : null}
+                  </label>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Alarm Low</span
+                    >
+                    <input
+                      type="number"
+                      class="${this.inputCls}"
+                      .value=${String(d3.alarms?.low ?? "")}
+                      @input=${(e6) => this.emit("alarms.low", this.num(e6.target.value))}
+                    />
+                    ${this.e("alarms.low") ? x`<p class="text-xs text-red-600 mt-1">
+                          ${this.e("alarms.low")}
+                        </p>` : null}
+                  </label>
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Alarm High</span
+                    >
+                    <input
+                      type="number"
+                      class="${this.inputCls}"
+                      .value=${String(d3.alarms?.high ?? "")}
+                      @input=${(e6) => this.emit("alarms.high", this.num(e6.target.value))}
+                    />
+                    ${this.e("alarms.high") ? x`<p class="text-xs text-red-600 mt-1">
+                          ${this.e("alarms.high")}
+                        </p>` : null}
+                  </label>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Sample Period (ms)</span
+                    >
+                    <input
+                      type="number"
+                      class="${this.inputCls}"
+                      .value=${String(d3.sample?.periodMs ?? 1e3)}
+                      @input=${(e6) => this.emit("sample.periodMs", this.num(e6.target.value))}
+                    />
+                  </label>
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Deadband</span
+                    >
+                    <input
+                      type="number"
+                      step="0.001"
+                      class="${this.inputCls}"
+                      .value=${d3.sample?.deadband ?? ""}
+                      @input=${(e6) => {
+          const t4 = e6.currentTarget;
+          const v2 = t4.value === "" ? null : Number(t4.value);
+          this.emit("sample.deadband", v2);
+        }}
+                    />
+                  </label>
+                </div>
+                <label class="block">
+                  <span class="text-sm font-medium text-slate-700"
+                    >Display Precision</span
+                  >
+                  <input
+                    type="number"
+                    class="${this.inputCls}"
+                    .value=${String(d3.display?.precision ?? 0)}
+                    @input=${(e6) => this.emit("display.precision", this.num(e6.target.value))}
+                  />
+                </label>
+              </div>
+            ` : x`
+              <!-- Kontrol -->
+              <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-slate-700">Kontrol</h3>
+                <label class="block">
+                  <span class="text-sm font-medium text-slate-700">Kind</span>
+                  <input
+                    class="${this.inputCls}"
+                    .value=${d3.kind ?? ""}
+                    placeholder="fan, relay, ..."
+                    @input=${(e6) => this.emit("kind", e6.target.value)}
+                  />
+                </label>
+                <label class="block">
+                  <span class="text-sm font-medium text-slate-700"
+                    >Allowed States (comma)</span
+                  >
+                  <input
+                    class="${this.inputCls}"
+                    .value=${statesCsv}
+                    placeholder="OFF,ON"
+                    @input=${(e6) => this.emit("allowedStatesCsv", e6.target.value)}
+                  />
+                  ${this.e("allowedStates") ? x`<p class="text-xs text-red-600 mt-1">
+                        ${this.e("allowedStates")}
+                      </p>` : null}
+                </label>
+                <div class="grid grid-cols-2 gap-4">
+                  <label class="block">
+                    <span class="text-sm font-medium text-slate-700"
+                      >Default State</span
+                    >
+                    <input
+                      class="${this.inputCls}"
+                      .value=${d3.defaultState ?? ""}
+                      @input=${(e6) => this.emit("defaultState", e6.target.value)}
+                    />
+                    ${this.e("defaultState") ? x`<p class="text-xs text-red-600 mt-1">
+                          ${this.e("defaultState")}
+                        </p>` : null}
+                  </label>
+                  <label class="inline-flex items-center gap-2 mt-7">
+                    <input
+                      type="checkbox"
+                      .checked=${!!d3.writable}
+                      @change=${(e6) => this.emit("writable", e6.target.checked)}
+                    />
+                    <span class="text-sm text-slate-700">Writable</span>
+                    ${this.e("writable") ? x`<span class="text-xs text-red-600 ml-2"
+                          >${this.e("writable")}</span
+                        >` : null}
+                  </label>
+                </div>
+              </div>
+            `}
+
+        <!-- Status (RO) -->
+        <div class="border rounded p-3 bg-slate-50">
+          <h3 class="text-sm font-semibold text-slate-700 mb-2">Status</h3>
+          ${d3.type === "sensor" ? x`<div class="text-sm">
+                Value: <span class="font-medium">${d3.value ?? "-"}</span>
+              </div>` : x`<div class="text-sm">
+                State: <span class="font-medium">${d3.state ?? "-"}</span>
+              </div>`}
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigGeneral.prototype, "model", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigGeneral.prototype, "errors", 2);
+    __decorateClass([
+      n4()
+    ], DevConfigGeneral.prototype, "mode", 2);
+    DevConfigGeneral = __decorateClass([
+      t3("dev-config-general")
+    ], DevConfigGeneral);
+  }
+});
+
+// src/pages/views/dev-config-hw-comm.ts
+var DevConfigHwComm;
+var init_dev_config_hw_comm = __esm({
+  "src/pages/views/dev-config-hw-comm.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    DevConfigHwComm = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.errors = {};
+        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+        this.e = (f3) => this.errors[f3];
+        this.num = (v2) => v2 === "" ? null : Number(v2);
+      }
+      createRenderRoot() {
+        return this;
+      }
+      emit(path, value) {
+        this.dispatchEvent(
+          new CustomEvent("dev-field-change", {
+            detail: { path, value },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        const d3 = this.model;
+        const showGPIO = d3.io.bus === "gpio";
+        const showI2C = d3.io.bus === "i2c";
+        const showADC = d3.io.bus === "adc";
+        return x`
+      <section class="p-4 space-y-6">
+        <!-- I/O (Hardware) -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-slate-700">I/O (Hardware)</h3>
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Bus</span>
+            <select
+              class="${this.inputCls}"
+              .value=${d3.io.bus}
+              @change=${(e6) => this.emit("io.bus", e6.target.value)}
+            >
+              <option value="adc">adc</option>
+              <option value="i2c">i2c</option>
+              <option value="gpio">gpio</option>
+            </select>
+            ${this.e("io.bus") ? x`<p class="text-xs text-red-600 mt-1">
+                  ${this.e("io.bus")}
+                </p>` : null}
+          </label>
+
+          ${showGPIO ? x` <label class="block">
+                <span class="text-sm font-medium text-slate-700">GPIO Pin</span>
+                <input
+                  type="number"
+                  class="${this.inputCls}"
+                  .value=${String(d3.io.pin ?? "")}
+                  @input=${(e6) => this.emit("io.pin", this.num(e6.target.value))}
+                />
+                ${this.e("io.pin") ? x`<p class="text-xs text-red-600 mt-1">
+                      ${this.e("io.pin")}
+                    </p>` : null}
+              </label>` : null}
+          ${showI2C ? x` <label class="block">
+                <span class="text-sm font-medium text-slate-700"
+                  >I2C Address</span
+                >
+                <input
+                  class="${this.inputCls}"
+                  .value=${d3.io.address ?? ""}
+                  placeholder="0x40"
+                  @input=${(e6) => this.emit("io.address", e6.target.value)}
+                />
+                ${this.e("io.address") ? x`<p class="text-xs text-red-600 mt-1">
+                      ${this.e("io.address")}
+                    </p>` : null}
+              </label>` : null}
+          ${showADC ? x` <label class="block">
+                <span class="text-sm font-medium text-slate-700"
+                  >ADC Channel</span
+                >
+                <input
+                  type="number"
+                  class="${this.inputCls}"
+                  .value=${String(d3.io.channel ?? "")}
+                  @input=${(e6) => this.emit("io.channel", this.num(e6.target.value))}
+                />
+                ${this.e("io.channel") ? x`<p class="text-xs text-red-600 mt-1">
+                      ${this.e("io.channel")}
+                    </p>` : null}
+              </label>` : null}
+        </div>
+
+        <!-- Komunikasi (MQTT) -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-slate-700">
+            Komunikasi (MQTT)
+          </h3>
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">MQTT Topic</span>
+            <input
+              class="${this.inputCls}"
+              .value=${d3.mqtt.topic ?? ""}
+              @input=${(e6) => this.emit("mqtt.topic", e6.target.value)}
+            />
+            ${this.e("mqtt.topic") ? x`<p class="text-xs text-red-600 mt-1">
+                  ${this.e("mqtt.topic")}
+                </p>` : null}
+          </label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Read Cmd</span>
+              <input
+                class="${this.inputCls}"
+                .value=${d3.mqtt.readCmd ?? ""}
+                placeholder="state / null"
+                @input=${(e6) => this.emit("mqtt.readCmd", e6.target.value)}
+              />
+            </label>
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Write Cmd</span>
+              <input
+                class="${this.inputCls}"
+                .value=${d3.mqtt.writeCmd ?? ""}
+                placeholder="set / null"
+                @input=${(e6) => this.emit("mqtt.writeCmd", e6.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigHwComm.prototype, "model", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigHwComm.prototype, "errors", 2);
+    DevConfigHwComm = __decorateClass([
+      t3("dev-config-hw-comm")
+    ], DevConfigHwComm);
+  }
+});
+
+// src/pages/views/dev-config-loc-meta.ts
+var DevConfigLocMeta;
+var init_dev_config_loc_meta = __esm({
+  "src/pages/views/dev-config-loc-meta.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    DevConfigLocMeta = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      emit(path, value) {
+        this.dispatchEvent(
+          new CustomEvent("dev-field-change", {
+            detail: { path, value },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        const d3 = this.model;
+        return x`
+      <section class="p-4 space-y-6">
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold text-slate-700">Lokasi</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Area</span>
+              <input
+                class="${this.inputCls}"
+                .value=${d3.location.area ?? ""}
+                @input=${(e6) => this.emit("location.area", e6.target.value)}
+              />
+            </label>
+            <label class="block">
+              <span class="text-sm font-medium text-slate-700">Position</span>
+              <input
+                class="${this.inputCls}"
+                .value=${d3.location.position ?? ""}
+                @input=${(e6) => this.emit("location.position", e6.target.value)}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <h3 class="text-sm font-semibold text-slate-700">Metadata</h3>
+          <div class="text-xs text-slate-600">
+            <div>Created At: <code>${d3.meta.createdAt}</code></div>
+            <div>Updated At: <code>${d3.meta.updatedAt}</code></div>
+          </div>
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigLocMeta.prototype, "model", 2);
+    DevConfigLocMeta = __decorateClass([
+      t3("dev-config-loc-meta")
+    ], DevConfigLocMeta);
+  }
+});
+
+// src/pages/device-config.ts
+var device_config_exports = {};
+__export(device_config_exports, {
+  PageDeviceConfig: () => PageDeviceConfig
+});
+var PageDeviceConfig;
+var init_device_config = __esm({
+  "src/pages/device-config.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_config_service();
+    init_ui_tabs();
+    init_dev_config_general();
+    init_dev_config_hw_comm();
+    init_dev_config_loc_meta();
+    PageDeviceConfig = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.errors = [];
+        this.errorsMap = {};
+        this.activeTab = "general";
+        this.mode = "new";
+        this.TAB_KEY = "deviceConfig.activeTab";
+        // events
+        this.onTabChange = (e6) => {
+          this.activeTab = e6.detail.id;
+          sessionStorage.setItem(this.TAB_KEY, this.activeTab);
+          const url = new URL(window.location.href);
+          url.searchParams.set("tab", this.activeTab);
+          history.replaceState({}, "", url.toString());
+        };
+        this.onFieldChange = (e6) => {
+          var _a, _b;
+          this.patch(this.device, e6.detail.path, e6.detail.value);
+          if (e6.detail.path === "type") {
+            if (e6.detail.value === "sensor") {
+              this.device.writable = false;
+              this.device.allowedStates = null;
+              this.device.defaultState = null;
+              this.device.kind = null;
+              (_a = this.device).sample ?? (_a.sample = { periodMs: 1e3, deadband: 0 });
+              (_b = this.device).display ?? (_b.display = { precision: 0 });
+            } else {
+              this.device.writable = true;
+              delete this.device.sample;
+              delete this.device.display;
+            }
+          }
+          if (e6.detail.path === "io.bus") {
+            const bus = e6.detail.value;
+            if (bus === "gpio")
+              this.device.io = { bus: "gpio", pin: 0, address: null, channel: null };
+            if (bus === "i2c")
+              this.device.io = {
+                bus: "i2c",
+                pin: null,
+                address: "0x40",
+                channel: null
+              };
+            if (bus === "adc")
+              this.device.io = { bus: "adc", pin: null, address: null, channel: 0 };
+          }
+          if (e6.detail.path === "allowedStatesCsv") {
+            const arr = String(e6.detail.value).split(",").map((s4) => s4.trim()).filter(Boolean);
+            this.device.allowedStates = arr.length ? arr : null;
+          }
+          this.revalidate(false);
+          this.requestUpdate();
+        };
+        this.onSave = () => {
+          this.revalidate(true);
+          if (this.errors.length) return;
+          upsertDevice(this.device);
+          window.history.pushState({}, "", "/#/dashboard");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        };
+        this.onReset = () => {
+          this.device = structuredClone(this.pristine);
+          this.revalidate(false);
+        };
+        this.onBack = () => window.history.back();
+      }
+      // Tailwind global → light DOM
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        await loadDevices();
+        const url = new URL(window.location.href);
+        const tag = url.searchParams.get("tag");
+        const tabParam = url.searchParams.get("tab") || sessionStorage.getItem(this.TAB_KEY) || "general";
+        this.activeTab = ["general", "hw-comm", "loc-meta"].includes(
+          tabParam
+        ) ? tabParam : "general";
+        if (tag) {
+          const found = getByTag(tag);
+          if (found) {
+            this.mode = "edit";
+            this.device = structuredClone(found);
+            this.pristine = structuredClone(found);
+          }
+        }
+        if (!this.device) {
+          const now = (/* @__PURE__ */ new Date()).toISOString();
+          this.mode = "new";
+          this.device = {
+            tagNumber: "",
+            type: "sensor",
+            description: "",
+            unit: "",
+            ranges: { low: 0, high: 100 },
+            alarms: { low: null, high: null },
+            kind: null,
+            allowedStates: null,
+            defaultState: null,
+            writable: false,
+            io: { bus: "adc", pin: null, address: null, channel: 0 },
+            mqtt: { topic: "", readCmd: null, writeCmd: null },
+            sample: { periodMs: 1e3, deadband: 0 },
+            display: { precision: 0 },
+            location: { area: "", position: "" },
+            meta: { createdAt: now, updatedAt: now }
+          };
+          this.pristine = structuredClone(this.device);
+        }
+        this.revalidate(false);
+      }
+      // utils
+      patch(obj, path, value) {
+        if (path === "allowedStatesCsv") return;
+        const keys = path.split(".");
+        if (!keys.length) return;
+        let ref = obj;
+        for (let i5 = 0; i5 < keys.length - 1; i5++) {
+          const k2 = keys[i5];
+          ref[k2] = { ...ref[k2] ?? {} };
+          ref = ref[k2];
+        }
+        const leaf = keys[keys.length - 1];
+        ref[leaf] = value;
+      }
+      revalidate(strict) {
+        const errs = validateDevice(this.device, this.mode === "new");
+        this.errors = strict ? errs : errs;
+        this.errorsMap = {};
+        for (const e6 of errs)
+          if (!this.errorsMap[e6.field]) this.errorsMap[e6.field] = e6.message;
+      }
+      fieldTab(path) {
+        if (path.startsWith("io.") || path.startsWith("mqtt.")) return "hw-comm";
+        if (path.startsWith("location.") || path.startsWith("meta."))
+          return "loc-meta";
+        return "general";
+      }
+      errorsByTab() {
+        const by = {
+          general: 0,
+          "hw-comm": 0,
+          "loc-meta": 0
+        };
+        for (const e6 of this.errors) by[this.fieldTab(e6.field)]++;
+        return by;
+      }
+      // render
+      render() {
+        if (!this.device) return null;
+        const badges = this.errorsByTab();
+        return x`
+      <section class="max-w-6xl mx-auto">
+        <ui-tabs
+          .tabs=${[
+          { id: "general", label: "General", icon: "\u{1F9FE}" },
+          { id: "hw-comm", label: "H/W & Comm", icon: "\u{1F50C}" },
+          { id: "loc-meta", label: "Lokasi & Metadata", icon: "\u{1F4CD}" }
+        ]}
+          .active=${this.activeTab}
+          .badges=${badges}
+          @dev-tab-change=${this.onTabChange}
+        >
+        </ui-tabs>
+
+        <div class="bg-white border border-slate-200 rounded-b-md p-2 md:p-4">
+          ${this.activeTab === "general" ? x`
+                <dev-config-general
+                  .model=${this.device}
+                  .errors=${this.errorsMap}
+                  .mode=${this.mode}
+                  @dev-field-change=${this.onFieldChange}
+                >
+                </dev-config-general>
+              ` : this.activeTab === "hw-comm" ? x`
+                <dev-config-hw-comm
+                  .model=${this.device}
+                  .errors=${this.errorsMap}
+                  @dev-field-change=${this.onFieldChange}
+                >
+                </dev-config-hw-comm>
+              ` : x`
+                <dev-config-loc-meta
+                  .model=${this.device}
+                  @dev-field-change=${this.onFieldChange}
+                >
+                </dev-config-loc-meta>
+              `}
+        </div>
+
+        <div
+          class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-3 justify-end"
+        >
+          <button
+            class="px-4 py-2 rounded bg-slate-100 hover:bg-slate-200"
+            @click=${this.onBack}
+          >
+            Kembali
+          </button>
+          <button
+            class="px-4 py-2 rounded bg-amber-100 hover:bg-amber-200"
+            @click=${this.onReset}
+          >
+            Reset
+          </button>
+          <button
+            class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+            @click=${this.onSave}
+          >
+            Simpan
+          </button>
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "device", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "pristine", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "errors", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "errorsMap", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "activeTab", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "mode", 2);
+    PageDeviceConfig = __decorateClass([
+      t3("page-device-config")
+    ], PageDeviceConfig);
+  }
+});
+
 // src/pages/about.ts
 var about_exports = {};
 __export(about_exports, {
@@ -2401,6 +3324,12 @@ var AppNav = class extends i4 {
         @click=${this._navigate}
         class=${this.isActive("histori")}
         >📈 Histori</a
+      >
+      <a
+        href="/config"
+        @click=${this._navigate}
+        class=${this.isActive("config")}
+        >⚙️ Konfigurasi</a
       >
     `;
   }
@@ -4739,15 +5668,16 @@ var AppMain = class extends i4 {
         },
         component: "page-histori"
       },
-      // {
-      //   path: '/config', // minimal engineer (admin juga boleh)
-      //   action: async (ctx, commands) => {
-      //     const g = requireRoleAtLeast('engineer')(ctx, commands);
-      //     if (g) return g;
-      //     await import('../pages/config');
-      //   },
-      //   component: 'page-config',
-      // },
+      {
+        path: "/config",
+        // minimal engineer (admin juga boleh)
+        action: async (ctx, commands) => {
+          const g2 = requireRoleAtLeast("engineer")(ctx, commands);
+          if (g2) return g2;
+          await Promise.resolve().then(() => (init_device_config(), device_config_exports));
+        },
+        component: "page-device-config"
+      },
       // {
       //   path: '/control', // perlu permission spesifik operate equipment
       //   action: async (ctx, commands) => {
