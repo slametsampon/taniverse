@@ -72,15 +72,15 @@ export class AppMain extends LitElement {
         },
         component: 'page-histori',
       },
-      // {
-      //   path: '/config', // minimal engineer (admin juga boleh)
-      //   action: async (ctx, commands) => {
-      //     const g = requireRoleAtLeast('engineer')(ctx, commands);
-      //     if (g) return g;
-      //     await import('../pages/config');
-      //   },
-      //   component: 'page-config',
-      // },
+      {
+        path: '/config', // minimal engineer (admin juga boleh)
+        action: async (ctx, commands) => {
+          const g = requireRoleAtLeast('engineer')(ctx, commands);
+          if (g) return g;
+          await import('../pages/device-config');
+        },
+        component: 'page-device-config',
+      },
       // {
       //   path: '/control', // perlu permission spesifik operate equipment
       //   action: async (ctx, commands) => {

@@ -85,6 +85,12 @@ export class AppNav extends LitElement {
         class=${this.isActive('histori')}
         >📈 Histori</a
       >
+      <a
+        href="/config"
+        @click=${this._navigate}
+        class=${this.isActive('config')}
+        >⚙️ Konfigurasi</a
+      >
     `;
   }
 }
