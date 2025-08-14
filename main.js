@@ -2072,7 +2072,8 @@ function validateDevice(d3, isNew) {
   return errs;
 }
 async function readMockDevicesCfg() {
-  const BASE = detectBasePath2();
+  const ENV = "development";
+  const BASE = ENV === "pre-release" ? "/taniverse/" : ENV === "production" ? "" : "/";
   const candidates = [
     `${BASE}assets/mock/devices.json`,
     `${BASE}src/assets/mock/devices.json`,
@@ -2090,15 +2091,6 @@ async function readMockDevicesCfg() {
     }
   }
   throw new Error("Tidak menemukan mock devices.json untuk CONFIG.");
-}
-function detectBasePath2() {
-  const ENV = typeof process !== "undefined" && "development" || "development";
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  const m2 = path.match(/^\/([^/]+)\//);
-  const sub = m2 ? `/${m2[1]}/` : "/";
-  if (ENV === "pre-release") return sub;
-  if (ENV === "production") return "";
-  return "/";
 }
 var LS_KEY, _cache;
 var init_devices_config_service = __esm({
