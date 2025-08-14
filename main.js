@@ -2192,11 +2192,17 @@ var init_dev_config_general = __esm({
       constructor() {
         super(...arguments);
         this.errors = {};
-        this.mode = "new";
+        this.mode = "edit";
+        this.tags = [];
+        // daftar Tag untuk dropdown
+        // ==== UI helpers ====
         this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
         this.e = (f3) => this.errors[f3];
         this.num = (v2) => v2 === "" ? null : Number(v2);
+        // ==== Initial pick (sekali) saat mode EDIT ====
+        this._initPicked = false;
       }
+      // pakai light DOM supaya Tailwind global berlaku
       createRenderRoot() {
         return this;
       }
@@ -2209,6 +2215,27 @@ var init_dev_config_general = __esm({
           })
         );
       }
+      updated(_c) {
+        if (!this._initPicked && this.mode === "edit" && this.tags?.length) {
+          const initial = this.model.tagNumber || this.tags[0];
+          console.warn("[dev-config-general] init pick \u2192", {
+            mode: this.mode,
+            tags: this.tags,
+            modelTag: this.model.tagNumber,
+            initial
+          });
+          if (initial) {
+            this.dispatchEvent(
+              new CustomEvent("dev-tag-picked", {
+                detail: { tag: initial },
+                bubbles: true,
+                composed: true
+              })
+            );
+            this._initPicked = true;
+          }
+        }
+      }
       render() {
         const d3 = this.model;
         const statesCsv = (d3.allowedStates ?? []).join(",");
@@ -2218,12 +2245,64 @@ var init_dev_config_general = __esm({
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <label class="block">
             <span class="text-sm font-medium text-slate-700">Tag Number</span>
-            <input
-              class="${this.inputCls}"
-              .value=${d3.tagNumber ?? ""}
-              ?disabled=${this.mode === "edit"}
-              @input=${(e6) => this.emit("tagNumber", e6.target.value)}
-            />
+
+            ${this.mode === "edit" ? (() => {
+          const selectValue = this.model.tagNumber || (this.tags[0] ?? "");
+          console.warn(
+            "[dev-config-general] render EDIT, mode =",
+            this.mode,
+            "| selectValue =",
+            selectValue,
+            "| tags =",
+            this.tags
+          );
+          return x`
+                    <select
+                      class="${this.inputCls}"
+                      .value=${selectValue}
+                      @change=${(e6) => {
+            const val = e6.currentTarget.value;
+            console.warn("[dev-config-general] tag-change \u2192", val);
+            if (!val) return;
+            this.emit("tagNumber", val);
+            this.dispatchEvent(
+              new CustomEvent("dev-tag-picked", {
+                detail: { tag: val },
+                bubbles: true,
+                composed: true
+              })
+            );
+          }}
+                    >
+                      ${this.tags.map(
+            (t4) => x`<option value=${t4}>${t4}</option>`
+          )}
+                    </select>
+                  `;
+        })() : (() => {
+          console.warn(
+            "[dev-config-general] render NEW, mode =",
+            this.mode,
+            "| initial input =",
+            this.model.tagNumber ?? ""
+          );
+          return x`
+                    <!-- NEW: input bebas -->
+                    <input
+                      class="${this.inputCls}"
+                      .value=${d3.tagNumber ?? ""}
+                      placeholder="Ketik tag baru…"
+                      @input=${(e6) => {
+            const val = e6.currentTarget.value.trim();
+            console.warn(
+              "[dev-config-general] new-tag typing \u2192",
+              val
+            );
+            this.emit("tagNumber", val);
+          }}
+                    />
+                  `;
+        })()}
             ${this.e("tagNumber") ? x`<p class="text-xs text-red-600 mt-1">
                   ${this.e("tagNumber")}
                 </p>` : null}
@@ -2234,7 +2313,7 @@ var init_dev_config_general = __esm({
             <select
               class="${this.inputCls}"
               .value=${d3.type}
-              @change=${(e6) => this.emit("type", e6.target.value)}
+              @change=${(e6) => this.emit("type", e6.currentTarget.value)}
             >
               <option value="sensor">sensor</option>
               <option value="actuator">actuator</option>
@@ -2246,7 +2325,10 @@ var init_dev_config_general = __esm({
             <input
               class="${this.inputCls}"
               .value=${d3.description ?? ""}
-              @input=${(e6) => this.emit("description", e6.target.value)}
+              @input=${(e6) => this.emit(
+          "description",
+          e6.currentTarget.value
+        )}
             />
           </label>
 
@@ -2256,7 +2338,7 @@ var init_dev_config_general = __esm({
               class="${this.inputCls}"
               .value=${d3.unit ?? ""}
               placeholder="DegC, %, kPa, ..."
-              @input=${(e6) => this.emit("unit", e6.target.value)}
+              @input=${(e6) => this.emit("unit", e6.currentTarget.value)}
             />
           </label>
         </div>
@@ -2265,6 +2347,7 @@ var init_dev_config_general = __esm({
               <!-- Pengukuran -->
               <div class="space-y-3">
                 <h3 class="text-sm font-semibold text-slate-700">Pengukuran</h3>
+
                 <div class="grid grid-cols-2 gap-4">
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
@@ -2273,10 +2356,14 @@ var init_dev_config_general = __esm({
                     <input
                       type="number"
                       class="${this.inputCls}"
-                      .value=${String(d3.ranges?.low ?? "")}
-                      @input=${(e6) => this.emit("ranges.low", this.num(e6.target.value))}
+                      .value=${d3.ranges?.low ?? ""}
+                      @input=${(e6) => this.emit(
+          "ranges.low",
+          this.num(e6.currentTarget.value)
+        )}
                     />
                   </label>
+
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
                       >Range High</span
@@ -2284,14 +2371,18 @@ var init_dev_config_general = __esm({
                     <input
                       type="number"
                       class="${this.inputCls}"
-                      .value=${String(d3.ranges?.high ?? "")}
-                      @input=${(e6) => this.emit("ranges.high", this.num(e6.target.value))}
+                      .value=${d3.ranges?.high ?? ""}
+                      @input=${(e6) => this.emit(
+          "ranges.high",
+          this.num(e6.currentTarget.value)
+        )}
                     />
                     ${this.e("ranges.high") ? x`<p class="text-xs text-red-600 mt-1">
                           ${this.e("ranges.high")}
                         </p>` : null}
                   </label>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
@@ -2300,13 +2391,17 @@ var init_dev_config_general = __esm({
                     <input
                       type="number"
                       class="${this.inputCls}"
-                      .value=${String(d3.alarms?.low ?? "")}
-                      @input=${(e6) => this.emit("alarms.low", this.num(e6.target.value))}
+                      .value=${d3.alarms?.low ?? ""}
+                      @input=${(e6) => this.emit(
+          "alarms.low",
+          this.num(e6.currentTarget.value)
+        )}
                     />
                     ${this.e("alarms.low") ? x`<p class="text-xs text-red-600 mt-1">
                           ${this.e("alarms.low")}
                         </p>` : null}
                   </label>
+
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
                       >Alarm High</span
@@ -2314,14 +2409,18 @@ var init_dev_config_general = __esm({
                     <input
                       type="number"
                       class="${this.inputCls}"
-                      .value=${String(d3.alarms?.high ?? "")}
-                      @input=${(e6) => this.emit("alarms.high", this.num(e6.target.value))}
+                      .value=${d3.alarms?.high ?? ""}
+                      @input=${(e6) => this.emit(
+          "alarms.high",
+          this.num(e6.currentTarget.value)
+        )}
                     />
                     ${this.e("alarms.high") ? x`<p class="text-xs text-red-600 mt-1">
                           ${this.e("alarms.high")}
                         </p>` : null}
                   </label>
                 </div>
+
                 <div class="grid grid-cols-2 gap-4">
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
@@ -2330,10 +2429,14 @@ var init_dev_config_general = __esm({
                     <input
                       type="number"
                       class="${this.inputCls}"
-                      .value=${String(d3.sample?.periodMs ?? 1e3)}
-                      @input=${(e6) => this.emit("sample.periodMs", this.num(e6.target.value))}
+                      .value=${d3.sample?.periodMs ?? 1e3}
+                      @input=${(e6) => this.emit(
+          "sample.periodMs",
+          this.num(e6.currentTarget.value)
+        )}
                     />
                   </label>
+
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
                       >Deadband</span
@@ -2351,6 +2454,7 @@ var init_dev_config_general = __esm({
                     />
                   </label>
                 </div>
+
                 <label class="block">
                   <span class="text-sm font-medium text-slate-700"
                     >Display Precision</span
@@ -2358,24 +2462,32 @@ var init_dev_config_general = __esm({
                   <input
                     type="number"
                     class="${this.inputCls}"
-                    .value=${String(d3.display?.precision ?? 0)}
-                    @input=${(e6) => this.emit("display.precision", this.num(e6.target.value))}
+                    .value=${d3.display?.precision ?? 0}
+                    @input=${(e6) => this.emit(
+          "display.precision",
+          this.num(e6.currentTarget.value)
+        )}
                   />
                 </label>
               </div>
             ` : x`
-              <!-- Kontrol -->
+              <!-- Kontrol (Actuator) -->
               <div class="space-y-3">
                 <h3 class="text-sm font-semibold text-slate-700">Kontrol</h3>
+
                 <label class="block">
                   <span class="text-sm font-medium text-slate-700">Kind</span>
                   <input
                     class="${this.inputCls}"
                     .value=${d3.kind ?? ""}
                     placeholder="fan, relay, ..."
-                    @input=${(e6) => this.emit("kind", e6.target.value)}
+                    @input=${(e6) => this.emit(
+          "kind",
+          e6.currentTarget.value
+        )}
                   />
                 </label>
+
                 <label class="block">
                   <span class="text-sm font-medium text-slate-700"
                     >Allowed States (comma)</span
@@ -2384,12 +2496,16 @@ var init_dev_config_general = __esm({
                     class="${this.inputCls}"
                     .value=${statesCsv}
                     placeholder="OFF,ON"
-                    @input=${(e6) => this.emit("allowedStatesCsv", e6.target.value)}
+                    @input=${(e6) => this.emit(
+          "allowedStatesCsv",
+          e6.currentTarget.value
+        )}
                   />
                   ${this.e("allowedStates") ? x`<p class="text-xs text-red-600 mt-1">
                         ${this.e("allowedStates")}
                       </p>` : null}
                 </label>
+
                 <div class="grid grid-cols-2 gap-4">
                   <label class="block">
                     <span class="text-sm font-medium text-slate-700"
@@ -2398,17 +2514,24 @@ var init_dev_config_general = __esm({
                     <input
                       class="${this.inputCls}"
                       .value=${d3.defaultState ?? ""}
-                      @input=${(e6) => this.emit("defaultState", e6.target.value)}
+                      @input=${(e6) => this.emit(
+          "defaultState",
+          e6.currentTarget.value
+        )}
                     />
                     ${this.e("defaultState") ? x`<p class="text-xs text-red-600 mt-1">
                           ${this.e("defaultState")}
                         </p>` : null}
                   </label>
+
                   <label class="inline-flex items-center gap-2 mt-7">
                     <input
                       type="checkbox"
                       .checked=${!!d3.writable}
-                      @change=${(e6) => this.emit("writable", e6.target.checked)}
+                      @change=${(e6) => this.emit(
+          "writable",
+          e6.currentTarget.checked
+        )}
                     />
                     <span class="text-sm text-slate-700">Writable</span>
                     ${this.e("writable") ? x`<span class="text-xs text-red-600 ml-2"
@@ -2423,9 +2546,11 @@ var init_dev_config_general = __esm({
         <div class="border rounded p-3 bg-slate-50">
           <h3 class="text-sm font-semibold text-slate-700 mb-2">Status</h3>
           ${d3.type === "sensor" ? x`<div class="text-sm">
-                Value: <span class="font-medium">${d3.value ?? "-"}</span>
+                Value:
+                <span class="font-medium">${d3.value ?? "-"}</span>
               </div>` : x`<div class="text-sm">
-                State: <span class="font-medium">${d3.state ?? "-"}</span>
+                State:
+                <span class="font-medium">${d3.state ?? "-"}</span>
               </div>`}
         </div>
       </section>
@@ -2441,6 +2566,9 @@ var init_dev_config_general = __esm({
     __decorateClass([
       n4()
     ], DevConfigGeneral.prototype, "mode", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], DevConfigGeneral.prototype, "tags", 2);
     DevConfigGeneral = __decorateClass([
       t3("dev-config-general")
     ], DevConfigGeneral);
@@ -2687,15 +2815,87 @@ var init_device_config = __esm({
         this.errors = [];
         this.errorsMap = {};
         this.activeTab = "general";
-        this.mode = "new";
+        this.mode = "edit";
+        this.tags = [];
+        this.dirty = false;
+        this._debug = false;
+        // HUD ?debug=1
         this.TAB_KEY = "deviceConfig.activeTab";
-        // events
+        this.beforeUnload = (e6) => {
+          if (!this.dirty) return;
+          e6.preventDefault();
+          e6.returnValue = "";
+        };
+        /* ====== EVENTS ====== */
         this.onTabChange = (e6) => {
           this.activeTab = e6.detail.id;
           sessionStorage.setItem(this.TAB_KEY, this.activeTab);
           const url = new URL(window.location.href);
           url.searchParams.set("tab", this.activeTab);
           history.replaceState({}, "", url.toString());
+        };
+        this.onChangeMode = (mode) => {
+          if (this.mode === mode) return;
+          this.mode = mode;
+          this.log("mode changed \u2192", mode);
+          if (mode === "edit") {
+            const sel = this.device?.tagNumber && this.tags.includes(this.device.tagNumber) ? this.device.tagNumber : this.tags[0] ?? "";
+            if (!sel) {
+              this.log("edit mode but no tags");
+              return;
+            }
+            let found = getByTag(sel);
+            if (!found) {
+              loadDevices().then((list) => {
+                const f3 = list.find((d3) => d3.tagNumber === sel);
+                if (f3) {
+                  this.device = structuredClone(f3);
+                  this.pristine = structuredClone(f3);
+                  this.requestUpdate();
+                }
+              });
+            } else {
+              this.device = structuredClone(found);
+              this.pristine = structuredClone(found);
+            }
+            const u3 = new URL(window.location.href);
+            u3.searchParams.set("tag", sel);
+            history.replaceState({}, "", u3.toString());
+          } else {
+            this.device = this.newTemplate();
+            this.pristine = structuredClone(this.device);
+            const u3 = new URL(window.location.href);
+            u3.searchParams.delete("tag");
+            history.replaceState({}, "", u3.toString());
+          }
+          this.dirty = false;
+          this.revalidate(false);
+        };
+        this.onTagPicked = (e6) => {
+          const tag = e6.detail.tag;
+          this.log("tag picked \u2192", tag);
+          let found = getByTag(tag);
+          if (!found) {
+            loadDevices().then((list) => {
+              const f3 = list.find((d3) => d3.tagNumber === tag);
+              if (f3) {
+                this.mode = "edit";
+                this.device = structuredClone(f3);
+                this.pristine = structuredClone(f3);
+                this.revalidate(false);
+                this.requestUpdate();
+              }
+            });
+            return;
+          }
+          this.mode = "edit";
+          this.device = structuredClone(found);
+          this.pristine = structuredClone(found);
+          const url = new URL(window.location.href);
+          url.searchParams.set("tag", tag);
+          history.replaceState({}, "", url.toString());
+          this.dirty = false;
+          this.revalidate(false);
         };
         this.onFieldChange = (e6) => {
           var _a, _b;
@@ -2732,85 +2932,145 @@ var init_device_config = __esm({
             const arr = String(e6.detail.value).split(",").map((s4) => s4.trim()).filter(Boolean);
             this.device.allowedStates = arr.length ? arr : null;
           }
+          this.dirty = true;
           this.revalidate(false);
           this.requestUpdate();
         };
         this.onSave = () => {
+          const wasNew = this.mode === "new";
           this.revalidate(true);
-          if (this.errors.length) return;
+          if (this.errors.length) {
+            this.log("save blocked: validation errors", this.errors);
+            return;
+          }
           upsertDevice(this.device);
-          window.history.pushState({}, "", "/#/dashboard");
-          window.dispatchEvent(new PopStateEvent("popstate"));
+          this.pristine = structuredClone(this.device);
+          this.dirty = false;
+          if (!this.tags.includes(this.device.tagNumber)) {
+            this.tags = [...this.tags, this.device.tagNumber].sort();
+          }
+          if (wasNew) {
+            this.mode = "edit";
+            const url = new URL(window.location.href);
+            url.searchParams.set("tag", this.device.tagNumber);
+            history.replaceState({}, "", url.toString());
+          }
+          this.log("saved", this.device.tagNumber);
         };
         this.onReset = () => {
           this.device = structuredClone(this.pristine);
-          this.revalidate(false);
+          this.errors = [];
+          this.errorsMap = {};
+          this.dirty = false;
+          this.log("reset to pristine");
         };
-        this.onBack = () => window.history.back();
+        this.onBack = () => {
+          if (this.dirty && !confirm("Perubahan belum disimpan. Tetap keluar?"))
+            return;
+          window.history.back();
+        };
       }
-      // Tailwind global → light DOM
+      // Tailwind dari global, jadi pakai light DOM
       createRenderRoot() {
         return this;
       }
+      /* ====== LOGGER (aman meski console di-trim) ====== */
+      log(...args) {
+        window.__tvdbg__ = window.__tvdbg__ || [];
+        window.__tvdbg__.push(args);
+        console.warn("[page-device-config]", ...args);
+      }
+      /* ====== LIFECYCLE ====== */
       async connectedCallback() {
         super.connectedCallback();
-        await loadDevices();
+        this._debug = new URL(window.location.href).searchParams.get("debug") === "1";
+        this.setAttribute("data-connected", (/* @__PURE__ */ new Date()).toISOString());
+        window.dispatchEvent(
+          new CustomEvent("taniverse:cc", {
+            detail: { who: "page-device-config", ts: Date.now() }
+          })
+        );
+        this.log("connectedCallback() CALLED | href=", location.href);
+        const list = await loadDevices();
+        this.tags = Array.from(new Set(list.map((d3) => d3.tagNumber))).filter(Boolean).sort();
+        this.log("step#1 loadDevices \u2192", { count: list.length, tags: this.tags });
         const url = new URL(window.location.href);
-        const tag = url.searchParams.get("tag");
         const tabParam = url.searchParams.get("tab") || sessionStorage.getItem(this.TAB_KEY) || "general";
         this.activeTab = ["general", "hw-comm", "loc-meta"].includes(
           tabParam
         ) ? tabParam : "general";
-        if (tag) {
-          const found = getByTag(tag);
-          if (found) {
-            this.mode = "edit";
-            this.device = structuredClone(found);
-            this.pristine = structuredClone(found);
-          }
+        this.log("step#2 activeTab \u2192", this.activeTab);
+        const tagParam = url.searchParams.get("tag");
+        const picked = tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? "";
+        this.log(
+          "step#3 picked tag \u2192",
+          picked || "(none)",
+          "(from url:",
+          tagParam,
+          ")"
+        );
+        const found = picked ? list.find((d3) => d3.tagNumber === picked) : void 0;
+        this.log(
+          "step#4 found? \u2192",
+          !!found,
+          found ? { tag: found.tagNumber, type: found.type } : null
+        );
+        if (found) {
+          this.mode = "edit";
+          this.device = structuredClone(found);
+          this.pristine = structuredClone(found);
+          url.searchParams.set("tag", picked);
+          history.replaceState({}, "", url.toString());
+          this.revalidate(false);
+          this.log("step#5 SET EDIT with", this.device.tagNumber);
+          return;
         }
-        if (!this.device) {
-          const now = (/* @__PURE__ */ new Date()).toISOString();
-          this.mode = "new";
-          this.device = {
-            tagNumber: "",
-            type: "sensor",
-            description: "",
-            unit: "",
-            ranges: { low: 0, high: 100 },
-            alarms: { low: null, high: null },
-            kind: null,
-            allowedStates: null,
-            defaultState: null,
-            writable: false,
-            io: { bus: "adc", pin: null, address: null, channel: 0 },
-            mqtt: { topic: "", readCmd: null, writeCmd: null },
-            sample: { periodMs: 1e3, deadband: 0 },
-            display: { precision: 0 },
-            location: { area: "", position: "" },
-            meta: { createdAt: now, updatedAt: now }
-          };
-          this.pristine = structuredClone(this.device);
-        }
+        this.mode = "new";
+        this.device = this.newTemplate();
+        this.pristine = structuredClone(this.device);
         this.revalidate(false);
+        this.log("step#5 SET NEW (no devices available)");
       }
-      // utils
+      disconnectedCallback() {
+        window.removeEventListener("beforeunload", this.beforeUnload);
+        super.disconnectedCallback();
+      }
+      /* ====== HELPERS ====== */
+      newTemplate() {
+        const now = (/* @__PURE__ */ new Date()).toISOString();
+        return {
+          tagNumber: "",
+          type: "sensor",
+          description: "",
+          unit: "",
+          ranges: { low: 0, high: 100 },
+          alarms: { low: null, high: null },
+          kind: null,
+          allowedStates: null,
+          defaultState: null,
+          writable: false,
+          io: { bus: "adc", pin: null, address: null, channel: 0 },
+          mqtt: { topic: "", readCmd: null, writeCmd: null },
+          sample: { periodMs: 1e3, deadband: 0 },
+          display: { precision: 0 },
+          location: { area: "", position: "" },
+          meta: { createdAt: now, updatedAt: now }
+        };
+      }
       patch(obj, path, value) {
         if (path === "allowedStatesCsv") return;
         const keys = path.split(".");
-        if (!keys.length) return;
         let ref = obj;
         for (let i5 = 0; i5 < keys.length - 1; i5++) {
           const k2 = keys[i5];
           ref[k2] = { ...ref[k2] ?? {} };
           ref = ref[k2];
         }
-        const leaf = keys[keys.length - 1];
-        ref[leaf] = value;
+        ref[keys[keys.length - 1]] = value;
       }
-      revalidate(strict) {
+      revalidate(_strict) {
         const errs = validateDevice(this.device, this.mode === "new");
-        this.errors = strict ? errs : errs;
+        this.errors = errs;
         this.errorsMap = {};
         for (const e6 of errs)
           if (!this.errorsMap[e6.field]) this.errorsMap[e6.field] = e6.message;
@@ -2830,12 +3090,87 @@ var init_device_config = __esm({
         for (const e6 of this.errors) by[this.fieldTab(e6.field)]++;
         return by;
       }
-      // render
+      /** Kelas Tailwind untuk tombol segmented control */
+      btnCls(active) {
+        const base = "relative px-3 md:px-4 py-1.5 rounded-md text-sm font-medium transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2";
+        const on = "bg-white text-slate-900 shadow ring-1 ring-slate-200";
+        const off = "text-slate-600 hover:text-slate-900 hover:bg-white/60";
+        return `${base} ${active ? on : off}`;
+      }
+      /* ====== RENDER ====== */
       render() {
         if (!this.device) return null;
         const badges = this.errorsByTab();
         return x`
       <section class="max-w-6xl mx-auto">
+        ${this._debug ? x` <div
+              class="m-2 p-2 text-xs rounded border border-amber-300 bg-amber-50 text-amber-800"
+            >
+              <div>
+                <b>DBG</b> mode=<code>${this.mode}</code>,
+                tags=${this.tags.length}, current=<code
+                  >${this.device?.tagNumber ?? "-"}</code
+                >
+              </div>
+            </div>` : null}
+
+        <!-- Mode switch: segmented control -->
+        <div class="flex items-center justify-between px-2 py-3">
+          <div
+            class="inline-flex items-center gap-1 rounded-lg bg-slate-100/80 p-1 shadow-inner ring-1 ring-slate-200"
+            role="group"
+            aria-label="Switch form mode"
+          >
+            <!-- EDIT button -->
+            <button
+              class="${this.btnCls(this.mode === "edit")}"
+              aria-pressed="${this.mode === "edit"}"
+              title="Edit device yang sudah ada"
+              @click=${() => this.onChangeMode("edit")}
+            >
+              <span class="inline-flex items-center gap-2">
+                <span aria-hidden="true">✏️</span>
+                <span>Edit</span>
+              </span>
+              ${this.mode === "edit" ? x`
+                    <span
+                      class="absolute -bottom-1.5 left-2 right-2 h-0.5 rounded bg-indigo-500"
+                    ></span>
+                  ` : null}
+            </button>
+
+            <!-- NEW button -->
+            <button
+              class="${this.btnCls(this.mode === "new")}"
+              aria-pressed="${this.mode === "new"}"
+              title="Buat device baru"
+              @click=${() => this.onChangeMode("new")}
+            >
+              <span class="inline-flex items-center gap-2">
+                <span aria-hidden="true">🆕</span>
+                <span>New</span>
+              </span>
+              ${this.mode === "new" ? x`
+                    <span
+                      class="absolute -bottom-1.5 left-2 right-2 h-0.5 rounded bg-indigo-500"
+                    ></span>
+                  ` : null}
+            </button>
+          </div>
+
+          <!-- status mode kecil di kanan (opsional, kesan “tech”) -->
+          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 ring-1 ring-slate-200"
+            >
+              <span
+                class="w-1.5 h-1.5 rounded-full ${this.mode === "edit" ? "bg-emerald-500" : "bg-indigo-500"}"
+              ></span>
+              Mode: <code class="font-mono">${this.mode}</code>
+            </span>
+          </div>
+        </div>
+
         <ui-tabs
           .tabs=${[
           { id: "general", label: "General", icon: "\u{1F9FE}" },
@@ -2854,7 +3189,9 @@ var init_device_config = __esm({
                   .model=${this.device}
                   .errors=${this.errorsMap}
                   .mode=${this.mode}
+                  .tags=${this.tags}
                   @dev-field-change=${this.onFieldChange}
+                  @dev-tag-picked=${this.onTagPicked}
                 >
                 </dev-config-general>
               ` : this.activeTab === "hw-comm" ? x`
@@ -2874,26 +3211,29 @@ var init_device_config = __esm({
         </div>
 
         <div
-          class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-3 justify-end"
+          class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-2 justify-end"
         >
           <button
-            class="px-4 py-2 rounded bg-slate-100 hover:bg-slate-200"
+            class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200"
             @click=${this.onBack}
           >
             Kembali
           </button>
           <button
-            class="px-4 py-2 rounded bg-amber-100 hover:bg-amber-200"
+            class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200"
             @click=${this.onReset}
           >
-            Reset
+            Cancel
           </button>
           <button
-            class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+            class="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
             @click=${this.onSave}
           >
-            Simpan
+            Save
           </button>
+          ${this.dirty ? x`<span class="self-center text-xs text-amber-600"
+                >unsaved changes…</span
+              >` : null}
         </div>
       </section>
     `;
@@ -2917,6 +3257,15 @@ var init_device_config = __esm({
     __decorateClass([
       r5()
     ], PageDeviceConfig.prototype, "mode", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "tags", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "dirty", 2);
+    __decorateClass([
+      r5()
+    ], PageDeviceConfig.prototype, "_debug", 2);
     PageDeviceConfig = __decorateClass([
       t3("page-device-config")
     ], PageDeviceConfig);
