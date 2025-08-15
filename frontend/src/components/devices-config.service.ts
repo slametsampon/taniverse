@@ -105,7 +105,10 @@ export function validateDevice<T = {}>(
 
 // ------- loader mock dengan auto path detection (mirip servicemu) -------
 async function readMockDevicesCfg(): Promise<DeviceConfig<any>[]> {
-  const BASE = detectBasePath();
+  const ENV = (process.env.NODE_ENV as string) || 'development';
+  const BASE =
+    ENV === 'pre-release' ? '/taniverse/' : ENV === 'production' ? '' : '/';
+  //const BASE = detectBasePath();
   const candidates = [
     `${BASE}assets/mock/devices.json`,
     `${BASE}src/assets/mock/devices.json`,
