@@ -1483,10 +1483,10 @@ var init_devices_service = __esm({
   }
 });
 
-// src/domains/hidroponik/dashboard-hidoponik.ts
+// src/views/domains/hidroponik/dashboard-hidoponik.ts
 var DashboardHidroponik;
 var init_dashboard_hidoponik = __esm({
-  "src/domains/hidroponik/dashboard-hidoponik.ts"() {
+  "src/views/domains/hidroponik/dashboard-hidoponik.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -1647,10 +1647,10 @@ var init_dashboard_hidoponik = __esm({
   }
 });
 
-// src/domains/aquakultur/dashboard-aquakultur.ts
+// src/views/domains/aquakultur/dashboard-aquakultur.ts
 var DashboardAquakultur;
 var init_dashboard_aquakultur = __esm({
-  "src/domains/aquakultur/dashboard-aquakultur.ts"() {
+  "src/views/domains/aquakultur/dashboard-aquakultur.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -1703,10 +1703,10 @@ var init_dashboard_aquakultur = __esm({
   }
 });
 
-// src/domains/peternakan/dashboard-peternakan.ts
+// src/views/domains/peternakan/dashboard-peternakan.ts
 var DashboardPeternakan;
 var init_dashboard_peternakan = __esm({
-  "src/domains/peternakan/dashboard-peternakan.ts"() {
+  "src/views/domains/peternakan/dashboard-peternakan.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -2101,10 +2101,10 @@ var init_devices_config_service = __esm({
   }
 });
 
-// src/pages/views/ui-tabs.ts
+// src/views/ui-tabs.ts
 var UiTabs;
 var init_ui_tabs = __esm({
-  "src/pages/views/ui-tabs.ts"() {
+  "src/views/ui-tabs.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -2173,10 +2173,10 @@ var init_ui_tabs = __esm({
   }
 });
 
-// src/pages/views/dev-config-general.ts
+// src/views/dev-config-general.ts
 var DevConfigGeneral;
 var init_dev_config_general = __esm({
-  "src/pages/views/dev-config-general.ts"() {
+  "src/views/dev-config-general.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -2567,10 +2567,10 @@ var init_dev_config_general = __esm({
   }
 });
 
-// src/pages/views/dev-config-hw-comm.ts
+// src/views/dev-config-hw-comm.ts
 var DevConfigHwComm;
 var init_dev_config_hw_comm = __esm({
-  "src/pages/views/dev-config-hw-comm.ts"() {
+  "src/views/dev-config-hw-comm.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -2715,10 +2715,10 @@ var init_dev_config_hw_comm = __esm({
   }
 });
 
-// src/pages/views/dev-config-loc-meta.ts
+// src/views/dev-config-loc-meta.ts
 var DevConfigLocMeta;
 var init_dev_config_loc_meta = __esm({
-  "src/pages/views/dev-config-loc-meta.ts"() {
+  "src/views/dev-config-loc-meta.ts"() {
     "use strict";
     init_lit();
     init_decorators();
