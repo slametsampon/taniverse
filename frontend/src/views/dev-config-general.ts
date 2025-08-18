@@ -1,7 +1,7 @@
 // src/pages/views/dev-config-general.ts
 import { LitElement, html, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { DeviceConfig } from '../../domains/devices/device.model';
+import type { DeviceConfig } from '../views/domains/devices/device.model';
 
 @customElement('dev-config-general')
 export class DevConfigGeneral extends LitElement {

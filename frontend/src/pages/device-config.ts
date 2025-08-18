@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DeviceConfig } from '../domains/devices/device.model';
+import type { DeviceConfig } from '../views/domains/devices/device.model';
 import {
   loadDevices,
   getByTag,
@@ -9,10 +9,10 @@ import {
   type ValidationError,
 } from '../components/devices-config.service';
 
-import './views/ui-tabs';
-import './views/dev-config-general';
-import './views/dev-config-hw-comm';
-import './views/dev-config-loc-meta';
+import '../views/ui-tabs';
+import '../views/dev-config-general';
+import '../views/dev-config-hw-comm';
+import '../views/dev-config-loc-meta';
 
 type TabId = 'general' | 'hw-comm' | 'loc-meta';
 type Device = DeviceConfig<any>;
