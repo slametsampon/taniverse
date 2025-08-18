@@ -1,8 +1,3 @@
-/**
- * ===== Konfigurasi (khusus devices) =====
- * true  -> pakai JSON statis (MQTT dimatikan)
- * false -> pakai MQTT (butuh <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html)
- */
 import mqtt from 'mqtt';
 export const DEVICES_MOCK = false; // <<-- MQTT disabled dulu
 
