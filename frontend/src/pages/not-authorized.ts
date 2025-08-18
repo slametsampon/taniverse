@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { AuthService } from '../components/auth-service';
+import { AuthService } from '../services/auth-service';
 
 @customElement('page-not-authorized')
 export class PageNotAuthorized extends LitElement {

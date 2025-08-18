@@ -1,7 +1,7 @@
 // frontend/src/pages/login.ts
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { AuthService } from '../components/auth-service';
+import { AuthService } from '../services/auth-service';
 
 @customElement('page-login')
 export class PageLogin extends LitElement {

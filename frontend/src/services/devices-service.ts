@@ -3,10 +3,11 @@
  * true  -> pakai JSON statis (MQTT dimatikan)
  * false -> pakai MQTT (butuh <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html)
  */
-export const DEVICES_MOCK = true; // <<-- MQTT disabled dulu
+import mqtt from 'mqtt';
+export const DEVICES_MOCK = false; // <<-- MQTT disabled dulu
 
 // Dipakai jika DEVICES_MOCK = false
-export const MQTT_BROKER_URL = 'ws://localhost:8083/mqtt';
+export const MQTT_BROKER_URL = 'ws://localhost:9001';
 export const TOPIC_PREFIX = 'taniverse/devices';
 
 /* ================== Tipe Data ================== */
@@ -83,14 +84,14 @@ class DevicesStore {
 
   private async connectMqtt() {
     if (DEVICES_MOCK) return; // safety
-    if (!window.mqtt) {
-      console.error(
-        '[devices] MQTT tidak tersedia. Tambahkan <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html'
-      );
-      return;
-    }
+    // if (!window.mqtt) {
+    //   console.error(
+    //     '[devices] MQTT tidak tersedia. Tambahkan <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html'
+    //   );
+    //   return;
+    // }
 
-    this.mqttClient = window.mqtt.connect(MQTT_BROKER_URL, {
+    this.mqttClient = mqtt.connect(MQTT_BROKER_URL, {
       clean: true,
       reconnectPeriod: 2000,
     });

@@ -1,5 +1,11 @@
 // frontend/src/components/auth-service.ts
-import { ROLE_PERMS, PERMS, roleGte, type Role, type Perm } from './roles';
+import {
+  ROLE_PERMS,
+  PERMS,
+  roleGte,
+  type Role,
+  type Perm,
+} from '../components/roles';
 
 export type AuthUser = {
   username: string;

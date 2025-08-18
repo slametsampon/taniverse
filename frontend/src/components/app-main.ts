@@ -2,7 +2,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { AuthService, PERMS, type Role } from './auth-service';
+import { AuthService, PERMS, type Role } from '../services/auth-service';
 import '../pages/home.ts';
 
 @customElement('app-main')

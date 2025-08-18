@@ -7,7 +7,7 @@ import {
   upsertDevice,
   validateDevice,
   type ValidationError,
-} from '../components/devices-config.service';
+} from '../services/devices-config.service';
 
 import '../views/ui-tabs';
 import '../views/dev-config-general';

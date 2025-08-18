@@ -5,7 +5,7 @@ import { customElement, state, query } from 'lit/decorators.js';
 import './app-header.ts';
 import './app-footer.ts';
 import './app-main.ts';
-import { AuthService } from './auth-service';
+import { AuthService } from '../services/auth-service.js';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
