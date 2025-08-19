@@ -2,9 +2,9 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 // Import semua komponen domain
-import '../views/domains/hidroponik/dashboard-hidoponik.ts';
-import '../views/domains/aquakultur/dashboard-aquakultur.ts';
-import '../views/domains/peternakan/dashboard-peternakan.ts';
+import '../views/domains/dashboard-hidoponik.js';
+import '../views/domains/dashboard-aquakultur.js';
+import '../views/domains/dashboard-peternakan.js';
 // page-dashboard.ts
 import '../components/device-dialog.ts'; // registrasi <device-dialog>
 

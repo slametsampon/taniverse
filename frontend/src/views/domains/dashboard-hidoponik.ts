@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore, Device } from '../../../services/devices-service';
+import { devicesStore, Device } from '../../services/devices-service';
 
 @customElement('dashboard-hidroponik')
 export class DashboardHidroponik extends LitElement {
