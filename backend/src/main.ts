@@ -2,12 +2,14 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { config } from './config';
 import devicesRoute from './api/devices.route';
+import usersRoute from './api/users.route';
 
 async function bootstrap() {
   const app = Fastify({ logger: true });
 
   await app.register(cors, { origin: config.CORS_ORIGIN });
   await app.register(devicesRoute, { prefix: '/api' });
+  await app.register(usersRoute, { prefix: '/api' });
 
   await app.listen({ port: config.PORT, host: '0.0.0.0' });
 }
