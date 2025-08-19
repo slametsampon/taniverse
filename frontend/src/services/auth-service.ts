@@ -16,9 +16,12 @@ export type AuthUser = {
 
 /**
  * Set true untuk testing tanpa backend (pakai JSON statis).
- * Saat backend siap, ubah ke false agar pakai /api/login.
+ * Saat backend siap, ubah ke false agar pakai /api/auth/login.
  */
-const USER_MOCK = true;
+const USER_MOCK = false;
+
+// Base URL backend (bisa diset di index.html: window.__API_BASE__ = "http://localhost:8080")
+const API_BASE: string = (globalThis as any).__API_BASE__ ?? '';
 
 export class AuthService {
   private static KEY = 'auth_token_v1';
@@ -52,11 +55,13 @@ export class AuthService {
     }
 
     // --- MODE LIVE: call endpoint backend ---
-    const res = await fetch('/api/login', {
+    const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
+      // credentials: 'include', // aktifkan nanti jika pakai cookie HttpOnly
     });
+
     if (!res.ok) {
       let msg = 'Login gagal. Periksa kredensial Anda.';
       try {
@@ -66,15 +71,21 @@ export class AuthService {
       throw new Error(msg);
     }
 
+    // Backend saat ini mengembalikan profil user tanpa token
     const data = (await res.json()) as {
-      token: string;
       username: string;
       avatarUrl?: string;
       role?: Role;
+      createdAt?: number;
+      updatedAt?: number;
     };
 
     const role = (data.role ?? 'guest') as Role;
-    localStorage.setItem(this.KEY, data.token);
+
+    // pseudo-token sementara (sampai backend mengirim JWT)
+    const token = `session-${data.username}-${Date.now()}`;
+
+    localStorage.setItem(this.KEY, token);
     localStorage.setItem(
       this.USER,
       JSON.stringify({
@@ -88,7 +99,7 @@ export class AuthService {
       username: data.username,
       avatarUrl: data.avatarUrl ?? '',
       role,
-      token: data.token,
+      token,
     };
   }
 
@@ -153,15 +164,14 @@ export class AuthService {
       role?: Role;
     }>
   > {
-    // Deteksi environment dari esbuild define
     const ENV = (process.env.NODE_ENV as string) || 'development';
     const BASE =
       ENV === 'pre-release' ? '/taniverse/' : ENV === 'production' ? '' : '/';
 
     const candidates = [
-      `${BASE}assets/mock/users.json`, // bila serve hasil build
-      `${BASE}src/assets/mock/users.json`, // bila serve source (live-server dari frontend/)
-      `${BASE}assets/mock/user.json`, // fallback nama file tunggal
+      `${BASE}assets/mock/users.json`,
+      `${BASE}src/assets/mock/users.json`,
+      `${BASE}assets/mock/user.json`,
       `${BASE}src/assets/mock/user.json`,
     ];
 
@@ -178,7 +188,6 @@ export class AuthService {
         if (Array.isArray(list)) return list as any[];
       } catch {}
     }
-    // embedded fallback agar tetap bisa test
     console.warn(
       '[AuthService] users.json tidak ditemukan, pakai data embedded.'
     );

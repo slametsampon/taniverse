@@ -45,6 +45,11 @@
 
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" />
     <link rel="stylesheet" href="./style.css" />
+    <!-- DEV ONLY: arahkan ke backend lokal -->
+    <script>
+      // kosongkan "" jika same-origin / reverse proxy
+      window.__API_BASE__ = 'http://localhost:8080';
+    </script>
     <script type="module" src="./main.js"></script>
   </head>
   <body class="bg-gray-100 font-sans">
