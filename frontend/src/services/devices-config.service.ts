@@ -1,7 +1,7 @@
 // CRUD + validasi untuk konfigurasi (bukan runtime MQTT)
 // Simpan ke LocalStorage saat dev; load awal dari assets/mock/devices.json
 
-import type { DeviceConfig } from '../views/domains/devices/device.model';
+import type { DeviceConfig } from '../../../models/device.model';
 
 export type ValidationError = { field: string; message: string };
 

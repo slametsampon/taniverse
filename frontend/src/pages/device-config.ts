@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { DeviceConfig } from '../views/domains/devices/device.model';
+import type { DeviceConfig } from '@models/device.model';
 import {
   loadDevices,
   getByTag,

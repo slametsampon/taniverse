@@ -2,7 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../build/frontend",
-    "rootDir": "src",
+    "baseUrl": ".",
+    "rootDir": ".",
     "target": "ES2020",
     "module": "ESNext",
     "moduleResolution": "node",
@@ -14,5 +15,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": [
+    "src/**/*",
+    "../models/**/*" // pastikan models ikut
+  ]
 }
