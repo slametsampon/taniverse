@@ -19,7 +19,6 @@ type Device = DeviceConfig<any>;
 
 @customElement('page-device-config')
 export class PageDeviceConfig extends LitElement {
-  // Tailwind dari global, jadi pakai light DOM
   createRenderRoot() {
     return this;
   }
@@ -30,14 +29,15 @@ export class PageDeviceConfig extends LitElement {
   @state() private errors: ValidationError[] = [];
   @state() private errorsMap: Record<string, string> = {};
   @state() private activeTab: TabId = 'general';
-  @state() private mode: 'new' | 'edit' = 'edit'; // default EDIT
-  @state() private tags: string[] = []; // dropdown tagnumber
+  @state() private mode: 'new' | 'edit' = 'edit';
+  @state() private tags: string[] = [];
   @state() private dirty = false;
-  @state() private _debug = false; // HUD ?debug=1
+  @state() private _debug = false;
+  @state() private saving = false; // ⬅️ indikator proses simpan
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
-  /* ====== LOGGER (aman meski console di-trim) ====== */
+  /* ====== LOGGER ====== */
   private log(...args: any[]) {
     (window as any).__tvdbg__ = (window as any).__tvdbg__ || [];
     (window as any).__tvdbg__.push(args);
@@ -48,11 +48,9 @@ export class PageDeviceConfig extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    // HUD via ?debug=1
     this._debug =
       new URL(window.location.href).searchParams.get('debug') === '1';
 
-    // cap timestamp di DOM (bukti connected)
     this.setAttribute('data-connected', new Date().toISOString());
     window.dispatchEvent(
       new CustomEvent('taniverse:cc', {
@@ -62,7 +60,7 @@ export class PageDeviceConfig extends LitElement {
 
     this.log('connectedCallback() CALLED | href=', location.href);
 
-    // 1) Muat devices & isi daftar tag
+    // 1) Muat devices & isi daftar tag dari backend
     const list = await loadDevices<Device>();
     this.tags = Array.from(new Set(list.map((d) => d.tagNumber)))
       .filter(Boolean)
@@ -82,7 +80,7 @@ export class PageDeviceConfig extends LitElement {
       : 'general';
     this.log('step#2 activeTab →', this.activeTab);
 
-    // 3) Pilih tag awal: dari ?tag=... atau tag pertama
+    // 3) Pilih tag awal
     const tagParam = url.searchParams.get('tag');
     const picked =
       tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? '';
@@ -94,7 +92,7 @@ export class PageDeviceConfig extends LitElement {
       ')'
     );
 
-    // 4) Muat device dari LIST yang baru dimuat (lebih pasti daripada cache)
+    // 4) Muat device dari LIST yang baru dimuat
     const found = picked ? list.find((d) => d.tagNumber === picked) : undefined;
     this.log(
       'step#4 found? →',
@@ -113,7 +111,7 @@ export class PageDeviceConfig extends LitElement {
       return;
     }
 
-    // 5) Fallback NEW bila tidak ada data sama sekali
+    // 5) NEW bila kosong
     this.mode = 'new';
     this.device = this.newTemplate();
     this.pristine = structuredClone(this.device);
@@ -216,7 +214,6 @@ export class PageDeviceConfig extends LitElement {
         return;
       }
 
-      // prefer cache; kalau kosong, fallback load ulang list
       let found = getByTag<Device>(sel);
       if (!found) {
         loadDevices<Device>().then((list) => {
@@ -319,28 +316,56 @@ export class PageDeviceConfig extends LitElement {
     this.requestUpdate();
   };
 
-  private onSave = () => {
+  // ⬇️ SAVE → simpan ke DB via backend
+  private onSave = async () => {
     const wasNew = this.mode === 'new';
+
+    // stamp waktu (backend bisa override lagi)
+    const now = new Date().toISOString();
+    this.device.meta = {
+      createdAt: this.device.meta?.createdAt ?? now,
+      updatedAt: now,
+    } as any;
+
     this.revalidate(true);
     if (this.errors.length) {
       this.log('save blocked: validation errors', this.errors);
       return;
     }
 
-    upsertDevice(this.device);
-    this.pristine = structuredClone(this.device);
-    this.dirty = false;
+    try {
+      this.saving = true;
 
-    if (!this.tags.includes(this.device.tagNumber)) {
-      this.tags = [...this.tags, this.device.tagNumber].sort();
+      // ⬇️ kunci: tunggu simpan ke database
+      const saved = await upsertDevice(this.device);
+
+      // sinkronkan UI & pristine
+      this.device = structuredClone(saved);
+      this.pristine = structuredClone(saved);
+      this.dirty = false;
+
+      // update daftar tag bila tag baru
+      if (!this.tags.includes(saved.tagNumber)) {
+        this.tags = [...this.tags, saved.tagNumber].sort();
+      }
+
+      // jika awalnya NEW, pindah ke EDIT + set ?tag
+      if (wasNew) {
+        this.mode = 'edit';
+        const url = new URL(window.location.href);
+        url.searchParams.set('tag', saved.tagNumber);
+        history.replaceState({}, '', url.toString());
+      }
+
+      this.log('saved', saved.tagNumber);
+      this.showToast('Saved ✅');
+    } catch (err: any) {
+      console.error('[config] save error:', err);
+      this.showToast('Save failed ❌', true);
+      alert(`Gagal simpan: ${err?.message || err}`);
+    } finally {
+      this.saving = false;
     }
-    if (wasNew) {
-      this.mode = 'edit';
-      const url = new URL(window.location.href);
-      url.searchParams.set('tag', this.device.tagNumber);
-      history.replaceState({}, '', url.toString());
-    }
-    this.log('saved', this.device.tagNumber);
   };
 
   private onReset = () => {
@@ -366,6 +391,16 @@ export class PageDeviceConfig extends LitElement {
     const on = 'bg-white text-slate-900 shadow ring-1 ring-slate-200';
     const off = 'text-slate-600 hover:text-slate-900 hover:bg-white/60';
     return `${base} ${active ? on : off}`;
+  }
+
+  private showToast(msg: string, error = false) {
+    const el = document.createElement('div');
+    el.textContent = msg;
+    el.className =
+      `fixed z-50 bottom-4 right-4 px-3 py-2 rounded shadow ` +
+      `${error ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1600);
   }
 
   /* ====== RENDER ====== */
@@ -395,7 +430,6 @@ export class PageDeviceConfig extends LitElement {
             role="group"
             aria-label="Switch form mode"
           >
-            <!-- EDIT button -->
             <button
               class="${this.btnCls(this.mode === 'edit')}"
               aria-pressed="${this.mode === 'edit'}"
@@ -415,7 +449,6 @@ export class PageDeviceConfig extends LitElement {
                 : null}
             </button>
 
-            <!-- NEW button -->
             <button
               class="${this.btnCls(this.mode === 'new')}"
               aria-pressed="${this.mode === 'new'}"
@@ -436,7 +469,6 @@ export class PageDeviceConfig extends LitElement {
             </button>
           </div>
 
-          <!-- status mode kecil di kanan (opsional, kesan “tech”) -->
           <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
             <span
               class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 ring-1 ring-slate-200"
@@ -498,22 +530,57 @@ export class PageDeviceConfig extends LitElement {
           class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-2 justify-end"
         >
           <button
-            class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200"
+            class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onBack}
+            ?disabled=${this.saving}
           >
             Kembali
           </button>
           <button
-            class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200"
+            class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onReset}
+            ?disabled=${this.saving}
           >
             Cancel
           </button>
           <button
-            class="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+            class="relative px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onSave}
+            ?disabled=${this.saving ||
+            this.errors.length > 0 ||
+            (!this.dirty && this.mode === 'edit')}
+            title=${this.errors.length
+              ? 'Perbaiki error dulu'
+              : this.saving
+              ? 'Saving...'
+              : 'Save'}
           >
-            Save
+            ${this.saving
+              ? html`
+                  <span class="inline-flex items-center gap-2">
+                    <svg
+                      class="animate-spin h-4 w-4 text-white"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        class="opacity-30"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                        fill="none"
+                      ></circle>
+                      <path
+                        class="opacity-90"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
+                      ></path>
+                    </svg>
+                    Saving…
+                  </span>
+                `
+              : html`Save`}
           </button>
           ${this.dirty
             ? html`<span class="self-center text-xs text-amber-600"

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 /**
  * Gunakan path absolut berbasis root project (process.cwd()),
  * sehingga DEV (tsx) maupun PROD (hasil build) selalu menunjuk
- * ke folder yang sama:  backend/data/devices.db
+ * ke folder yang sama:  backend/data/taniverse.db
  */
 export const config = {
   PORT: Number(process.env.PORT ?? 8080),

@@ -1,49 +1,134 @@
-// CRUD + validasi untuk konfigurasi (bukan runtime MQTT)
-// Simpan ke LocalStorage saat dev; load awal dari assets/mock/devices.json
+// frontend/src/services/devices-config.service.ts
+// CRUD + validasi untuk konfigurasi device (bukan runtime MQTT)
+// DEFAULT: pakai HTTP → Fastify + SQLite (lihat VITE_API_BASE)
+// Fallback dev: LocalStorage + mock JSON jika USE_HTTP=false
 
-import type { DeviceConfig } from '../../../models/device.model';
+import type { DeviceConfig } from '@models/device.model';
 
 export type ValidationError = { field: string; message: string };
 
-const LS_KEY = 'mock.devices.config';
-let _cache: DeviceConfig<any>[] | null = null;
+/* ================== Konfigurasi sumber data ================== */
+const USE_HTTP = true; // ← set ke false jika ingin kembali ke LocalStorage/mock saat dev
+export const API_BASE =
+  (import.meta as any)?.env?.VITE_API_BASE || 'http://localhost:8080/api';
 
+// LocalStorage key (fallback dev)
+const LS_KEY = 'mock.devices.config';
+
+/* ================== Cache in-memory ================== */
+const cache = new Map<string, DeviceConfig<any>>();
+
+/* ================== HTTP helper ================== */
+async function http<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-cache',
+    ...init,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText);
+    throw new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+/* ================== API untuk UI ================== */
 export async function loadDevices<T = {}>(): Promise<DeviceConfig<T>[]> {
-  if (_cache) return _cache as DeviceConfig<T>[];
+  if (USE_HTTP) {
+    console.warn('[cfg] loadDevices via HTTP →', API_BASE);
+    const list = await http<DeviceConfig<any>[]>('/devices');
+    cache.clear();
+    list.forEach((d) => cache.set(d.tagNumber, d));
+    return list as DeviceConfig<T>[];
+  }
+
+  // fallback dev: LocalStorage → mock JSON
   const ls = localStorage.getItem(LS_KEY);
   if (ls) {
-    _cache = JSON.parse(ls);
-    return _cache as DeviceConfig<T>[];
+    const arr = JSON.parse(ls) as DeviceConfig<any>[];
+    cache.clear();
+    arr.forEach((d) => cache.set(d.tagNumber, d));
+    return arr as DeviceConfig<T>[];
   }
-  _cache = await readMockDevicesCfg();
-  localStorage.setItem(LS_KEY, JSON.stringify(_cache));
-  return _cache as DeviceConfig<T>[];
+  const arr = await readMockDevicesCfg();
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  cache.clear();
+  arr.forEach((d) => cache.set(d.tagNumber, d));
+  return arr as DeviceConfig<T>[];
 }
 
 export function getByTag<T = {}>(tag: string): DeviceConfig<T> | undefined {
-  return _cache?.find((d) => d.tagNumber === tag) as any;
+  return cache.get(tag) as any;
 }
 
-export function upsertDevice<T = {}>(device: DeviceConfig<T>): void {
-  if (!_cache) throw new Error('loadDevices() belum dipanggil');
-  const i = _cache.findIndex((d) => d.tagNumber === device.tagNumber);
+export async function upsertDevice<T = {}>(
+  device: DeviceConfig<T>
+): Promise<DeviceConfig<T>> {
+  // stamp waktu update di FE (backend boleh override lagi)
   const now = new Date().toISOString();
-  if (i >= 0) device.meta = { ...device.meta, updatedAt: now };
-  else device.meta = device.meta ?? { createdAt: now, updatedAt: now };
-  if (i >= 0) _cache[i] = device as any;
-  else _cache.push(device as any);
-  localStorage.setItem(LS_KEY, JSON.stringify(_cache));
+  device.meta = {
+    createdAt: device.meta?.createdAt ?? now,
+    updatedAt: now,
+  } as any;
+
+  if (USE_HTTP) {
+    const exists = cache.has(device.tagNumber);
+    const saved = exists
+      ? await http<DeviceConfig<any>>(
+          `/devices/${encodeURIComponent(device.tagNumber)}`,
+          { method: 'PUT', body: JSON.stringify(device) }
+        )
+      : await http<DeviceConfig<any>>('/devices', {
+          method: 'POST',
+          body: JSON.stringify(device),
+        });
+    cache.set(saved.tagNumber, saved);
+    return saved as DeviceConfig<T>;
+  }
+
+  // fallback dev: LocalStorage
+  const arr = Array.from(cache.values());
+  const i = arr.findIndex((d) => d.tagNumber === device.tagNumber);
+  if (i >= 0) arr[i] = device as any;
+  else arr.push(device as any);
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  cache.clear();
+  arr.forEach((d) => cache.set(d.tagNumber, d));
+  return device;
 }
 
+export async function deleteDevice(tag: string): Promise<boolean> {
+  if (USE_HTTP) {
+    await http<{ deleted: string }>(`/devices/${encodeURIComponent(tag)}`, {
+      method: 'DELETE',
+    });
+    cache.delete(tag);
+    return true;
+  }
+  // fallback dev
+  const arr = Array.from(cache.values()).filter((d) => d.tagNumber !== tag);
+  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  cache.delete(tag);
+  return true;
+}
+
+/* ================== Validasi ================== */
 export function validateDevice<T = {}>(
   d: DeviceConfig<T>,
   isNew: boolean
 ): ValidationError[] {
   const errs: ValidationError[] = [];
+
+  // wajib dasar
   if (!d.tagNumber) errs.push({ field: 'tagNumber', message: 'Tag wajib' });
-  if (isNew && _cache?.some((x) => x.tagNumber === d.tagNumber))
-    errs.push({ field: 'tagNumber', message: 'Tag sudah dipakai' });
   if (!d.type) errs.push({ field: 'type', message: 'Type wajib' });
+  if (!d.description || !String(d.description).trim())
+    errs.push({ field: 'description', message: 'Deskripsi wajib' });
+
+  // unik saat NEW → cek dari cache (yang diisi loadDevices())
+  if (isNew && cache.has(d.tagNumber)) {
+    errs.push({ field: 'tagNumber', message: 'Tag sudah dipakai' });
+  }
 
   // ranges
   if (d.ranges) {
@@ -52,7 +137,8 @@ export function validateDevice<T = {}>(
     if (lo !== null && hi !== null && Number(lo) >= Number(hi))
       errs.push({ field: 'ranges.high', message: 'High harus > Low' });
   }
-  // alarms in range
+
+  // alarms di dalam range
   if (d.alarms && d.ranges && d.ranges.low !== null && d.ranges.high !== null) {
     const { low: rL, high: rH } = d.ranges;
     const { low: aL, high: aH } = d.alarms;
@@ -103,12 +189,11 @@ export function validateDevice<T = {}>(
   return errs;
 }
 
-// ------- loader mock dengan auto path detection (mirip servicemu) -------
+/* ================== Loader mock (fallback dev) ================== */
 async function readMockDevicesCfg(): Promise<DeviceConfig<any>[]> {
   const ENV = (process.env.NODE_ENV as string) || 'development';
   const BASE =
     ENV === 'pre-release' ? '/taniverse/' : ENV === 'production' ? '' : '/';
-  //const BASE = detectBasePath();
   const candidates = [
     `${BASE}assets/mock/devices.json`,
     `${BASE}src/assets/mock/devices.json`,
@@ -131,16 +216,4 @@ async function readMockDevicesCfg(): Promise<DeviceConfig<any>[]> {
     }
   }
   throw new Error('Tidak menemukan mock devices.json untuk CONFIG.');
-}
-
-function detectBasePath(): string {
-  const ENV =
-    (typeof process !== 'undefined' && (process as any)?.env?.NODE_ENV) ||
-    'development';
-  const path = typeof window !== 'undefined' ? window.location.pathname : '/';
-  const m = path.match(/^\/([^/]+)\//);
-  const sub = m ? `/${m[1]}/` : '/';
-  if (ENV === 'pre-release') return sub;
-  if (ENV === 'production') return '';
-  return '/';
 }
