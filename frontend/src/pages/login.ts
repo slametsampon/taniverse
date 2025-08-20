@@ -2,6 +2,7 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { AuthService } from '../services/auth-service';
+import { API_BASE } from '../config/api-base';
 
 @customElement('page-login')
 export class PageLogin extends LitElement {
@@ -81,40 +82,58 @@ export class PageLogin extends LitElement {
   };
 
   private async registerUser() {
+    console.log('[registerUser] Called');
     this.regError = '';
 
     if (!this.regUsername || !this.regPwd1 || !this.regPwd2) {
       this.regError = 'Semua field harus diisi.';
-      return;
-    }
-    if (this.regPwd1 !== this.regPwd2) {
-      this.regError = 'Password tidak cocok.';
+      console.warn('[registerUser] Validation failed: missing fields');
       return;
     }
 
+    if (this.regPwd1 !== this.regPwd2) {
+      this.regError = 'Password tidak cocok.';
+      console.warn('[registerUser] Validation failed: password mismatch');
+      return;
+    }
+
+    const payload = {
+      username: this.regUsername.trim(),
+      password: this.regPwd1,
+      role: this.regRole,
+    };
+
+    console.log('[registerUser] Sending payload:', payload);
+
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch(`${API_BASE}/api/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: this.regUsername.trim(),
-          password: this.regPwd1,
-          role: this.regRole,
-        }),
+        body: JSON.stringify(payload),
       });
+      console.log('[registerUser] Response status:', res.status);
+
+      const contentType = res.headers.get('Content-Type');
+      console.log('[registerUser] Response Content-Type:', contentType);
+
       if (res.status === 201) {
-        // Berhasil, tidak perlu parse jika tidak ada body
+        console.log('[registerUser] Registration success!');
+
         this.showRegister = false;
         this.username = this.regUsername;
         this.password = this.regPwd1;
       } else {
-        const err = await res.json();
-        throw new Error(err?.message || 'Gagal registrasi');
+        let errBody = '';
+        try {
+          errBody = await res.text(); // safer than res.json() if body is invalid
+          console.error('[registerUser] Error body:', errBody);
+        } catch (e) {
+          console.error('[registerUser] Failed to parse error body:', e);
+        }
+        throw new Error(`Registrasi gagal. Status: ${res.status}`);
       }
-      this.showRegister = false;
-      this.username = this.regUsername;
-      this.password = this.regPwd1;
     } catch (err: any) {
+      console.error('[registerUser] Catch error:', err);
       this.regError = err.message;
     }
   }
@@ -367,21 +386,12 @@ export class PageLogin extends LitElement {
             <!-- Register button -->
             <button
               type="button"
-              class="w-full mt-2 text-sm text-center text-emerald-600 hover:underline dark:text-emerald-400"
-              @click=${() => (this.showRegister = true)}
-            >
-              Belum punya akun? Daftar di sini
-            </button>
-
-            <!-- Quick demo (dev helper) -->
-            <button
-              type="button"
               class="w-full inline-flex items-center justify-center gap-2
                      py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
                      text-slate-700 dark:text-slate-100 dark:bg-transparent dark:border-white/20"
-              @click=${this.fillDemo}
+              @click=${() => (this.showRegister = true)}
             >
-              🧪 Isi kredensial demo
+              🧪 Belum punya akun? Daftar di sini
             </button>
           </form>
 

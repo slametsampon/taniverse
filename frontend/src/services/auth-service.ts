@@ -6,6 +6,7 @@ import {
   type Role,
   type Perm,
 } from '../components/roles';
+import { API_BASE } from '../config/api-base';
 
 export type AuthUser = {
   username: string;
@@ -19,10 +20,6 @@ export type AuthUser = {
  * Saat backend siap, ubah ke false agar pakai /api/auth/login.
  */
 const USER_MOCK = false;
-
-// Base URL backend (bisa diset di index.html: window.__API_BASE__ = "http://localhost:8080")
-const API_BASE: string = (globalThis as any).__API_BASE__ ?? '';
-
 export class AuthService {
   private static KEY = 'auth_token_v1';
   private static USER = 'auth_user_v1';
