@@ -20,15 +20,27 @@ const cache = new Map<string, DeviceConfig<any>>();
 
 /* ================== HTTP helper ================== */
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
+  const hasBody = init && 'body' in (init as any) && (init as any).body != null;
+
+  const headers: HeadersInit = hasBody
+    ? { 'Content-Type': 'application/json', ...(init?.headers as any) }
+    : (init?.headers as any) ?? {};
+
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     cache: 'no-cache',
     ...init,
+    headers,
   });
+
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
     throw new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
   }
+
+  // handle 204/empty body
+  if (res.status === 204) return undefined as unknown as T;
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.includes('application/json')) return undefined as unknown as T;
   return res.json() as Promise<T>;
 }
 
@@ -98,16 +110,10 @@ export async function upsertDevice<T = {}>(
 }
 
 export async function deleteDevice(tag: string): Promise<boolean> {
-  if (USE_HTTP) {
-    await http<{ deleted: string }>(`/devices/${encodeURIComponent(tag)}`, {
-      method: 'DELETE',
-    });
-    cache.delete(tag);
-    return true;
-  }
-  // fallback dev
-  const arr = Array.from(cache.values()).filter((d) => d.tagNumber !== tag);
-  localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  // gunakan helper http tanpa body, jadi tidak ada Content-Type
+  await http<{ deleted: string }>(`/devices/${encodeURIComponent(tag)}`, {
+    method: 'DELETE',
+  });
   cache.delete(tag);
   return true;
 }

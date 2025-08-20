@@ -7,6 +7,7 @@ import {
   upsertDevice,
   validateDevice,
   type ValidationError,
+  deleteDevice,
 } from '../services/devices-config.service';
 
 import '../views/ui-tabs';
@@ -34,6 +35,7 @@ export class PageDeviceConfig extends LitElement {
   @state() private dirty = false;
   @state() private _debug = false;
   @state() private saving = false; // ⬅️ indikator proses simpan
+  @state() private deleting = false;
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
@@ -316,6 +318,60 @@ export class PageDeviceConfig extends LitElement {
     this.requestUpdate();
   };
 
+  // Delete→ hapus device
+  private onDelete = async () => {
+    if (this.mode !== 'edit') return;
+    const tag = this.pristine?.tagNumber || this.device.tagNumber;
+    if (!tag) return;
+
+    if (
+      this.dirty &&
+      !confirm('Perubahan belum disimpan akan hilang.\nHapus device ini?')
+    )
+      return;
+    if (!confirm(`Hapus device "${tag}"?`)) return;
+
+    try {
+      this.deleting = true;
+
+      await deleteDevice(tag); // ⬅️ hapus di DB
+      this.tags = this.tags.filter((t) => t !== tag);
+
+      // pilih entri berikutnya atau masuk mode NEW
+      if (this.tags.length > 0) {
+        const next = this.tags[0];
+        const list = await loadDevices<Device>(); // refresh cache
+        const nextDev = list.find((d) => d.tagNumber === next);
+        if (nextDev) {
+          this.mode = 'edit';
+          this.device = structuredClone(nextDev);
+          this.pristine = structuredClone(nextDev);
+          const url = new URL(window.location.href);
+          url.searchParams.set('tag', next);
+          history.replaceState({}, '', url.toString());
+        }
+      } else {
+        this.mode = 'new';
+        this.device = this.newTemplate();
+        this.pristine = structuredClone(this.device);
+        const url = new URL(window.location.href);
+        url.searchParams.delete('tag');
+        history.replaceState({}, '', url.toString());
+      }
+
+      this.dirty = false;
+      this.revalidate(false);
+      this.showToast('Deleted 🗑️');
+      this.log('deleted', tag);
+    } catch (err: any) {
+      console.error('[config] delete error:', err);
+      this.showToast('Delete failed ❌', true);
+      alert(`Gagal hapus: ${err?.message || err}`);
+    } finally {
+      this.deleting = false;
+    }
+  };
+
   // ⬇️ SAVE → simpan ke DB via backend
   private onSave = async () => {
     const wasNew = this.mode === 'new';
@@ -532,21 +588,60 @@ export class PageDeviceConfig extends LitElement {
           <button
             class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onBack}
-            ?disabled=${this.saving}
+            ?disabled=${this.saving || this.deleting}
           >
             Kembali
           </button>
+
           <button
             class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onReset}
-            ?disabled=${this.saving}
+            ?disabled=${this.saving || this.deleting}
           >
             Cancel
           </button>
+
+          ${this.mode === 'edit'
+            ? html`
+                <button
+                  class="relative px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click=${this.onDelete}
+                  ?disabled=${this.saving || this.deleting}
+                  title="Hapus device ini"
+                >
+                  ${this.deleting
+                    ? html` <span class="inline-flex items-center gap-2">
+                        <svg
+                          class="animate-spin h-4 w-4 text-white"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            class="opacity-30"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                            fill="none"
+                          ></circle>
+                          <path
+                            class="opacity-90"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
+                          ></path>
+                        </svg>
+                        Deleting…
+                      </span>`
+                    : html`Delete`}
+                </button>
+              `
+            : null}
+
           <button
             class="relative px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             @click=${this.onSave}
             ?disabled=${this.saving ||
+            this.deleting ||
             this.errors.length > 0 ||
             (!this.dirty && this.mode === 'edit')}
             title=${this.errors.length
@@ -556,32 +651,31 @@ export class PageDeviceConfig extends LitElement {
               : 'Save'}
           >
             ${this.saving
-              ? html`
-                  <span class="inline-flex items-center gap-2">
-                    <svg
-                      class="animate-spin h-4 w-4 text-white"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        class="opacity-30"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                        fill="none"
-                      ></circle>
-                      <path
-                        class="opacity-90"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
-                      ></path>
-                    </svg>
-                    Saving…
-                  </span>
-                `
+              ? html` <span class="inline-flex items-center gap-2">
+                  <svg
+                    class="animate-spin h-4 w-4 text-white"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-30"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                      fill="none"
+                    ></circle>
+                    <path
+                      class="opacity-90"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
+                    ></path>
+                  </svg>
+                  Saving…
+                </span>`
               : html`Save`}
           </button>
+
           ${this.dirty
             ? html`<span class="self-center text-xs text-amber-600"
                 >unsaved changes…</span
