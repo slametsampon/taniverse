@@ -8,6 +8,7 @@ import { join } from 'node:path';
 export const config = {
   PORT: Number(process.env.PORT ?? 8080),
   DB_PATH:
-    process.env.DB_PATH ?? join(process.cwd(), 'backend', 'data', 'devices.db'),
+    process.env.DB_PATH ??
+    join(process.cwd(), 'backend', 'data', 'taniverse.db'),
   CORS_ORIGIN: process.env.CORS_ORIGIN ?? '*',
 } as const;
