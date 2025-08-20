@@ -387,7 +387,7 @@ export class PageLogin extends LitElement {
             <button
               type="button"
               class="w-full inline-flex items-center justify-center gap-2
-                     py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50
+                     py-2.5 rounded-xl border border-blue-600 bg-white hover:bg-slate-100
                      text-slate-700 dark:text-slate-100 dark:bg-transparent dark:border-white/20"
               @click=${() => (this.showRegister = true)}
             >
