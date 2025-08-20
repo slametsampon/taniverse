@@ -143,7 +143,9 @@ export class AppMain extends LitElement {
 
   render() {
     return html`
-      <main class="max-w-7xl mx-auto px-4 py-6 pb-16">
+      <main
+        class="max-w-7xl mx-auto px-4 py-6 pb-16 p-layout min-h-screen bg-background dark:bg-darkbg"
+      >
         <div id="outlet" class="p-4"></div>
       </main>
     `;

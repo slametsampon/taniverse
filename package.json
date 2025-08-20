@@ -13,7 +13,7 @@
     "copy:html": "copy frontend\\src\\index.html build\\frontend\\",
     "clean": "rimraf build/frontend",
     "deploy:github": "npm run build:frontend && gh-pages -d build/frontend",
-    "dev:backend": "tsx watch backend/src/main.ts",
+    "server": "tsx watch backend/src/main.ts",
     "build:backend": "tsc -p backend/tsconfig.json",
     "start:backend": "node build/backend/main.js"
   },

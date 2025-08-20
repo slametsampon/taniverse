@@ -2,8 +2,6 @@ import type { FastifyPluginAsync } from 'fastify';
 import { UserService } from '../services/user.service';
 import type { UserBase } from '@models/user.model';
 
-console.log('[users.route.ts] Loaded ✅');
-
 const usersRoute: FastifyPluginAsync = async (app) => {
   app.get('/users', async () => UserService.getAll());
 
@@ -16,11 +14,8 @@ const usersRoute: FastifyPluginAsync = async (app) => {
   );
 
   app.post<{ Body: UserBase }>('/users', async (req, rep) => {
-    console.log('[POST /users] body:', req.body);
-
     try {
       const saved = UserService.upsert(req.body);
-      console.log('[POST /users] saved:', saved);
 
       if (!saved) {
         return rep.code(500).send({ message: 'Gagal menyimpan user' });
@@ -28,7 +23,6 @@ const usersRoute: FastifyPluginAsync = async (app) => {
 
       return rep.code(201).send(saved);
     } catch (err: any) {
-      console.error('[POST /users] error:', err);
       return rep.code(400).send({ message: err.message ?? 'Bad request' });
     }
   });

@@ -17,15 +17,9 @@ export class DashboardHidroponik extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    console.debug('[dashboard] connected');
     await devicesStore.init();
-    console.debug(
-      '[dashboard] store initialized, mode =',
-      devicesStore.getMode()
-    );
     this.pull();
     this.off = devicesStore.onChange(() => {
-      console.debug('[dashboard] store change event');
       this.pull();
     });
   }
@@ -33,7 +27,6 @@ export class DashboardHidroponik extends LitElement {
   private pull() {
     const tags = ['TI-001', 'LI-004', 'AI-006', 'P-001'];
     const snapshot = tags.map((t) => [t, devicesStore.get(t)]);
-    console.debug('[dashboard] pull snapshot =', snapshot);
 
     const suhu = devicesStore.get('TI-001') as Device | undefined;
     const pmp = devicesStore.get('P-001') as Device | undefined;
@@ -54,14 +47,10 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private openDetail = (tag: string) => {
-    console.debug('[dashboard] openDetail clicked, tag =', tag);
-
     // Log status custom element
     const isRegistered = !!customElements.get('device-dialog');
-    console.debug('[dashboard] device-dialog registered =', isRegistered);
 
     const dlg = document.querySelector('device-dialog') as any;
-    console.debug('[dashboard] device-dialog instance =', dlg);
 
     if (!dlg) {
       console.error(

@@ -82,18 +82,15 @@ export class PageLogin extends LitElement {
   };
 
   private async registerUser() {
-    console.log('[registerUser] Called');
     this.regError = '';
 
     if (!this.regUsername || !this.regPwd1 || !this.regPwd2) {
       this.regError = 'Semua field harus diisi.';
-      console.warn('[registerUser] Validation failed: missing fields');
       return;
     }
 
     if (this.regPwd1 !== this.regPwd2) {
       this.regError = 'Password tidak cocok.';
-      console.warn('[registerUser] Validation failed: password mismatch');
       return;
     }
 
@@ -101,9 +98,8 @@ export class PageLogin extends LitElement {
       username: this.regUsername.trim(),
       password: this.regPwd1,
       role: this.regRole,
+      avatarUrl: `https://i.pravatar.cc/100?u=${this.regUsername.trim()}`,
     };
-
-    console.log('[registerUser] Sending payload:', payload);
 
     try {
       const res = await fetch(`${API_BASE}/api/users`, {
@@ -111,14 +107,10 @@ export class PageLogin extends LitElement {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      console.log('[registerUser] Response status:', res.status);
 
       const contentType = res.headers.get('Content-Type');
-      console.log('[registerUser] Response Content-Type:', contentType);
 
       if (res.status === 201) {
-        console.log('[registerUser] Registration success!');
-
         this.showRegister = false;
         this.username = this.regUsername;
         this.password = this.regPwd1;
@@ -126,14 +118,10 @@ export class PageLogin extends LitElement {
         let errBody = '';
         try {
           errBody = await res.text(); // safer than res.json() if body is invalid
-          console.error('[registerUser] Error body:', errBody);
-        } catch (e) {
-          console.error('[registerUser] Failed to parse error body:', e);
-        }
+        } catch (e) {}
         throw new Error(`Registrasi gagal. Status: ${res.status}`);
       }
     } catch (err: any) {
-      console.error('[registerUser] Catch error:', err);
       this.regError = err.message;
     }
   }
