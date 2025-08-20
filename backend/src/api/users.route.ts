@@ -15,7 +15,10 @@ const usersRoute: FastifyPluginAsync = async (app) => {
 
   app.post<{ Body: UserBase }>('/users', async (req, rep) => {
     const saved = UserService.upsert(req.body);
-    return rep.code(201).send(saved);
+    if (!saved) {
+      return rep.code(500).send({ message: 'Gagal menyimpan user' });
+    }
+    return rep.code(201).send(saved); // pastikan `saved` object valid
   });
 
   app.post<{ Body: UserBase[] | { users: UserBase[] } }>(

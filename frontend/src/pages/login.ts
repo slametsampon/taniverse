@@ -11,6 +11,12 @@ export class PageLogin extends LitElement {
   @state() private error = '';
   @state() private showPwd = false;
   @state() private remember = true; // feel: on by default
+  @state() private showRegister = false;
+  @state() private regUsername = '';
+  @state() private regPwd1 = '';
+  @state() private regPwd2 = '';
+  @state() private regRole = 'guest';
+  @state() private regError = '';
 
   static styles = css`
     :host {
@@ -73,6 +79,54 @@ export class PageLogin extends LitElement {
     this.username = 'admin';
     this.password = 'admin123';
   };
+
+  private async registerUser() {
+    this.regError = '';
+
+    if (!this.regUsername || !this.regPwd1 || !this.regPwd2) {
+      this.regError = 'Semua field harus diisi.';
+      return;
+    }
+    if (this.regPwd1 !== this.regPwd2) {
+      this.regError = 'Password tidak cocok.';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: this.regUsername.trim(),
+          password: this.regPwd1,
+          role: this.regRole,
+        }),
+      });
+      if (res.status === 201) {
+        // Berhasil, tidak perlu parse jika tidak ada body
+        this.showRegister = false;
+        this.username = this.regUsername;
+        this.password = this.regPwd1;
+      } else {
+        const err = await res.json();
+        throw new Error(err?.message || 'Gagal registrasi');
+      }
+      this.showRegister = false;
+      this.username = this.regUsername;
+      this.password = this.regPwd1;
+    } catch (err: any) {
+      this.regError = err.message;
+    }
+  }
+
+  private cancelRegister() {
+    this.showRegister = false;
+    this.regUsername = '';
+    this.regPwd1 = '';
+    this.regPwd2 = '';
+    this.regRole = 'guest';
+    this.regError = '';
+  }
 
   render() {
     return html`
@@ -310,6 +364,15 @@ export class PageLogin extends LitElement {
               <div class="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
             </div>
 
+            <!-- Register button -->
+            <button
+              type="button"
+              class="w-full mt-2 text-sm text-center text-emerald-600 hover:underline dark:text-emerald-400"
+              @click=${() => (this.showRegister = true)}
+            >
+              Belum punya akun? Daftar di sini
+            </button>
+
             <!-- Quick demo (dev helper) -->
             <button
               type="button"
@@ -331,6 +394,77 @@ export class PageLogin extends LitElement {
             </p>
           </div>
         </div>
+        ${this.showRegister
+          ? html`
+              <div
+                class="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+              >
+                <div
+                  class="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700"
+                >
+                  <h2
+                    class="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100"
+                  >
+                    Registrasi Pengguna
+                  </h2>
+
+                  ${this.regError
+                    ? html`<div class="text-sm text-red-500 mb-2">
+                        ${this.regError}
+                      </div>`
+                    : null}
+
+                  <div class="space-y-4">
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      placeholder="Username"
+                      .value=${this.regUsername}
+                      @input=${(e: any) => (this.regUsername = e.target.value)}
+                    />
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      type="password"
+                      placeholder="Password"
+                      .value=${this.regPwd1}
+                      @input=${(e: any) => (this.regPwd1 = e.target.value)}
+                    />
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      type="password"
+                      placeholder="Ulangi Password"
+                      .value=${this.regPwd2}
+                      @input=${(e: any) => (this.regPwd2 = e.target.value)}
+                    />
+                    <select
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      .value=${this.regRole}
+                      @change=${(e: any) => (this.regRole = e.target.value)}
+                    >
+                      <option value="guest">Guest</option>
+                      <option value="operator">Operator</option>
+                      <option value="engineer">Engineer</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+
+                  <div class="mt-6 flex justify-end gap-3">
+                    <button
+                      @click=${this.cancelRegister}
+                      class="px-4 py-2 rounded border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      @click=${this.registerUser}
+                      class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `
+          : null}
       </section>
     `;
   }
