@@ -79,12 +79,6 @@ class DevicesStore {
 
   private async connectMqtt() {
     if (DEVICES_MOCK) return; // safety
-    // if (!window.mqtt) {
-    //   console.error(
-    //     '[devices] MQTT tidak tersedia. Tambahkan <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"> di index.html'
-    //   );
-    //   return;
-    // }
 
     this.mqttClient = mqtt.connect(MQTT_BROKER_URL, {
       clean: true,
