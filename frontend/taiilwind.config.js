@@ -1,5 +1,9 @@
 module.exports = {
-  content: ['./src/**/*.{ts,html}'],
+  content: [
+    './src/**/*.{ts,html}',
+    './src/components/**/*.{ts}', // ⬅️ app-header.ts masuk sini
+    './index.html',
+  ],
   darkMode: 'class',
   theme: {
     extend: {

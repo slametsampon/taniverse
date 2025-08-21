@@ -12,7 +12,7 @@ export class PageHome extends LitElement {
   render() {
     return html`
       <section class="p-6 space-y-6">
-        <header>
+        <div>
           <h1 class="text-2xl font-bold text-green-800 mb-2">
             🌿 Selamat Datang di TaniVerse
           </h1>
@@ -20,7 +20,7 @@ export class PageHome extends LitElement {
             TaniVerse adalah platform monitoring dan kontrol berbasis IoT untuk
             sistem pertanian cerdas di berbagai sektor.
           </p>
-        </header>
+        </div>
 
         <div class="grid md:grid-cols-3 gap-4">
           <feature-card
