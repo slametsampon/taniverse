@@ -19,7 +19,7 @@ public:
 private:
   WiFiManager wifiManager;
   MQTTClientManager mqttManager;
-  SensorManager sensorManager;
+  SensorManager sensorManager = SensorManager(true); // true = simMode
   LedStatusManager ledManager;
 
   unsigned long lastSendTime = 0;
