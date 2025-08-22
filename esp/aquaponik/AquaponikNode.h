@@ -1,14 +1,14 @@
-#ifndef HIDROPONIK_NODE_H
-#define HIDROPONIK_NODE_H
+#ifndef AQUAPONIK_NODE_H
+#define AQUAPONIK_NODE_H
 
 #include "WifiManager.h"
 #include "MQTTClientManager.h"
 #include "LedStatusManager.h"
 #include "SensorManager.h"
 
-/// @class HidroponikNode
-/// @brief Class utama yang mengatur lifecycle node hidroponik (WiFi, MQTT, Sensor).
-class HidroponikNode {
+/// @class AquaponikNode
+/// @brief Class utama yang mengatur lifecycle node Aquaponik (WiFi, MQTT, Sensor).
+class AquaponikNode {
 public:
   /// @brief Inisialisasi WiFi, MQTT, dll.
   void setup();
@@ -27,8 +27,8 @@ private:
 
   const char* broker   = "192.168.0.10";
   const int   port     = 1883;
-  const char* clientId = "esp32-hidroponik";
-  const char* topic    = "taniverse/hidroponik/sensor";
+  const char* clientId = "esp32-Aquaponik";
+  const char* topic    = "taniverse/Aquaponik/sensor";
 };
 
 #endif

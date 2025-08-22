@@ -1,6 +1,6 @@
-#include "HidroponikNode.h"
+#include "AquaponikNode.h"
 
-void HidroponikNode::setup() {
+void AquaponikNode::setup() {
   Serial.begin(115200);
   delay(1000);
 
@@ -23,7 +23,7 @@ void HidroponikNode::setup() {
   }
 }
 
-void HidroponikNode::loop() {
+void AquaponikNode::loop() {
   ledManager.update();
   mqttManager.loop();
 
