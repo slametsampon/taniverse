@@ -1,11 +1,15 @@
+// frontend/src/components/user-info.ts
 import { LitElement, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+import { consume } from '@lit/context';
+
+import { userContext } from '../context/user-context';
+import type { AuthUser } from '../services/auth-service';
 
 @customElement('user-info')
 export class UserInfo extends LitElement {
-  @property({ type: String }) username = 'Guest';
-  @property({ type: String }) avatarUrl = '';
-  @property({ type: Boolean, reflect: true }) isLoggedIn = false;
+  @consume({ context: userContext, subscribe: true })
+  private user: AuthUser | null = null;
 
   @state() private open = false;
 
@@ -63,9 +67,13 @@ export class UserInfo extends LitElement {
   };
 
   render() {
-    const avatar = this.avatarUrl
+    const isLoggedIn = !!this.user;
+    const username = this.user?.username ?? 'Guest';
+    const avatarUrl = this.user?.avatarUrl ?? '';
+
+    const avatar = avatarUrl
       ? html`<img
-          src="${this.avatarUrl}"
+          src="${avatarUrl}"
           alt="Avatar"
           class="w-8 h-8 rounded-full border"
         />`
@@ -86,7 +94,7 @@ export class UserInfo extends LitElement {
         >
           ${avatar}
           <span class="text-sm font-medium truncate max-w-[10rem]"
-            >${this.username}</span
+            >${username}</span
           >
           <svg
             class="w-4 h-4 text-gray-500"
@@ -109,7 +117,7 @@ export class UserInfo extends LitElement {
                 class="absolute right-0 mt-2 w-44 rounded-lg border bg-white shadow-lg overflow-hidden z-[100]"
                 role="menu"
               >
-                ${this.isLoggedIn
+                ${isLoggedIn
                   ? html`
                       <button
                         class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"

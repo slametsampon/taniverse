@@ -1,6 +1,8 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore, Device } from '../../services/devices-service';
+import { consume } from '@lit/context';
+import { mqttContext, type MqttContextValue } from '../../context/mqtt-context';
 
 @customElement('dashboard-hidroponik')
 export class DashboardHidroponik extends LitElement {
@@ -14,6 +16,9 @@ export class DashboardHidroponik extends LitElement {
   @state() private phAir: number | null = null;
   @state() private kosentrasiNutrisi: number | null = null;
   @state() private pompaState: 'ON' | 'OFF' = 'OFF';
+
+  @consume({ context: mqttContext, subscribe: true })
+  private mqttCtx?: MqttContextValue;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -113,12 +118,32 @@ export class DashboardHidroponik extends LitElement {
 
     return html`
       <section class="bg-white rounded shadow p-4">
-        <h2 class="text-xl font-semibold text-green-800 mb-4">
-          🌱 Hidroponik
-          <span class="ml-2 text-xs text-gray-500"
-            >mode: ${devicesStore.getMode()}</span
+        <div class="flex justify-between items-center mb-4">
+          <h2
+            class="text-xl font-semibold text-green-800 flex items-center gap-2"
           >
-        </h2>
+            🌱 Hidroponik
+            <span class="text-xs text-gray-500">
+              mode: ${this.mqttCtx?.mode ?? 'unknown'}
+            </span>
+          </h2>
+
+          <label class="flex items-center gap-2 text-sm">
+            <span class="text-gray-600">Mode:</span>
+            <button
+              class="flex items-center gap-1 px-3 py-1 rounded-full transition-colors duration-200
+        ${this.mqttCtx?.mode === 'mock'
+                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                : 'bg-green-200 text-green-900 hover:bg-green-300'}"
+              @click=${() => this.mqttCtx?.toggleMode()}
+            >
+              <span class="text-sm font-medium">
+                ${this.mqttCtx?.mode === 'mock' ? 'Mock' : 'MQTT'}
+              </span>
+              <span> ${this.mqttCtx?.mode === 'mock' ? '🧪' : '📡'} </span>
+            </button>
+          </label>
+        </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
           ${card('💧 Suhu Air', suhuTxt, () => this.openDetail('TI-001'))}

@@ -20,6 +20,7 @@ export type AuthUser = {
  * Saat backend siap, ubah ke false agar pakai /api/auth/login.
  */
 const USER_MOCK = false;
+
 export class AuthService {
   private static KEY = 'auth_token_v1';
   private static USER = 'auth_user_v1';
@@ -48,15 +49,17 @@ export class AuthService {
 
       localStorage.setItem(this.KEY, token);
       localStorage.setItem(this.USER, JSON.stringify(user));
-      return { ...user, token };
+
+      const fullUser: AuthUser = { ...user, token };
+      window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
+      return fullUser;
     }
 
-    // --- MODE LIVE: call endpoint backend ---
+    // --- MODE LIVE: call backend endpoint ---
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
-      // credentials: 'include', // aktifkan nanti jika pakai cookie HttpOnly
     });
 
     if (!res.ok) {
@@ -68,7 +71,6 @@ export class AuthService {
       throw new Error(msg);
     }
 
-    // Backend saat ini mengembalikan profil user tanpa token
     const data = (await res.json()) as {
       username: string;
       avatarUrl?: string;
@@ -78,31 +80,33 @@ export class AuthService {
     };
 
     const role = (data.role ?? 'guest') as Role;
-
-    // pseudo-token sementara (sampai backend mengirim JWT)
     const token = `session-${data.username}-${Date.now()}`;
 
-    localStorage.setItem(this.KEY, token);
-    localStorage.setItem(
-      this.USER,
-      JSON.stringify({
-        username: data.username,
-        avatarUrl: data.avatarUrl ?? '',
-        role,
-      })
-    );
-
-    return {
+    const user: AuthUser = {
       username: data.username,
       avatarUrl: data.avatarUrl ?? '',
       role,
       token,
     };
+
+    localStorage.setItem(this.KEY, token);
+    localStorage.setItem(
+      this.USER,
+      JSON.stringify({
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+      })
+    );
+
+    window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
+    return user;
   }
 
   static logout() {
     localStorage.removeItem(this.KEY);
     localStorage.removeItem(this.USER);
+    window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
   }
 
   static getToken(): string | null {
@@ -127,6 +131,15 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Mengembalikan user lengkap beserta token untuk context
+   */
+  static getUserWithToken(): AuthUser | null {
+    const user = this.getUser();
+    const token = this.getToken();
+    return user && token ? { ...user, token } : null;
   }
 
   static isLoggedIn(): boolean {
@@ -185,6 +198,7 @@ export class AuthService {
         if (Array.isArray(list)) return list as any[];
       } catch {}
     }
+
     console.warn(
       '[AuthService] users.json tidak ditemukan, pakai data embedded.'
     );

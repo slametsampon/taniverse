@@ -6,8 +6,19 @@ import { provide } from '@lit/context';
 import './app-header.ts';
 import './app-footer.ts';
 import './app-main.ts';
+
 import { AuthService } from '../services/auth-service.js';
 import { themeContext, Theme } from '../context/theme-context';
+import { userContext } from '../context/user-context';
+import type { AuthUser } from '../services/auth-service';
+
+import {
+  mqttContext,
+  type MqttContextValue,
+  createMqttContext,
+} from '../context/mqtt-context';
+import { isMockMode, setMockMode } from '../services/mode';
+import { devicesStore } from '../services/devices-service';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -24,6 +35,42 @@ export class AppShell extends LitElement {
   @provide({ context: themeContext })
   private providedTheme: Theme = 'light';
 
+  @provide({ context: userContext })
+  private currentUser: AuthUser | null = AuthService.getUserWithToken();
+
+  // ✅ Toggle handler disiapkan dulu
+  // Tambahkan log saat switching mode
+  private async _toggleMockMode() {
+    const nextMode = isMockMode() ? 'mqtt' : 'mock';
+    console.warn('[app-shell] 🔁 Toggling mode →', nextMode);
+    setMockMode(nextMode === 'mock');
+
+    await devicesStore.init();
+    this.mqttContextValue = createMqttContext();
+
+    console.info('[app-shell] ✅ Context updated with new mode:', nextMode);
+  }
+
+  // ✅ Init context MQTT
+  @state()
+  @provide({ context: mqttContext })
+  private mqttContextValue: MqttContextValue = {
+    mode: isMockMode() ? 'mock' : 'mqtt',
+    toggleMode: this._toggleMockMode.bind(this),
+    isConnected: false,
+    lastMessage: null,
+    client: null,
+    publish: (topic: string, payload: string) => {
+      console.warn(
+        '[app-shell] publish() called, but MQTT is not connected yet',
+        {
+          topic,
+          payload,
+        }
+      );
+    },
+  };
+
   @query('app-main') private appMainEl!: HTMLElement & {
     navigate: (path: string) => void;
   };
@@ -31,7 +78,7 @@ export class AppShell extends LitElement {
   connectedCallback() {
     super.connectedCallback();
 
-    // Load from localStorage or match system
+    // Load theme from localStorage or system
     const saved = localStorage.getItem('theme') as Theme | null;
     this.theme =
       saved ??
@@ -42,28 +89,36 @@ export class AppShell extends LitElement {
     this._applyTheme();
 
     window.addEventListener('popstate', this._onPopState);
+    window.addEventListener('auth:changed', this._onAuthChanged);
+    window.addEventListener('mqtt:context-updated', this._onMqttContextUpdated);
   }
 
   disconnectedCallback() {
     window.removeEventListener('popstate', this._onPopState);
+    window.removeEventListener('auth:changed', this._onAuthChanged);
+    window.removeEventListener(
+      'mqtt:context-updated',
+      this._onMqttContextUpdated
+    );
     super.disconnectedCallback();
   }
 
+  private _onMqttContextUpdated = (e: Event) => {
+    const detail = (e as CustomEvent<MqttContextValue>).detail;
+    console.info('[app-shell] 🔄 mqttContextValue updated via event:', detail);
+    this.mqttContextValue = detail;
+  };
+
   private _toggleTheme = () => {
-    console.log('[app-shell] toggle-theme event received');
     this.theme = this.theme === 'dark' ? 'light' : 'dark';
     this.providedTheme = this.theme;
-    console.log('[app-shell] Theme switched to:', this.theme);
     this._applyTheme();
   };
 
   private _applyTheme() {
     const isDark = this.theme === 'dark';
-
-    // ✅ Tambahkan class 'light' saat bukan dark
     document.documentElement.classList.toggle('dark', isDark);
     document.documentElement.classList.toggle('light', !isDark);
-
     document.body.classList.remove(
       'bg-white',
       'bg-gray-100',
@@ -75,17 +130,15 @@ export class AppShell extends LitElement {
       isDark ? 'bg-gray-950' : 'bg-white',
       isDark ? 'text-white' : 'text-black'
     );
-
     localStorage.setItem('theme', this.theme);
-    console.log('[app-shell] Applying theme:', this.theme);
-    console.log(
-      '[app-shell] <html> classList:',
-      document.documentElement.className
-    );
   }
 
   private _onPopState = () => {
     this.currentPath = window.location.pathname;
+  };
+
+  private _onNavigateTo = (e: CustomEvent<{ path: string }>) => {
+    this.appMainEl?.navigate(e.detail.path);
   };
 
   private _onNavChanged = (e: CustomEvent<{ path: string }>) => {
@@ -94,25 +147,32 @@ export class AppShell extends LitElement {
     this.appMainEl?.navigate(target);
   };
 
-  private _onLoginClick = () => this.appMainEl?.navigate('/login');
+  private _onLoginClick = () => {
+    this.appMainEl?.navigate('/login');
+  };
+
   private _onLogoutClick = () => {
     AuthService.logout();
+    window.dispatchEvent(new Event('auth:changed'));
     this.appMainEl?.navigate('/');
+  };
+
+  private _onProfileClick = () => {
+    this.appMainEl?.navigate('/dashboard');
+  };
+
+  private _onAuthChanged = () => {
+    this.currentUser = AuthService.getUserWithToken();
     this.requestUpdate();
   };
-  private _onProfileClick = () => this.appMainEl?.navigate('/dashboard');
-
-  private _onNavigateTo = (e: CustomEvent<{ path: string }>) =>
-    this.appMainEl?.navigate(e.detail.path);
-  private _onAuthChanged = () => this.requestUpdate();
 
   render() {
     return html`
       <app-header
         .currentPath=${this.currentPath}
-        .username=${AuthService.getUser()?.username ?? 'Guest'}
-        .avatarUrl=${AuthService.getUser()?.avatarUrl ?? ''}
-        .isLoggedIn=${AuthService.isLoggedIn()}
+        .username=${this.currentUser?.username ?? 'Guest'}
+        .avatarUrl=${this.currentUser?.avatarUrl ?? ''}
+        .isLoggedIn=${!!this.currentUser}
         @nav-changed=${this._onNavChanged}
         @login-click=${this._onLoginClick}
         @logout-click=${this._onLogoutClick}

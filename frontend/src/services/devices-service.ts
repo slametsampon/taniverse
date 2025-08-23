@@ -1,7 +1,9 @@
 import mqtt from 'mqtt';
-export const DEVICES_MOCK = false; // <<-- MQTT disabled dulu
 
-// Dipakai jika DEVICES_MOCK = false
+//export const isMockMode() = false; // <<-- MQTT disabled dulu
+import { isMockMode } from './mode';
+
+// Dipakai jika isMockMode() = false
 export const MQTT_BROKER_URL = 'ws://localhost:9001';
 export const TOPIC_PREFIX = 'taniverse/devices';
 
@@ -36,7 +38,7 @@ export type Actuator = BaseDevice & {
 
 type Listener = () => void;
 
-// (opsional) deklarasi global utk TS (hanya dipakai saat DEVICES_MOCK=false)
+// (opsional) deklarasi global utk TS (hanya dipakai saat isMockMode()=false)
 declare global {
   interface Window {
     mqtt?: {
@@ -60,7 +62,7 @@ class DevicesStore {
 
     await this.loadMock(); // katalog + nilai awal saat mock
 
-    if (!DEVICES_MOCK) {
+    if (!isMockMode()) {
       await this.connectMqtt();
     }
 
@@ -78,7 +80,7 @@ class DevicesStore {
   }
 
   private async connectMqtt() {
-    if (DEVICES_MOCK) return; // safety
+    if (isMockMode()) return; // safety
 
     this.mqttClient = mqtt.connect(MQTT_BROKER_URL, {
       clean: true,
@@ -133,12 +135,12 @@ class DevicesStore {
     this.emit();
 
     // Kirim ke device bila MQTT aktif
-    if (!DEVICES_MOCK && this.mqttClient) {
+    if (!isMockMode() && this.mqttClient) {
       this.mqttClient.publish(`${TOPIC_PREFIX}/${tag}/set`, next);
     }
   }
 
-  /** Untuk demo saat DEVICES_MOCK = true */
+  /** Untuk demo saat isMockMode() = true */
   setSensorValue(tag: string, value: number) {
     const d = this.devices.get(tag);
     if (d && d.type === 'sensor') {
@@ -148,7 +150,7 @@ class DevicesStore {
   }
 
   getMode() {
-    return DEVICES_MOCK ? 'mock' : 'mqtt';
+    return isMockMode() ? 'mock' : 'mqtt';
   }
 }
 

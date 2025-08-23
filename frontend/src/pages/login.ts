@@ -1,4 +1,3 @@
-// frontend/src/pages/login.ts
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { AuthService } from '../services/auth-service';
@@ -11,7 +10,7 @@ export class PageLogin extends LitElement {
   @state() private loading = false;
   @state() private error = '';
   @state() private showPwd = false;
-  @state() private remember = true; // feel: on by default
+  @state() private remember = true;
   @state() private showRegister = false;
   @state() private regUsername = '';
   @state() private regPwd1 = '';
@@ -24,11 +23,11 @@ export class PageLogin extends LitElement {
       display: block;
     }
   `;
+
   createRenderRoot() {
     return this;
-  } // gunakan Tailwind global
+  }
 
-  // DEV ONLY: isi default untuk uji cepat
   firstUpdated() {
     this.username = 'admin';
     this.password = 'admin123';
@@ -40,19 +39,11 @@ export class PageLogin extends LitElement {
     this.error = '';
     this.loading = true;
     try {
-      const user = await AuthService.login(this.username.trim(), this.password);
-      this.dispatchEvent(
-        new CustomEvent('auth-changed', {
-          detail: { user },
-          bubbles: true,
-          composed: true,
-        })
-      );
+      // ✅ AuthService.login() akan trigger 'auth:changed'
+      await AuthService.login(this.username.trim(), this.password);
 
-      // ambil tujuan yang diset guard
       const next = sessionStorage.getItem('next_path') || '/';
       if (this.remember) {
-        // opsional: simpan username buat autofill ringan
         localStorage.setItem('last_username', this.username.trim());
       } else {
         localStorage.removeItem('last_username');
@@ -73,13 +64,7 @@ export class PageLogin extends LitElement {
     }
   }
 
-  private togglePwd = () => {
-    this.showPwd = !this.showPwd;
-  };
-  private fillDemo = () => {
-    this.username = 'admin';
-    this.password = 'admin123';
-  };
+  private togglePwd = () => (this.showPwd = !this.showPwd);
 
   private async registerUser() {
     this.regError = '';
@@ -108,18 +93,13 @@ export class PageLogin extends LitElement {
         body: JSON.stringify(payload),
       });
 
-      const contentType = res.headers.get('Content-Type');
-
       if (res.status === 201) {
         this.showRegister = false;
         this.username = this.regUsername;
         this.password = this.regPwd1;
       } else {
-        let errBody = '';
-        try {
-          errBody = await res.text(); // safer than res.json() if body is invalid
-        } catch (e) {}
-        throw new Error(`Registrasi gagal. Status: ${res.status}`);
+        const body = await res.text();
+        throw new Error(`Registrasi gagal. Status: ${res.status}\n${body}`);
       }
     } catch (err: any) {
       this.regError = err.message;
