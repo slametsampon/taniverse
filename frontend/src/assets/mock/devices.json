@@ -26,6 +26,32 @@
     "value": 25.4
   },
   {
+    "tagNumber": "TI-101",
+    "type": "sensor",
+    "description": "Suhu Kolam",
+    "unit": "DegC",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 20, "high": 40 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "adc", "pin": null, "address": null, "channel": 0 },
+    "mqtt": {
+      "topic": "taniverse/devices/TI-101",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 0.2 },
+    "display": { "precision": 1 },
+    "location": { "area": "Kolam - 2", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 30.2
+  },
+  {
     "tagNumber": "AI-002",
     "type": "sensor",
     "description": "Humidity",
@@ -108,8 +134,8 @@
     "type": "sensor",
     "description": "PH Meter",
     "unit": "-",
-    "ranges": { "low": 0, "high": 100 },
-    "alarms": { "low": 30, "high": 90 },
+    "ranges": { "low": 0, "high": 14 },
+    "alarms": { "low": 5, "high": 8 },
     "kind": null,
     "allowedStates": null,
     "defaultState": null,
@@ -130,12 +156,38 @@
     "value": 6.8
   },
   {
+    "tagNumber": "AI-105",
+    "type": "sensor",
+    "description": "PH Meter",
+    "unit": "-",
+    "ranges": { "low": 0, "high": 14 },
+    "alarms": { "low": 5, "high": 8 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/AI-105",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": { "area": "Kolam - 1", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 6.8
+  },
+  {
     "tagNumber": "AI-006",
     "type": "sensor",
     "description": "Nutrisi",
     "unit": "ppm",
-    "ranges": { "low": 0, "high": 100 },
-    "alarms": { "low": 30, "high": 90 },
+    "ranges": { "low": 0, "high": 1500 },
+    "alarms": { "low": 500, "high": 1200 },
     "kind": null,
     "allowedStates": null,
     "defaultState": null,
@@ -153,7 +205,33 @@
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
-    "value": 975
+    "value": 956
+  },
+  {
+    "tagNumber": "AI-106",
+    "type": "sensor",
+    "description": "Oksigen Terlarut",
+    "unit": "ppm",
+    "ranges": { "low": 0, "high": 12 },
+    "alarms": { "low": 4, "high": 10 },
+    "kind": null,
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/AI-106",
+      "readCmd": null,
+      "writeCmd": null
+    },
+    "sample": { "periodMs": 1000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": { "area": "Kolam - 1", "position": "rack-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "value": 6.5
   },
   {
     "tagNumber": "FAN001",
@@ -196,7 +274,31 @@
       "readCmd": "state",
       "writeCmd": "set"
     },
-    "location": { "area": "greenhouse-a", "position": "pump-1" },
+    "location": { "area": "Kolam - 1", "position": "pump-1" },
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "state": "OFF"
+  },
+  {
+    "tagNumber": "P-101",
+    "type": "actuator",
+    "description": "Pompa Air",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "kind": "relay",
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
+    "mqtt": {
+      "topic": "taniverse/devices/P-101",
+      "readCmd": "state",
+      "writeCmd": "set"
+    },
+    "location": { "area": "Kolam - 1", "position": "pump-1" },
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"

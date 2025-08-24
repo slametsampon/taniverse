@@ -1,7 +1,7 @@
 import mqtt from 'mqtt';
 
 //export const isMockMode() = false; // <<-- MQTT disabled dulu
-import { isMockMode } from './mode';
+import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
 
 // Dipakai jika isMockMode() = false
 export const MQTT_BROKER_URL = 'ws://localhost:9001';
@@ -56,14 +56,53 @@ class DevicesStore {
   // MQTT (opsional)
   private mqttClient: any | null = null;
 
+  private simulationInterval?: number;
+
+  private startSimulation() {
+    this.simulationInterval && clearInterval(this.simulationInterval);
+
+    this.simulationInterval = window.setInterval(() => {
+      this.devices.forEach((dev) => {
+        if (dev.type === 'sensor') {
+          const low = dev.ranges?.low ?? 20;
+          const high = dev.ranges?.high ?? 100;
+
+          const mid = (low + high) / 2;
+          const deviation = 0.05 * mid; // 5% dari mid
+
+          const r = Math.random() * 2 - 1; // r ∈ [-1, 1]
+          const simulated = mid + r * deviation;
+
+          dev.value = Number(simulated.toFixed(2));
+        }
+      });
+      this.emit();
+    }, 2000);
+  }
+
+  private stopSimulation() {
+    if (this.simulationInterval) {
+      clearInterval(this.simulationInterval);
+      this.simulationInterval = undefined;
+    }
+  }
+
   /** Inisialisasi: selalu muat katalog dari mock, lalu opsional sambung MQTT */
-  async init() {
-    if (this.ready) return;
+  async init(force = false) {
+    if (this.ready && !force) return;
 
-    await this.loadMock(); // katalog + nilai awal saat mock
+    this.devices.clear(); // Pastikan tidak ada sisa sebelumnya
 
-    if (!isMockMode()) {
+    this.stopSimulation(); // 🔴 Hentikan simulation jika masih jalan
+
+    const mode = getMode();
+
+    await this.loadMock();
+
+    if (mode === 'mqtt') {
       await this.connectMqtt();
+    } else if (mode === 'sim') {
+      this.startSimulation();
     }
 
     this.ready = true;
@@ -184,24 +223,32 @@ async function readMockDevices(): Promise<Device[]> {
   for (const url of candidates) {
     try {
       const res = await fetch(url, { cache: 'no-cache' });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        console.warn(
+          `[devicesStore] ⚠️ Tidak bisa fetch dari ${url} (status: ${res.status})`
+        );
+        continue;
+      }
 
       const data = await res.json();
-      // Terima berbagai bentuk: array langsung, atau { devices: [...] }
       const list = Array.isArray(data)
         ? data
         : Array.isArray((data as any)?.devices)
         ? (data as any).devices
         : null;
 
-      if (Array.isArray(list)) return list as Device[];
-    } catch {
-      // lanjut kandidat berikutnya
+      if (Array.isArray(list)) {
+        return list as Device[];
+      } else {
+        console.warn(`[devicesStore] ❌ Format tidak dikenali di: ${url}`);
+      }
+    } catch (err) {
+      console.error(`[devicesStore] ❌ Gagal load dari ${url}:`, err);
     }
   }
 
   throw new Error(
-    'Tidak menemukan mock devices.json di lokasi kandidat mana pun.'
+    '❌ Tidak menemukan mock devices.json di lokasi kandidat mana pun.'
   );
 }
 

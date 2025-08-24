@@ -17,8 +17,6 @@ import {
   type MqttContextValue,
   createMqttContext,
 } from '../context/mqtt-context';
-import { isMockMode, setMockMode } from '../services/mode';
-import { devicesStore } from '../services/devices-service';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {
@@ -38,38 +36,9 @@ export class AppShell extends LitElement {
   @provide({ context: userContext })
   private currentUser: AuthUser | null = AuthService.getUserWithToken();
 
-  // ✅ Toggle handler disiapkan dulu
-  // Tambahkan log saat switching mode
-  private async _toggleMockMode() {
-    const nextMode = isMockMode() ? 'mqtt' : 'mock';
-    console.warn('[app-shell] 🔁 Toggling mode →', nextMode);
-    setMockMode(nextMode === 'mock');
-
-    await devicesStore.init();
-    this.mqttContextValue = createMqttContext();
-
-    console.info('[app-shell] ✅ Context updated with new mode:', nextMode);
-  }
-
-  // ✅ Init context MQTT
   @state()
   @provide({ context: mqttContext })
-  private mqttContextValue: MqttContextValue = {
-    mode: isMockMode() ? 'mock' : 'mqtt',
-    toggleMode: this._toggleMockMode.bind(this),
-    isConnected: false,
-    lastMessage: null,
-    client: null,
-    publish: (topic: string, payload: string) => {
-      console.warn(
-        '[app-shell] publish() called, but MQTT is not connected yet',
-        {
-          topic,
-          payload,
-        }
-      );
-    },
-  };
+  private mqttContextValue: MqttContextValue = createMqttContext();
 
   @query('app-main') private appMainEl!: HTMLElement & {
     navigate: (path: string) => void;
@@ -78,7 +47,7 @@ export class AppShell extends LitElement {
   connectedCallback() {
     super.connectedCallback();
 
-    // Load theme from localStorage or system
+    // Theme
     const saved = localStorage.getItem('theme') as Theme | null;
     this.theme =
       saved ??
@@ -88,6 +57,7 @@ export class AppShell extends LitElement {
     this.providedTheme = this.theme;
     this._applyTheme();
 
+    // Event listeners
     window.addEventListener('popstate', this._onPopState);
     window.addEventListener('auth:changed', this._onAuthChanged);
     window.addEventListener('mqtt:context-updated', this._onMqttContextUpdated);

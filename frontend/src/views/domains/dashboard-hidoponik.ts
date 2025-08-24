@@ -30,8 +30,8 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private pull() {
-    const tags = ['TI-001', 'LI-004', 'AI-006', 'P-001'];
-    const snapshot = tags.map((t) => [t, devicesStore.get(t)]);
+    // const tags = ['TI-001', 'LI-004', 'AI-006', 'P-001'];
+    // const snapshot = tags.map((t) => [t, devicesStore.get(t)]);
 
     const suhu = devicesStore.get('TI-001') as Device | undefined;
     const pmp = devicesStore.get('P-001') as Device | undefined;
@@ -87,6 +87,14 @@ export class DashboardHidroponik extends LitElement {
     devicesStore.setActuatorState('P-001', next); // <- disamakan
   };
 
+  private _onSelectMode(e: Event) {
+    const selected = (e.target as HTMLSelectElement).value;
+    if (selected && selected !== this.mqttCtx?.mode) {
+      console.info('[dashboard] 📥 Selected mode:', selected);
+      this.mqttCtx?.setMode?.(selected as any); // safe cast
+    }
+  }
+
   render() {
     const aktif = this.pompaState === 'ON';
     const warna = aktif
@@ -130,18 +138,15 @@ export class DashboardHidroponik extends LitElement {
 
           <label class="flex items-center gap-2 text-sm">
             <span class="text-gray-600">Mode:</span>
-            <button
-              class="flex items-center gap-1 px-3 py-1 rounded-full transition-colors duration-200
-        ${this.mqttCtx?.mode === 'mock'
-                ? 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                : 'bg-green-200 text-green-900 hover:bg-green-300'}"
-              @click=${() => this.mqttCtx?.toggleMode()}
+            <select
+              class="px-3 py-1 rounded border text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+              .value=${this.mqttCtx?.mode ?? 'mock'}
+              @change=${(e: Event) => this._onSelectMode(e)}
             >
-              <span class="text-sm font-medium">
-                ${this.mqttCtx?.mode === 'mock' ? 'Mock' : 'MQTT'}
-              </span>
-              <span> ${this.mqttCtx?.mode === 'mock' ? '🧪' : '📡'} </span>
-            </button>
+              <option value="mock">Mock 🧪</option>
+              <option value="mqtt">MQTT 📡</option>
+              <option value="sim">Sim 🌀</option>
+            </select>
           </label>
         </div>
 
