@@ -1,8 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore, Device } from '../../services/devices-service';
-import { consume } from '@lit/context';
-import { mqttContext, type MqttContextValue } from '../../context/mqtt-context';
 
 @customElement('dashboard-hidroponik')
 export class DashboardHidroponik extends LitElement {
@@ -16,9 +14,6 @@ export class DashboardHidroponik extends LitElement {
   @state() private phAir: number | null = null;
   @state() private kosentrasiNutrisi: number | null = null;
   @state() private pompaState: 'ON' | 'OFF' = 'OFF';
-
-  @consume({ context: mqttContext, subscribe: true })
-  private mqttCtx?: MqttContextValue;
 
   async connectedCallback() {
     super.connectedCallback();
@@ -53,7 +48,6 @@ export class DashboardHidroponik extends LitElement {
 
   private openDetail = (tag: string) => {
     // Log status custom element
-    const isRegistered = !!customElements.get('device-dialog');
 
     const dlg = document.querySelector('device-dialog') as any;
 
@@ -86,14 +80,6 @@ export class DashboardHidroponik extends LitElement {
     const next = this.pompaState === 'ON' ? 'OFF' : 'ON';
     devicesStore.setActuatorState('P-001', next); // <- disamakan
   };
-
-  private _onSelectMode(e: Event) {
-    const selected = (e.target as HTMLSelectElement).value;
-    if (selected && selected !== this.mqttCtx?.mode) {
-      console.info('[dashboard] 📥 Selected mode:', selected);
-      this.mqttCtx?.setMode?.(selected as any); // safe cast
-    }
-  }
 
   render() {
     const aktif = this.pompaState === 'ON';
@@ -131,23 +117,7 @@ export class DashboardHidroponik extends LitElement {
             class="text-xl font-semibold text-green-800 flex items-center gap-2"
           >
             🌱 Hidroponik
-            <span class="text-xs text-gray-500">
-              mode: ${this.mqttCtx?.mode ?? 'unknown'}
-            </span>
           </h2>
-
-          <label class="flex items-center gap-2 text-sm">
-            <span class="text-gray-600">Mode:</span>
-            <select
-              class="px-3 py-1 rounded border text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-green-300"
-              .value=${this.mqttCtx?.mode ?? 'mock'}
-              @change=${(e: Event) => this._onSelectMode(e)}
-            >
-              <option value="mock">Mock 🧪</option>
-              <option value="mqtt">MQTT 📡</option>
-              <option value="sim">Sim 🌀</option>
-            </select>
-          </label>
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
