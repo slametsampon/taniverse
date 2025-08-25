@@ -4,6 +4,8 @@ import { config } from './config';
 import devicesRoute from './api/devices.route';
 import usersRoute from './api/users.route';
 import { SQLite } from './db/sqlite'; // pastikan path ini benar
+import { sensorLogsRoute } from './api/sensor-logs.route';
+import { loggingRoute } from './api/logging.route';
 
 async function bootstrap() {
   const app = Fastify({ logger: true });
@@ -44,6 +46,8 @@ async function bootstrap() {
 
   await app.register(devicesRoute, { prefix: '/api' });
   await app.register(usersRoute, { prefix: '/api' });
+  await app.register(sensorLogsRoute, { prefix: '/api' });
+  await app.register(loggingRoute, { prefix: '/api' }); // control plane
 
   // --- (opsional) HEALTH di /api ---
   app.get('/api/health', async () => ({ ok: true }));

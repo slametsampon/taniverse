@@ -80,6 +80,26 @@ export class SQLite {
       this.db.exec(`
         CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
       `);
+
+      // === sensor_logs ===
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS sensor_logs (
+          id         INTEGER PRIMARY KEY AUTOINCREMENT,
+          tagNumber  TEXT NOT NULL,
+          value      REAL NOT NULL,
+          timestamp  INTEGER NOT NULL,
+
+          FOREIGN KEY (tagNumber) REFERENCES devices(tagNumber) ON DELETE CASCADE
+        );
+      `);
+
+      this.db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_sensor_logs_tagNumber ON sensor_logs(tagNumber);
+      `);
+
+      this.db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_sensor_logs_timestamp ON sensor_logs(timestamp);
+    `);
     });
 
     tx(); // commit
