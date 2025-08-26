@@ -15,7 +15,9 @@ import '../views/dev-config-general';
 import '../views/dev-config-hw-comm';
 import '../views/dev-config-loc-meta';
 
-type TabId = 'general' | 'hw-comm' | 'loc-meta';
+import { TabId } from 'src/types/tab-id';
+
+//type TabId = String;
 type Device = DeviceConfig<any>;
 
 @customElement('page-device-config')
@@ -182,13 +184,16 @@ export class PageDeviceConfig extends LitElement {
     return 'general';
   }
 
-  private errorsByTab(): Record<TabId, number> {
-    const by: Record<TabId, number> = {
+  private errorsByTab(): Partial<Record<TabId, number>> {
+    const by: Partial<Record<TabId, number>> = {
       general: 0,
       'hw-comm': 0,
       'loc-meta': 0,
     };
-    for (const e of this.errors) by[this.fieldTab(e.field)]++;
+    for (const e of this.errors) {
+      const tab = this.fieldTab(e.field);
+      by[tab] = (by[tab] ?? 0) + 1;
+    }
     return by;
   }
 

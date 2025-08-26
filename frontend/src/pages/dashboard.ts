@@ -1,30 +1,66 @@
 import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 
-// Import semua komponen domain
+// Import komponen dashboard
 import '../views/domains/dashboard-hidoponik.js';
 import '../views/domains/dashboard-aquakultur.js';
 import '../views/domains/dashboard-peternakan.js';
 import '../components/mode-selector.js';
-// page-dashboard.ts
-import '../components/device-dialog.ts'; // registrasi <device-dialog>
+import '../components/device-dialog.ts';
+import '../components/dashboard-mqtt.ts';
+
+// Import tab UI
+import '../views/ui-tabs.js';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {
+  @state() private activeTab: 'operation' | 'mqtt' = 'operation';
+
   createRenderRoot() {
     return this;
   }
 
-  render() {
-    const cardStyle = 'display:block;margin-bottom:1.5rem;'; // jarak 24px antar komponen
+  private get tabs() {
+    return [
+      { id: 'operation', label: 'Operation', icon: '⚙️' },
+      { id: 'mqtt', label: 'MQTT Devices', icon: '🧪' },
+    ];
+  }
 
+  private onTabChange(e: CustomEvent<{ id: String }>) {
+    this.activeTab = e.detail.id as 'operation' | 'mqtt';
+  }
+
+  private renderContent() {
+    const cardStyle = 'display:block;margin-bottom:1.5rem;';
+    if (this.activeTab === 'operation') {
+      return html`
+        <mode-selector></mode-selector>
+        <section>
+          <dashboard-hidroponik style=${cardStyle}></dashboard-hidroponik>
+          <dashboard-aquakultur style=${cardStyle}></dashboard-aquakultur>
+          <dashboard-peternakan style=${cardStyle}></dashboard-peternakan>
+        </section>
+      `;
+    } else if (this.activeTab === 'mqtt') {
+      return html`<dashboard-mqtt></dashboard-mqtt>`;
+    }
+  }
+
+  render() {
     return html`
-      <mode-selector></mode-selector>
-      <section>
-        <dashboard-hidroponik style=${cardStyle}></dashboard-hidroponik>
-        <dashboard-aquakultur style=${cardStyle}></dashboard-aquakultur>
-        <dashboard-peternakan style=${cardStyle}></dashboard-peternakan>
-      </section>
+      <div class="p-4 space-y-4">
+        <ui-tabs
+          .tabs=${[
+            { id: 'operation', label: 'Operation', icon: '⚙️' },
+            { id: 'mqtt', label: 'MQTT Devices', icon: '🧪' },
+          ] as const}
+          .active=${this.activeTab}
+          @dev-tab-change=${this.onTabChange}
+        ></ui-tabs>
+
+        ${this.renderContent()}
+      </div>
     `;
   }
 }

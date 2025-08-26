@@ -1,11 +1,7 @@
-import mqtt from 'mqtt';
+import { mqttService, TOPIC_PREFIX } from './mqtt-service';
 
 //export const isMockMode() = false; // <<-- MQTT disabled dulu
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
-
-// Dipakai jika isMockMode() = false
-export const MQTT_BROKER_URL = 'ws://localhost:9001';
-export const TOPIC_PREFIX = 'taniverse/devices';
 
 /* ================== Tipe Data ================== */
 export type Device =
@@ -119,22 +115,14 @@ class DevicesStore {
   }
 
   private async connectMqtt() {
-    if (isMockMode()) return; // safety
+    if (isMockMode()) return;
 
-    this.mqttClient = mqtt.connect(MQTT_BROKER_URL, {
-      clean: true,
-      reconnectPeriod: 2000,
-    });
+    await mqttService.connect();
 
-    this.mqttClient.on('connect', () => {
-      this.mqttClient.subscribe(`${TOPIC_PREFIX}/+/value`);
-      this.mqttClient.subscribe(`${TOPIC_PREFIX}/+/state`);
-    });
-
-    this.mqttClient.on('message', (topic: string, payload: Uint8Array) => {
+    mqttService.onMessage((topic, rawPayload) => {
       try {
-        const msg = new TextDecoder().decode(payload).trim();
-        const parts = topic.split('/'); // taniverse devices <TAG> value/state
+        const msg = rawPayload.trim();
+        const parts = topic.split('/'); // taniverse/devices/<TAG>/value|state
         const tag = parts[2];
         const leaf = parts[3];
         const dev = this.devices.get(tag);
@@ -146,8 +134,8 @@ class DevicesStore {
           dev.state = parseState(msg);
         }
         this.emit();
-      } catch {
-        /* ignore */
+      } catch (err) {
+        console.error('[devicesStore] ❌ Error parsing MQTT message:', err);
       }
     });
   }
@@ -165,17 +153,19 @@ class DevicesStore {
     return this.devices.get(tag);
   }
 
+  getAllTags(): string[] {
+    return [...this.devices.keys()];
+  }
+
   setActuatorState(tag: string, next: 'ON' | 'OFF') {
     const d = this.devices.get(tag);
     if (!d || d.type !== 'actuator') return;
 
-    // Update optimistik (mock & mqtt)
     d.state = next;
     this.emit();
 
-    // Kirim ke device bila MQTT aktif
-    if (!isMockMode() && this.mqttClient) {
-      this.mqttClient.publish(`${TOPIC_PREFIX}/${tag}/set`, next);
+    if (!isMockMode() && mqttService.isReady()) {
+      mqttService.publish(`${TOPIC_PREFIX}/${tag}/set`, next);
     }
   }
 

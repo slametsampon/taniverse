@@ -104,6 +104,73 @@ export class AboutPage extends LitElement {
           </div>
         </div>
 
+        <h2 class="text-xl font-semibold text-green-700 mt-10 mb-4">
+          Arsitektur Sistem IoT TaniVerse
+        </h2>
+
+        <p class="text-base text-gray-700 leading-relaxed mb-4">
+          Untuk mendukung keberlanjutan dan skalabilitas, sistem TaniVerse
+          dibangun dengan pendekatan
+          <span class="font-semibold text-green-600"
+            >Separation of Concern (SoC)</span
+          >
+          yang membagi tanggung jawab sistem menjadi tiga lapisan utama:
+          firmware node IoT, komunikasi data, dan antarmuka pengguna (HMI).
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold text-green-600 mb-2">
+              Firmware Node (ESP32)
+            </h3>
+            <ul class="list-disc list-inside text-gray-700 text-sm">
+              <li>Bahasa: C++ (Object-Oriented)</li>
+              <li>Platform: Arduino IDE + Arduino CE</li>
+              <li>Komunikasi: MQTT (Pub/Sub), HTTP AJAX (opsional)</li>
+              <li>Storage: SPIFFS / LittleFS</li>
+              <li>Web Server lokal untuk konfigurasi & status</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-green-600 mb-2">
+              Server & Komunikasi
+            </h3>
+            <ul class="list-disc list-inside text-gray-700 text-sm">
+              <li>
+                <span class="font-medium">Raspberry Pi 4</span> berperan sebagai
+                pusat sistem
+              </li>
+              <li>
+                Menjalankan
+                <span class="font-medium">Mosquitto MQTT Broker</span>
+              </li>
+              <li>Hosting Web UI (HMI) berbasis LitElement</li>
+              <li>Bridge komunikasi: MQTT ↔ WebSocket untuk frontend</li>
+              <li>Mengelola koneksi semua node ESP melalui jaringan lokal</li>
+              <li>Dapat berfungsi sebagai edge server (offline & online)</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-green-600 mb-2">
+              Antarmuka Pengguna (HMI)
+            </h3>
+            <ul class="list-disc list-inside text-gray-700 text-sm">
+              <li>Framework: LitElement (Web Components)</li>
+              <li>Styling: Tailwind CSS</li>
+              <li>Koneksi: MQTT over WebSocket ke Raspberry Pi</li>
+              <li>Build Tool: esbuild (bundling & minify)</li>
+              <li>Deployment: GitHub Pages / Raspberry Pi</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="text-base text-gray-700 leading-relaxed mt-4">
+          Pendekatan ini memastikan bahwa sistem TaniVerse dapat dikembangkan
+          secara modular dan efisien. Raspberry Pi berfungsi sebagai pusat
+          komputasi ringan dan komunikasi, memungkinkan kontrol penuh terhadap
+          seluruh ekosistem IoT pertanian dari satu perangkat edge server.
+        </p>
+
         <h2 class="text-xl font-semibold text-green-700 mt-10 mb-4">Penutup</h2>
 
         <p class="text-base text-gray-700 leading-relaxed mb-2">

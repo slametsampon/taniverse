@@ -1,12 +1,11 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import type { TabId } from 'src/types/tab-id';
 
-type TabId = 'general' | 'hw-comm' | 'loc-meta';
 type BadgeMap = Partial<Record<TabId, number>>;
 
 @customElement('ui-tabs')
 export class UiTabs extends LitElement {
-  // Tailwind global → light DOM
   createRenderRoot() {
     return this;
   }
@@ -16,6 +15,7 @@ export class UiTabs extends LitElement {
     label: string;
     icon?: string;
   }[] = [];
+
   @property() active: TabId = 'general';
   @property({ attribute: false }) badges: BadgeMap = {};
 
@@ -39,11 +39,13 @@ export class UiTabs extends LitElement {
             return html`
               <li>
                 <button
-                  class="px-4 py-2 text-sm rounded-t-md border transition
-                         ${is
-                    ? 'bg-white border-slate-300 border-b-white'
-                    : 'border-transparent hover:bg-slate-50'}
-                         inline-flex items-center gap-2"
+                  class="${[
+                    'px-4 py-2 text-sm rounded-t-md border transition',
+                    'inline-flex items-center gap-2',
+                    is
+                      ? 'bg-slate-100 text-slate-900 border-slate-300 border-b-white'
+                      : 'border-transparent text-slate-500 hover:bg-slate-50',
+                  ].join(' ')}"
                   @click=${() => this.onClick(t.id)}
                 >
                   ${t.icon ? html`<span>${t.icon}</span>` : null}
