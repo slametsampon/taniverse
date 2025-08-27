@@ -83,14 +83,13 @@ export class DeviceDialog extends LitElement {
           ${d
             ? html`
                 <div class="space-y-2">
-                  ${this.renderRow('Kind', (d as any).kind)}
-                  ${this.renderRow('Unit', d.unit)}
+                  ${this.renderRow('Unit', d.unit ?? '-')}
                   ${d.type === 'sensor'
                     ? this.renderRow(
                         'Nilai',
                         (d.value ?? '-') + (d.unit ? ` ${d.unit}` : '')
                       )
-                    : this.renderRow('State', (d as any).state)}
+                    : this.renderRow('State', d.state ?? '-')}
                   ${d.ranges
                     ? this.renderRow(
                         'Range',
@@ -103,6 +102,8 @@ export class DeviceDialog extends LitElement {
                         `${d.alarms.low ?? '-'} / ${d.alarms.high ?? '-'}`
                       )
                     : null}
+                  ${d.location ? this.renderRow('Lokasi', d.location) : null}
+                  ${d.status ? this.renderRow('Status', d.status) : null}
                 </div>
               `
             : html`

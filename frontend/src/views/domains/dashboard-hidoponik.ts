@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore, Device } from '../../services/devices-service';
+import { devicesStore } from '../../services/devices-service';
+import type { DeviceConfig } from '../../../../models/device.model';
 
 @customElement('dashboard-hidroponik')
 export class DashboardHidroponik extends LitElement {
@@ -9,10 +10,11 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private off?: () => void;
+
   @state() private suhuAir: number | null = null;
   @state() private levelAir: number | null = null;
   @state() private phAir: number | null = null;
-  @state() private kosentrasiNutrisi: number | null = null;
+  @state() private konsentrasiNutrisi: number | null = null;
   @state() private pompaState: 'ON' | 'OFF' = 'OFF';
 
   async connectedCallback() {
@@ -25,20 +27,18 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private pull() {
-    // const tags = ['TI-001', 'LI-004', 'AI-006', 'P-001'];
-    // const snapshot = tags.map((t) => [t, devicesStore.get(t)]);
+    const suhu = devicesStore.get('TI-001') as DeviceConfig | undefined;
+    const level = devicesStore.get('LI-004') as DeviceConfig | undefined;
+    const ph = devicesStore.get('AI-005') as DeviceConfig | undefined;
+    const nutrisi = devicesStore.get('AI-006') as DeviceConfig | undefined;
+    const pompa = devicesStore.get('P-001') as DeviceConfig | undefined;
 
-    const suhu = devicesStore.get('TI-001') as Device | undefined;
-    const pmp = devicesStore.get('P-001') as Device | undefined;
-    const level = devicesStore.get('LI-004') as Device | undefined;
-    const nutrisi = devicesStore.get('AI-006') as Device | undefined;
-    const ph = devicesStore.get('AI-005') as Device | undefined;
-
-    this.suhuAir = suhu?.type === 'sensor' ? suhu.value : null;
-    this.levelAir = level?.type === 'sensor' ? level.value : null;
-    this.kosentrasiNutrisi = nutrisi?.type === 'sensor' ? nutrisi.value : null;
-    this.phAir = ph?.type === 'sensor' ? ph.value : null;
-    this.pompaState = pmp?.type === 'actuator' ? pmp.state : 'OFF';
+    this.suhuAir = suhu?.type === 'sensor' ? suhu.value ?? null : null;
+    this.levelAir = level?.type === 'sensor' ? level.value ?? null : null;
+    this.phAir = ph?.type === 'sensor' ? ph.value ?? null : null;
+    this.konsentrasiNutrisi =
+      nutrisi?.type === 'sensor' ? nutrisi.value ?? null : null;
+    this.pompaState = pompa?.type === 'actuator' ? pompa.state ?? 'OFF' : 'OFF';
   }
 
   disconnectedCallback() {
@@ -47,30 +47,15 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private openDetail = (tag: string) => {
-    // Log status custom element
-
     const dlg = document.querySelector('device-dialog') as any;
-
-    if (!dlg) {
-      console.error(
-        '[dashboard] <device-dialog> instance NOT found in DOM. Did you add it to index.html?'
-      );
-      return;
-    }
-    if (typeof dlg.open !== 'function') {
-      console.error(
-        '[dashboard] dlg.open() is not a function. Check component export/registration.'
-      );
+    if (!dlg || typeof dlg.open !== 'function') {
+      console.error('[dashboard] device-dialog not found or invalid.');
       return;
     }
 
-    // Optional: log device existence before open
     const dev = devicesStore.get(tag);
-    console.debug('[dashboard] deviceStore.get(tag) =', dev);
     if (!dev) {
-      console.warn(
-        `[dashboard] Device ${tag} tidak ditemukan di store (cek devices.json)`
-      );
+      console.warn(`[dashboard] Device ${tag} not found`);
     }
 
     dlg.open(tag);
@@ -78,7 +63,7 @@ export class DashboardHidroponik extends LitElement {
 
   private togglePompa = () => {
     const next = this.pompaState === 'ON' ? 'OFF' : 'ON';
-    devicesStore.setActuatorState('P-001', next); // <- disamakan
+    devicesStore.setActuatorState('P-001', next);
   };
 
   render() {
@@ -86,15 +71,16 @@ export class DashboardHidroponik extends LitElement {
     const warna = aktif
       ? 'bg-green-100 text-green-700'
       : 'bg-red-100 text-red-700';
+
     const suhuTxt =
       this.suhuAir == null ? '--' : `${this.suhuAir.toFixed(1)} °C`;
     const levelTxt =
       this.levelAir == null ? '--' : `${this.levelAir.toFixed(1)} %`;
     const phTxt = this.phAir == null ? '--' : `${this.phAir.toFixed(1)} pH`;
     const konsentrasiTxt =
-      this.kosentrasiNutrisi == null
+      this.konsentrasiNutrisi == null
         ? '--'
-        : `${this.kosentrasiNutrisi.toFixed(0)} ppm`;
+        : `${this.konsentrasiNutrisi.toFixed(0)} ppm`;
 
     const card = (label: string, value: string, click: () => void) => html`
       <div
@@ -126,17 +112,15 @@ export class DashboardHidroponik extends LitElement {
             this.openDetail('LI-004')
           )}
           ${card('🧪 Nutrisi', konsentrasiTxt, () => this.openDetail('AI-006'))}
-          ${card('🌿 pH Air', phTxt, () => {
-            this.openDetail('AI-005');
-          })}
+          ${card('🌿 pH Air', phTxt, () => this.openDetail('AI-005'))}
         </div>
 
         <div class="flex items-center justify-between">
           <div class="text-sm font-medium">Pompa Nutrisi (P-001):</div>
           <div class="flex items-center gap-2">
-            <span class="text-sm px-2 py-1 rounded ${warna}"
-              >${aktif ? 'Aktif' : 'Mati'}</span
-            >
+            <span class="text-sm px-2 py-1 rounded ${warna}">
+              ${aktif ? 'Aktif' : 'Mati'}
+            </span>
             <button
               class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
               @click=${this.togglePompa}
