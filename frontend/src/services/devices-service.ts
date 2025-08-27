@@ -1,36 +1,17 @@
 import { mqttService, TOPIC_PREFIX } from './mqtt-service';
-
-//export const isMockMode() = false; // <<-- MQTT disabled dulu
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
+import type { DeviceConfig } from '../../../models/device.model';
 
-/* ================== Tipe Data ================== */
-export type Device =
-  | (Sensor & { type: 'sensor' })
-  | (Actuator & { type: 'actuator' });
-
-export type BaseDevice = {
-  tagNumber: string;
-  type: 'sensor' | 'actuator';
-  description: string;
-  unit: string | null;
-  ranges?: { low: number | null; high: number | null };
-  alarms?: { low: number | null; high: number | null };
-  kind: string | null;
+type Device = DeviceConfig & {
+  status?: DeviceStatus;
 };
 
-export type Sensor = BaseDevice & {
-  type: 'sensor';
-  writable: false;
-  value: number | null;
-};
-
-export type Actuator = BaseDevice & {
-  type: 'actuator';
-  writable: true;
-  allowedStates: string[];
-  defaultState: string;
-  state: 'ON' | 'OFF';
-};
+type DeviceStatus =
+  | 'ok'
+  | 'alarm-low'
+  | 'alarm-high'
+  | 'disconnected'
+  | 'unknown';
 
 type Listener = () => void;
 
@@ -70,10 +51,36 @@ class DevicesStore {
           const simulated = mid + r * deviation;
 
           dev.value = Number(simulated.toFixed(2));
+          this.updateStatus(dev);
         }
       });
       this.emit();
     }, 2000);
+  }
+
+  private updateStatus(dev: Device) {
+    if (dev.type === 'sensor') {
+      if (dev.value === null || dev.value === undefined) {
+        dev.status = 'disconnected';
+        return;
+      }
+
+      const val = dev.value;
+      const lo = dev.alarms?.low ?? null;
+      const hi = dev.alarms?.high ?? null;
+
+      if (lo !== null && val < lo) {
+        dev.status = 'alarm-low';
+      } else if (hi !== null && val > hi) {
+        dev.status = 'alarm-high';
+      } else {
+        dev.status = 'ok';
+      }
+    } else if (dev.type === 'actuator') {
+      dev.status = dev.state ? 'ok' : 'disconnected';
+    } else {
+      dev.status = 'unknown';
+    }
   }
 
   private stopSimulation() {
@@ -108,7 +115,10 @@ class DevicesStore {
   private async loadMock() {
     try {
       const list = await readMockDevices();
-      list.forEach((d) => this.devices.set(d.tagNumber, d));
+      list.forEach((d) => {
+        this.updateStatus(d);
+        this.devices.set(d.tagNumber, d);
+      });
     } catch (err) {
       console.error('[devices] loadMock gagal:', err);
     }
@@ -130,8 +140,10 @@ class DevicesStore {
 
         if (dev.type === 'sensor' && leaf === 'value') {
           dev.value = parseValue(msg);
+          this.updateStatus(dev);
         } else if (dev.type === 'actuator' && leaf === 'state') {
           dev.state = parseState(msg);
+          this.updateStatus(dev);
         }
         this.emit();
       } catch (err) {
@@ -257,3 +269,4 @@ function parseState(s: string): 'ON' | 'OFF' {
 }
 
 export const devicesStore = new DevicesStore();
+export type { Device };

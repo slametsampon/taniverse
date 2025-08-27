@@ -2,6 +2,7 @@
 import { LitElement, html, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { DeviceConfig } from '../../../models/device.model';
+import { STANDARD_UNITS } from '../../../models/device.model';
 
 @customElement('dev-config-general')
 export class DevConfigGeneral extends LitElement {
@@ -139,19 +140,6 @@ export class DevConfigGeneral extends LitElement {
           </label>
 
           <label class="block">
-            <span class="text-sm font-medium text-slate-700">Type</span>
-            <select
-              class="${this.inputCls}"
-              .value=${d.type}
-              @change=${(e: Event) =>
-                this.emit('type', (e.currentTarget as HTMLSelectElement).value)}
-            >
-              <option value="sensor">sensor</option>
-              <option value="actuator">actuator</option>
-            </select>
-          </label>
-
-          <label class="block">
             <span class="text-sm font-medium text-slate-700">Description</span>
             <input
               class="${this.inputCls}"
@@ -165,14 +153,45 @@ export class DevConfigGeneral extends LitElement {
           </label>
 
           <label class="block">
-            <span class="text-sm font-medium text-slate-700">Unit</span>
+            <span class="text-sm font-medium text-slate-700">Location</span>
             <input
               class="${this.inputCls}"
-              .value=${d.unit ?? ''}
-              placeholder="DegC, %, kPa, ..."
+              .value=${d.location ?? ''}
+              placeholder="Lokasi fisik (mis. zona A1)"
               @input=${(e: Event) =>
-                this.emit('unit', (e.currentTarget as HTMLInputElement).value)}
+                this.emit(
+                  'location',
+                  (e.currentTarget as HTMLInputElement).value
+                )}
             />
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Type</span>
+            <select
+              class="${this.inputCls}"
+              .value=${d.type}
+              @change=${(e: Event) =>
+                this.emit('type', (e.currentTarget as HTMLSelectElement).value)}
+            >
+              <option value="sensor">sensor</option>
+              <option value="actuator">actuator</option>
+            </select>
+          </label>
+
+          <label class="block">
+            <span class="text-sm font-medium text-slate-700">Unit</span>
+            <select
+              class="${this.inputCls}"
+              .value=${d.unit ?? ''}
+              @change=${(e: Event) =>
+                this.emit('unit', (e.currentTarget as HTMLSelectElement).value)}
+            >
+              <option value="">(pilih unit)</option>
+              ${STANDARD_UNITS.map(
+                (u) => html`<option value=${u.value}>${u.label}</option>`
+              )}
+            </select>
           </label>
         </div>
 
@@ -321,20 +340,6 @@ export class DevConfigGeneral extends LitElement {
               <!-- Kontrol (Actuator) -->
               <div class="space-y-3">
                 <h3 class="text-sm font-semibold text-slate-700">Kontrol</h3>
-
-                <label class="block">
-                  <span class="text-sm font-medium text-slate-700">Kind</span>
-                  <input
-                    class="${this.inputCls}"
-                    .value=${d.kind ?? ''}
-                    placeholder="fan, relay, ..."
-                    @input=${(e: Event) =>
-                      this.emit(
-                        'kind',
-                        (e.currentTarget as HTMLInputElement).value
-                      )}
-                  />
-                </label>
 
                 <label class="block">
                   <span class="text-sm font-medium text-slate-700"

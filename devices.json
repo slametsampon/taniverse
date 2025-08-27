@@ -6,23 +6,18 @@
     "unit": "DegC",
     "ranges": { "low": 0, "high": 100 },
     "alarms": { "low": 10, "high": 50 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "adc", "pin": null, "address": null, "channel": 0 },
-    "mqtt": {
-      "topic": "taniverse/devices/TI-001",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 0.2 },
     "display": { "precision": 1 },
-    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "location": "greenhouse-a/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 25.4
   },
   {
@@ -32,23 +27,18 @@
     "unit": "DegC",
     "ranges": { "low": 0, "high": 100 },
     "alarms": { "low": 20, "high": 40 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "adc", "pin": null, "address": null, "channel": 0 },
-    "mqtt": {
-      "topic": "taniverse/devices/TI-101",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 0.2 },
     "display": { "precision": 1 },
-    "location": { "area": "Kolam - 2", "position": "rack-1" },
+    "location": "Kolam - 2/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 30.2
   },
   {
@@ -58,23 +48,18 @@
     "unit": "%",
     "ranges": { "low": 0, "high": 100 },
     "alarms": { "low": 30, "high": 90 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/AI-002",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 1 },
     "display": { "precision": 0 },
-    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "location": "greenhouse-a/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 68
   },
   {
@@ -84,23 +69,18 @@
     "unit": "kPa",
     "ranges": { "low": 0, "high": 400 },
     "alarms": { "low": 120, "high": 300 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x76", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/PI-003",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 0.5 },
     "display": { "precision": 1 },
-    "location": { "area": "greenhouse-a", "position": "line-1" },
+    "location": "greenhouse-a/line-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 214.6
   },
   {
@@ -110,23 +90,18 @@
     "unit": "%",
     "ranges": { "low": 0, "high": 100 },
     "alarms": { "low": 30, "high": 90 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x76", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/LI-004",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 0.5 },
     "display": { "precision": 1 },
-    "location": { "area": "greenhouse-a", "position": "line-1" },
+    "location": "greenhouse-a/line-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 75.4
   },
   {
@@ -136,23 +111,18 @@
     "unit": "-",
     "ranges": { "low": 0, "high": 14 },
     "alarms": { "low": 5, "high": 8 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/AI-005",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 1 },
     "display": { "precision": 0 },
-    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "location": "greenhouse-a/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 6.8
   },
   {
@@ -162,23 +132,18 @@
     "unit": "-",
     "ranges": { "low": 0, "high": 14 },
     "alarms": { "low": 5, "high": 8 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/AI-105",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 1 },
     "display": { "precision": 0 },
-    "location": { "area": "Kolam - 1", "position": "rack-1" },
+    "location": "Kolam - 1/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 6.8
   },
   {
@@ -188,50 +153,40 @@
     "unit": "ppm",
     "ranges": { "low": 0, "high": 1500 },
     "alarms": { "low": 500, "high": 1200 },
-    "kind": null,
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/AI-006",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 1 },
     "display": { "precision": 0 },
-    "location": { "area": "greenhouse-a", "position": "rack-1" },
+    "location": "greenhouse-a/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "value": 956
   },
   {
     "tagNumber": "AI-106",
     "type": "sensor",
-    "description": "Nutrisi",
+    "description": "Oksigen Terlarut",
     "unit": "ppm",
-    "ranges": { "low": 0, "high": 1500 },
-    "alarms": { "low": 500, "high": 1200 },
-    "kind": null,
+    "ranges": { "low": 0, "high": 12 },
+    "alarms": { "low": 4, "high": 10 },
     "allowedStates": null,
     "defaultState": null,
     "writable": false,
     "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/AI-106",
-      "readCmd": null,
-      "writeCmd": null
-    },
     "sample": { "periodMs": 1000, "deadband": 1 },
     "display": { "precision": 0 },
-    "location": { "area": "Kolam - 1", "position": "rack-1" },
+    "location": "Kolam - 1/rack-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
-    "value": 956
+    "status": "ok",
+    "value": 6.5
   },
   {
     "tagNumber": "FAN001",
@@ -240,21 +195,16 @@
     "unit": null,
     "ranges": { "low": null, "high": null },
     "alarms": { "low": null, "high": null },
-    "kind": "fan",
     "allowedStates": ["OFF", "ON"],
     "defaultState": "OFF",
     "writable": true,
     "io": { "bus": "gpio", "pin": 15, "address": null, "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/FAN001",
-      "readCmd": "state",
-      "writeCmd": "set"
-    },
-    "location": { "area": "greenhouse-a", "position": "vent-1" },
+    "location": "greenhouse-a/vent-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "state": "OFF"
   },
   {
@@ -264,21 +214,16 @@
     "unit": null,
     "ranges": { "low": null, "high": null },
     "alarms": { "low": null, "high": null },
-    "kind": "relay",
     "allowedStates": ["OFF", "ON"],
     "defaultState": "OFF",
     "writable": true,
     "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/P-001",
-      "readCmd": "state",
-      "writeCmd": "set"
-    },
-    "location": { "area": "Kolam - 1", "position": "pump-1" },
+    "location": "Kolam - 1/pump-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "state": "OFF"
   },
   {
@@ -288,21 +233,16 @@
     "unit": null,
     "ranges": { "low": null, "high": null },
     "alarms": { "low": null, "high": null },
-    "kind": "relay",
     "allowedStates": ["OFF", "ON"],
     "defaultState": "OFF",
     "writable": true,
     "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
-    "mqtt": {
-      "topic": "taniverse/devices/P-101",
-      "readCmd": "state",
-      "writeCmd": "set"
-    },
-    "location": { "area": "Kolam - 1", "position": "pump-1" },
+    "location": "Kolam - 1/pump-1",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"
     },
+    "status": "ok",
     "state": "OFF"
   }
 ]

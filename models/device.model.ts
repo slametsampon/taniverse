@@ -1,69 +1,92 @@
 export type DeviceType = 'sensor' | 'actuator';
 export type BusType = 'adc' | 'i2c' | 'gpio';
 
+/** Nilai minimum & maksimum */
 export interface Ranges {
   low: number | null;
   high: number | null;
 }
+
+/** Alarm ambang batas */
 export interface Alarms {
   low: number | null;
   high: number | null;
 }
+
+/** Koneksi fisik ke ESP */
 export interface IO {
   bus: BusType;
-  pin: number | null;
-  address: string | null;
-  channel: number | null;
+  pin?: number | null;
+  address?: string | null;
+  channel?: number | null;
 }
-export interface MQTT {
-  topic: string;
-  readCmd: string | null;
-  writeCmd: string | null;
-}
+
+/** Sampling untuk sensor */
 export interface Sample {
   periodMs: number;
   deadband: number;
 }
+
+/** Format display nilai */
 export interface Display {
   precision: number;
 }
-export interface Location {
-  area: string;
-  position: string;
-}
-export interface Meta {
-  createdAt: string;
-  updatedAt: string;
+
+/** Status MQTT & sistem (diupdate saat runtime) */
+export interface DeviceStatus {
+  mqtt: 'connected' | 'disconnected';
+  valueStatus?: 'normal' | 'low-alarm' | 'high-alarm' | 'sensor-fail';
+  lastSeen?: string; // ISO timestamp
 }
 
-/** Base konfigurasi device (dipakai page config) */
+export interface UnitOption {
+  label: string;
+  value: string;
+}
+
+export const STANDARD_UNITS: UnitOption[] = [
+  { label: '°C - Suhu', value: '°C' },
+  { label: '% - Persentase', value: '%' },
+  { label: 'cm - Panjang, Level, Ketinggian', value: 'cm' },
+  { label: 'RH% - Kelembaban', value: 'RH%' },
+  { label: 'm/s - Kecepatan', value: 'm/s' },
+  { label: 'lux - Intensitas Cahaya', value: 'lux' },
+  { label: 'ppm - Konsentrasi Gas', value: 'ppm' },
+  { label: 'kPa - Tekanan', value: 'kPa' },
+  { label: 'mV - Tegangan', value: 'mV' },
+  { label: 'μS/cm - Konduktivitas', value: 'μS/cm' },
+  { label: 'pH - Keasaman', value: 'pH' },
+  { label: 'NTU - Kekeruhan', value: 'NTU' },
+];
+
+/** Konfigurasi utama perangkat */
 export interface DeviceBase {
   tagNumber: string;
   type: DeviceType;
   description: string;
   unit: string | null;
 
-  ranges: Ranges; // sensor-friendly, boleh null di field-nya
-  alarms: Alarms; // sensor-friendly, boleh null di field-nya
+  writable: boolean; // true → actuator
 
-  kind: string | null; // actuator-friendly
-  allowedStates: string[] | null;
-  defaultState: string | null;
-  writable: boolean;
+  ranges?: Ranges;
+  alarms?: Alarms;
+
+  allowedStates?: string[]; // actuator
+  defaultState?: string; // actuator
 
   io: IO;
-  mqtt: MQTT;
 
-  sample?: Sample; // hanya sensor
-  display?: Display; // hanya sensor
+  sample?: Sample;
+  display?: Display;
 
-  location: Location;
-  meta: Meta;
+  location: string; // disederhanakan
 
-  // runtime (RO), opsional:
+  // runtime-only fields
   value?: number; // sensor
   state?: string; // actuator
+
+  status?: DeviceStatus; // mqtt status, alarm status, dll
 }
 
-/** Generic untuk menambah field domain tanpa ganggu base */
+/** Extensible domain-friendly config */
 export type DeviceConfig<TExtra = {}> = DeviceBase & TExtra;
