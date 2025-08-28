@@ -11,6 +11,24 @@ export class AppNav extends LitElement {
     return this;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    document.addEventListener('click', this._handleOutsideClick);
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener('click', this._handleOutsideClick);
+    super.disconnectedCallback();
+  }
+
+  private _handleOutsideClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    // jika klik di luar komponen app-nav → tutup submenu
+    if (!this.contains(target)) {
+      this.produksiOpen = false;
+    }
+  };
+
   private isActive(path: string): string {
     return this.currentPath.endsWith(path)
       ? 'bg-green-300 text-green-900 rounded px-2 py-1'
@@ -22,6 +40,7 @@ export class AppNav extends LitElement {
     const target = e.currentTarget as HTMLAnchorElement;
     const path = target.getAttribute('href');
     this.menuOpen = false; // close menu after click
+    this.produksiOpen = false; // ⬅ tutup dropdown setelah klik
     if (path && path !== this.currentPath) {
       this.dispatchEvent(
         new CustomEvent('nav-changed', {

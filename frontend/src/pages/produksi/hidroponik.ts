@@ -7,6 +7,7 @@ import { customElement, state } from 'lit/decorators.js';
 import type { Plant } from '../../../../models/plant.model';
 import type { PlantingBatch } from '../../../../models/batch.model';
 import type { HarvestResult } from '../../../../models/harvest-result.model';
+import '../../components/plant-detail-dialog'; // pastikan path sesuai
 
 @customElement('hidroponik-page')
 export class PageProduksiHidroponik extends LitElement {
@@ -17,6 +18,21 @@ export class PageProduksiHidroponik extends LitElement {
   @state() plants: Plant[] = [];
   @state() batches: PlantingBatch[] = [];
   @state() harvests: HarvestResult[] = [];
+  @state()
+  private selectedPlant: Plant | null = null;
+
+  @state()
+  private showDialog = false;
+
+  private showPlantDetail(plant: Plant | undefined) {
+    console.log('[showPlantDetail] Trigger global dialog');
+
+    const dialogEl = document.querySelector('plant-detail-dialog') as any;
+    if (dialogEl) {
+      dialogEl.plant = plant;
+      dialogEl.show(); // pastikan method ini ada
+    }
+  }
 
   async connectedCallback() {
     super.connectedCallback();
@@ -30,32 +46,6 @@ export class PageProduksiHidroponik extends LitElement {
     return html`
       <section class="p-4 space-y-6">
         <h1 class="text-2xl font-bold mb-2">🌱 Produksi Hidroponik</h1>
-
-        <!-- Daftar Tanaman -->
-        <div>
-          <h2 class="text-xl font-semibold mb-2">Jenis Tanaman</h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            ${this.plants.map(
-              (p) => html`
-                <div
-                  class="border rounded-lg shadow p-3 flex flex-col items-center"
-                >
-                  <img
-                    src=${p.image}
-                    alt=${p.name}
-                    class="h-24 object-cover rounded mb-2"
-                  />
-                  <h3 class="font-medium">${p.name}</h3>
-                  <p class="text-sm">
-                    ⏳ ${p.growthDaysMin}-${p.growthDaysMax} hari
-                  </p>
-                  <p class="text-sm">📏 ${p.heightMinCm}-${p.heightMaxCm} cm</p>
-                  <p class="text-sm">⚖️ ~${p.avgWeightG} g</p>
-                </div>
-              `
-            )}
-          </div>
-        </div>
 
         <!-- Daftar Batch -->
         <div>
@@ -80,9 +70,16 @@ export class PageProduksiHidroponik extends LitElement {
                 return html`
                   <tr>
                     <td class="border px-2 py-1">${b.code}</td>
-                    <td class="border px-2 py-1">
+                    <td
+                      class="border px-2 py-1 cursor-pointer text-blue-600 hover:underline"
+                      @click=${() => {
+                        console.log('[PLANT CLICKED]', plant);
+                        this.showPlantDetail(plant);
+                      }}
+                    >
                       ${plant?.name || b.plantId}
                     </td>
+
                     <td class="border px-2 py-1">${b.startDate}</td>
                     <td class="border px-2 py-1">${b.expectedHarvestDate}</td>
                     <td class="border px-2 py-1 text-center">
