@@ -1,19 +1,142 @@
+// c:\Users\sam294\Documents\Projects\Agro\taniverse\frontend\src\pages\produksi\hidroponik.ts
+
 import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+
+// import type definitions dari models
+import type { Plant } from '../../../../models/plant.model';
+import type { PlantingBatch } from '../../../../models/batch.model';
+import type { HarvestResult } from '../../../../models/harvest-result.model';
 
 @customElement('hidroponik-page')
-export class HidroponikPage extends LitElement {
+export class PageProduksiHidroponik extends LitElement {
   createRenderRoot() {
-    return this;
+    return this; // gunakan light DOM supaya Tailwind bekerja
+  }
+
+  @state() plants: Plant[] = [];
+  @state() batches: PlantingBatch[] = [];
+  @state() harvests: HarvestResult[] = [];
+
+  async connectedCallback() {
+    super.connectedCallback();
+    // load mock data dari src/assets/mock
+    this.plants = await (await fetch('/assets/mock/plants.json')).json();
+    this.batches = await (await fetch('/assets/mock/batches.json')).json();
+    this.harvests = await (await fetch('/assets/mock/harvests.json')).json();
   }
 
   render() {
     return html`
-      <section class="p-4">
-        <h1 class="text-xl font-bold">🌱 Hidroponik</h1>
-        <p>Modul produksi hidroponik aktif.</p>
+      <section class="p-4 space-y-6">
+        <h1 class="text-2xl font-bold mb-2">🌱 Produksi Hidroponik</h1>
+
+        <!-- Daftar Tanaman -->
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Jenis Tanaman</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            ${this.plants.map(
+              (p) => html`
+                <div
+                  class="border rounded-lg shadow p-3 flex flex-col items-center"
+                >
+                  <img
+                    src=${p.image}
+                    alt=${p.name}
+                    class="h-24 object-cover rounded mb-2"
+                  />
+                  <h3 class="font-medium">${p.name}</h3>
+                  <p class="text-sm">
+                    ⏳ ${p.growthDaysMin}-${p.growthDaysMax} hari
+                  </p>
+                  <p class="text-sm">📏 ${p.heightMinCm}-${p.heightMaxCm} cm</p>
+                  <p class="text-sm">⚖️ ~${p.avgWeightG} g</p>
+                </div>
+              `
+            )}
+          </div>
+        </div>
+
+        <!-- Daftar Batch -->
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Batch Aktif</h2>
+          <table
+            class="table-auto border-collapse border border-gray-300 w-full text-sm"
+          >
+            <thead class="bg-green-100">
+              <tr>
+                <th class="border px-2 py-1">Kode</th>
+                <th class="border px-2 py-1">Tanaman</th>
+                <th class="border px-2 py-1">Mulai</th>
+                <th class="border px-2 py-1">Estimasi Panen</th>
+                <th class="border px-2 py-1">Total Tanaman</th>
+                <th class="border px-2 py-1">Lokasi</th>
+                <th class="border px-2 py-1">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.batches.map((b) => {
+                const plant = this.plants.find((p) => p.id === b.plantId);
+                return html`
+                  <tr>
+                    <td class="border px-2 py-1">${b.code}</td>
+                    <td class="border px-2 py-1">
+                      ${plant?.name || b.plantId}
+                    </td>
+                    <td class="border px-2 py-1">${b.startDate}</td>
+                    <td class="border px-2 py-1">${b.expectedHarvestDate}</td>
+                    <td class="border px-2 py-1 text-center">
+                      ${b.totalPlants}
+                    </td>
+                    <td class="border px-2 py-1">${b.location}</td>
+                    <td class="border px-2 py-1">${b.status}</td>
+                  </tr>
+                `;
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Hasil Panen -->
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Hasil Panen</h2>
+          <table
+            class="table-auto border-collapse border border-gray-300 w-full text-sm"
+          >
+            <thead class="bg-green-100">
+              <tr>
+                <th class="border px-2 py-1">Batch</th>
+                <th class="border px-2 py-1">Tanggal Panen</th>
+                <th class="border px-2 py-1">Berat Total (g)</th>
+                <th class="border px-2 py-1">Pendapatan (Rp)</th>
+                <th class="border px-2 py-1">Laba (Rp)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.harvests.map((h) => {
+                const batch = this.batches.find((b) => b.id === h.batchId);
+                return html`
+                  <tr>
+                    <td class="border px-2 py-1">
+                      ${batch?.code || h.batchId}
+                    </td>
+                    <td class="border px-2 py-1">${h.harvestDate}</td>
+                    <td class="border px-2 py-1 text-right">
+                      ${h.totalWeightG}
+                    </td>
+                    <td class="border px-2 py-1 text-right">
+                      ${h.revenue.toLocaleString()}
+                    </td>
+                    <td class="border px-2 py-1 text-right">
+                      ${h.netProfit.toLocaleString()}
+                    </td>
+                  </tr>
+                `;
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
     `;
   }
 }
-// c:\Users\sam294\Documents\Projects\Agro\taniverse\frontend\src\pages\produksi\hidroponik.ts
