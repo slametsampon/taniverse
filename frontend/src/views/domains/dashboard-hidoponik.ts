@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore } from '../../services/devices-service';
-import type { DeviceConfig } from '../../../../models/device.model';
+import { DeviceHelper } from 'src/services/device-helper';
 
 @customElement('dashboard-hidroponik')
 export class DashboardHidroponik extends LitElement {
@@ -16,6 +16,7 @@ export class DashboardHidroponik extends LitElement {
   @state() private phAir: number | null = null;
   @state() private konsentrasiNutrisi: number | null = null;
   @state() private pompaState: 'ON' | 'OFF' = 'OFF';
+  @state() private statusMap: Record<string, string> = {};
 
   async connectedCallback() {
     super.connectedCallback();
@@ -27,18 +28,19 @@ export class DashboardHidroponik extends LitElement {
   }
 
   private pull() {
-    const suhu = devicesStore.get('TI-001') as DeviceConfig | undefined;
-    const level = devicesStore.get('LI-004') as DeviceConfig | undefined;
-    const ph = devicesStore.get('AI-005') as DeviceConfig | undefined;
-    const nutrisi = devicesStore.get('AI-006') as DeviceConfig | undefined;
-    const pompa = devicesStore.get('P-001') as DeviceConfig | undefined;
+    const ids = ['TI-001', 'LI-004', 'AI-005', 'AI-006', 'P-001'];
 
-    this.suhuAir = suhu?.type === 'sensor' ? suhu.value ?? null : null;
-    this.levelAir = level?.type === 'sensor' ? level.value ?? null : null;
-    this.phAir = ph?.type === 'sensor' ? ph.value ?? null : null;
-    this.konsentrasiNutrisi =
-      nutrisi?.type === 'sensor' ? nutrisi.value ?? null : null;
-    this.pompaState = pompa?.type === 'actuator' ? pompa.state ?? 'OFF' : 'OFF';
+    const statusMap: Record<string, string> = {};
+    ids.forEach((tag) => {
+      statusMap[tag] = DeviceHelper.getDeviceStatus(tag);
+    });
+    this.statusMap = statusMap;
+
+    this.suhuAir = DeviceHelper.getSensorValue('TI-001');
+    this.levelAir = DeviceHelper.getSensorValue('LI-004');
+    this.phAir = DeviceHelper.getSensorValue('AI-005');
+    this.konsentrasiNutrisi = DeviceHelper.getSensorValue('AI-006');
+    this.pompaState = DeviceHelper.getActuatorState('P-001');
   }
 
   disconnectedCallback() {
@@ -67,6 +69,7 @@ export class DashboardHidroponik extends LitElement {
   };
 
   render() {
+    const status = this.statusMap;
     const aktif = this.pompaState === 'ON';
     const warna = aktif
       ? 'bg-green-100 text-green-700'
@@ -82,19 +85,27 @@ export class DashboardHidroponik extends LitElement {
         ? '--'
         : `${this.konsentrasiNutrisi.toFixed(0)} ppm`;
 
-    const card = (label: string, value: string, click: () => void) => html`
-      <div
-        class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
-        role="button"
-        tabindex="0"
-        @click=${click}
-        @keydown=${(e: KeyboardEvent) =>
-          (e.key === 'Enter' || e.key === ' ') && click()}
-      >
-        <div class="text-sm text-gray-500">${label}</div>
-        <div class="text-lg font-bold">${value}</div>
-      </div>
-    `;
+    const card = (
+      label: string,
+      value: string,
+      status: string,
+      click: () => void
+    ) => {
+      const kelas = DeviceHelper.getStatusClass(status);
+      return html`
+        <div
+          class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+          role="button"
+          tabindex="0"
+          @click=${click}
+          @keydown=${(e: KeyboardEvent) =>
+            (e.key === 'Enter' || e.key === ' ') && click()}
+        >
+          <div class="text-sm text-gray-500">${label}</div>
+          <div class="text-lg font-bold ${kelas}">${value}</div>
+        </div>
+      `;
+    };
 
     return html`
       <section class="bg-white rounded shadow p-4">
@@ -107,12 +118,18 @@ export class DashboardHidroponik extends LitElement {
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
-          ${card('💧 Suhu Air', suhuTxt, () => this.openDetail('TI-001'))}
-          ${card('🌊 Ketinggian Air', levelTxt, () =>
+          ${card('💧 Suhu Air', suhuTxt, status['TI-001'], () =>
+            this.openDetail('TI-001')
+          )}
+          ${card('🌊 Ketinggian Air', levelTxt, status['LI-004'], () =>
             this.openDetail('LI-004')
           )}
-          ${card('🧪 Nutrisi', konsentrasiTxt, () => this.openDetail('AI-006'))}
-          ${card('🌿 pH Air', phTxt, () => this.openDetail('AI-005'))}
+          ${card('🧪 Nutrisi', konsentrasiTxt, status['AI-006'], () =>
+            this.openDetail('AI-006')
+          )}
+          ${card('🌿 pH Air', phTxt, status['AI-005'], () =>
+            this.openDetail('AI-005')
+          )}
         </div>
 
         <div class="flex items-center justify-between">

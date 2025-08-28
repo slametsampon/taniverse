@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore, type Device } from '../../services/devices-service';
+import { DeviceHelper } from 'src/services/device-helper';
 
 @customElement('dashboard-aquakultur')
 export class DashboardAquakultur extends LitElement {
@@ -14,6 +15,7 @@ export class DashboardAquakultur extends LitElement {
   @state() private phAir: number | null = null;
   @state() private oksigen: number | null = null;
   @state() private aeratorState: 'ON' | 'OFF' = 'OFF';
+  @state() private statusMap: Record<string, string> = {};
 
   async connectedCallback() {
     super.connectedCallback();
@@ -30,15 +32,18 @@ export class DashboardAquakultur extends LitElement {
   }
 
   private pull() {
-    const suhu = devicesStore.get('TI-101') as Device | undefined;
-    const ph = devicesStore.get('AI-105') as Device | undefined;
-    const oksigen = devicesStore.get('AI-106') as Device | undefined;
-    const aerator = devicesStore.get('P-101') as Device | undefined;
+    const ids = ['TI-101', 'AI-105', 'AI-106', 'P-101'];
 
-    this.suhuAir = suhu?.type === 'sensor' ? suhu.value : null;
-    this.phAir = ph?.type === 'sensor' ? ph.value : null;
-    this.oksigen = oksigen?.type === 'sensor' ? oksigen.value : null;
-    this.aeratorState = aerator?.type === 'actuator' ? aerator.state : 'OFF';
+    const statusMap: Record<string, string> = {};
+    ids.forEach((tag) => {
+      statusMap[tag] = DeviceHelper.getDeviceStatus(tag);
+    });
+    this.statusMap = statusMap;
+
+    this.suhuAir = DeviceHelper.getSensorValue('TI-101');
+    this.phAir = DeviceHelper.getSensorValue('AI-105');
+    this.oksigen = DeviceHelper.getSensorValue('AI-106');
+    this.aeratorState = DeviceHelper.getActuatorState('P-001');
   }
 
   private openDetail(tag: string) {
@@ -53,6 +58,7 @@ export class DashboardAquakultur extends LitElement {
   }
 
   render() {
+    const status = this.statusMap;
     const aktif = this.aeratorState === 'ON';
     const warna = aktif
       ? 'bg-green-100 text-green-700'
@@ -63,19 +69,27 @@ export class DashboardAquakultur extends LitElement {
     const oksigenTxt =
       this.oksigen == null ? '--' : `${this.oksigen.toFixed(1)} mg/L`;
 
-    const card = (label: string, value: string, click: () => void) => html`
-      <div
-        class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
-        role="button"
-        tabindex="0"
-        @click=${click}
-        @keydown=${(e: KeyboardEvent) =>
-          (e.key === 'Enter' || e.key === ' ') && click()}
-      >
-        <div class="text-sm text-gray-500">${label}</div>
-        <div class="text-lg font-bold">${value}</div>
-      </div>
-    `;
+    const card = (
+      label: string,
+      value: string,
+      status: string,
+      click: () => void
+    ) => {
+      const kelas = DeviceHelper.getStatusClass(status);
+      return html`
+        <div
+          class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+          role="button"
+          tabindex="0"
+          @click=${click}
+          @keydown=${(e: KeyboardEvent) =>
+            (e.key === 'Enter' || e.key === ' ') && click()}
+        >
+          <div class="text-sm text-gray-500">${label}</div>
+          <div class="text-lg font-bold ${kelas}">${value}</div>
+        </div>
+      `;
+    };
 
     return html`
       <section class="bg-white rounded shadow p-4">
@@ -88,9 +102,13 @@ export class DashboardAquakultur extends LitElement {
         </div>
 
         <div class="grid grid-cols-2 gap-4 mb-4">
-          ${card('💧 Suhu Air', suhuTxt, () => this.openDetail('TI-101'))}
-          ${card('🌿 pH Air', phTxt, () => this.openDetail('AI-105'))}
-          ${card('🧪 Oksigen Terlarut', oksigenTxt, () =>
+          ${card('💧 Suhu Air', suhuTxt, status['TI-101'], () =>
+            this.openDetail('TI-101')
+          )}
+          ${card('🌿 pH Air', phTxt, status['AI-105'], () =>
+            this.openDetail('AI-105')
+          )}
+          ${card('🧪 Oksigen Terlarut', oksigenTxt, status['AI-106'], () =>
             this.openDetail('AI-106')
           )}
         </div>

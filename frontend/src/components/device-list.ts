@@ -29,7 +29,10 @@ export class DeviceList extends LitElement {
   private updateDevices() {
     const tags = devicesStore.getAllTags();
     this.devices = tags
-      .map((tag) => devicesStore.get(tag))
+      .map((tag) => {
+        const d = devicesStore.get(tag);
+        return d ? { ...d } : undefined; // 👈 trigger Lit reactivity
+      })
       .filter((d): d is Device => d !== undefined);
   }
 

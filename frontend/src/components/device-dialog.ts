@@ -4,7 +4,6 @@ import { devicesStore, Device } from '../services/devices-service';
 
 @customElement('device-dialog')
 export class DeviceDialog extends LitElement {
-  // Light DOM supaya class Tailwind aktif
   createRenderRoot() {
     return this;
   }
@@ -18,7 +17,7 @@ export class DeviceDialog extends LitElement {
 
   async open(tagNumber: string) {
     await devicesStore.init();
-    this.dev = devicesStore.get(tagNumber) as Device | undefined;
+    this.dev = devicesStore.get(tagNumber);
     if (!this.dlg) this.dlg = this.querySelector('dialog');
     this.dlg?.showModal();
   }
@@ -27,12 +26,45 @@ export class DeviceDialog extends LitElement {
     this.dlg?.close();
   };
 
-  private renderRow(label: string, value: unknown) {
+  /** Cek apakah status bernilai 'ok' (string atau array) */
+  private isOk(status: unknown): boolean {
+    if (typeof status === 'string') {
+      return status === 'ok';
+    }
+    if (Array.isArray(status)) {
+      return status.every((s) => s === 'ok');
+    }
+    return false;
+  }
+
+  /** Tampilkan properti dinamis dari device */
+  private renderDynamic(d: Device) {
     return html`
-      <div class="flex justify-between items-start gap-4 text-sm py-1">
-        <div class="text-gray-500">${label}</div>
-        <div class="font-medium text-gray-800 text-right">${value ?? '-'}</div>
-      </div>
+      ${Object.entries(d).map(([key, val]) => {
+        const isStatusKey = key.toLowerCase().includes('status');
+        const isNormal = isStatusKey ? this.isOk(val) : true;
+        const valueStr =
+          typeof val === 'object'
+            ? JSON.stringify(val)
+            : Array.isArray(val)
+            ? val.join(', ')
+            : String(val);
+
+        return html`
+          <div class="flex justify-between text-sm py-1 gap-4">
+            <div class="text-gray-500 font-medium">${key}</div>
+            <div
+              class="${isStatusKey
+                ? isNormal
+                  ? 'text-green-600 font-semibold'
+                  : 'text-red-600 font-semibold'
+                : 'text-gray-800'} text-right break-all"
+            >
+              ${valueStr}
+            </div>
+          </div>
+        `;
+      })}
     `;
   }
 
@@ -50,11 +82,10 @@ export class DeviceDialog extends LitElement {
           class="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5
                  p-5 sm:p-6"
         >
-          <!-- Tombol X (kanan-atas) -->
           <button
             class="absolute top-2.5 right-2.5 inline-flex items-center justify-center
-                   h-8 w-8 rounded-lg text-gray-400 hover:text-red-500
-                   hover:bg-red-50 active:scale-95 transition"
+         h-8 w-8 rounded-full bg-red-500 text-white font-bold
+         hover:bg-red-600 active:scale-95 transition cursor-pointer"
             @click=${this.close}
             aria-label="Tutup dialog"
             title="Tutup"
@@ -62,7 +93,6 @@ export class DeviceDialog extends LitElement {
             ✕
           </button>
 
-          <!-- Header -->
           <header class="mb-4">
             <div class="flex items-center gap-2">
               <span class="text-xl">${typeEmoji}</span>
@@ -79,36 +109,11 @@ export class DeviceDialog extends LitElement {
             </p>
           </header>
 
-          <!-- Body -->
           ${d
-            ? html`
-                <div class="space-y-2">
-                  ${this.renderRow('Unit', d.unit ?? '-')}
-                  ${d.type === 'sensor'
-                    ? this.renderRow(
-                        'Nilai',
-                        (d.value ?? '-') + (d.unit ? ` ${d.unit}` : '')
-                      )
-                    : this.renderRow('State', d.state ?? '-')}
-                  ${d.ranges
-                    ? this.renderRow(
-                        'Range',
-                        `${d.ranges.low ?? '-'} .. ${d.ranges.high ?? '-'}`
-                      )
-                    : null}
-                  ${d.alarms
-                    ? this.renderRow(
-                        'Alarm',
-                        `${d.alarms.low ?? '-'} / ${d.alarms.high ?? '-'}`
-                      )
-                    : null}
-                  ${d.location ? this.renderRow('Lokasi', d.location) : null}
-                  ${d.status ? this.renderRow('Status', d.status) : null}
-                </div>
-              `
-            : html`
-                <div class="text-sm text-gray-500">Device tidak ditemukan.</div>
-              `}
+            ? html`<div class="space-y-2">${this.renderDynamic(d)}</div>`
+            : html`<div class="text-sm text-gray-500">
+                Device tidak ditemukan.
+              </div>`}
         </section>
       </dialog>
     `;

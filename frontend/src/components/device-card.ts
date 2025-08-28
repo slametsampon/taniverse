@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Device } from '../services/devices-service';
+import { devicesStore } from '../services/devices-service';
 
 @customElement('device-card')
 export class DeviceCard extends LitElement {
@@ -24,11 +25,29 @@ export class DeviceCard extends LitElement {
     }
   }
 
+  private openDetail = (tag: string) => {
+    const dlg = document.querySelector('device-dialog') as any;
+    if (!dlg || typeof dlg.open !== 'function') {
+      console.error('[dashboard] device-dialog not found or invalid.');
+      return;
+    }
+
+    const dev = devicesStore.get(tag);
+    if (!dev) {
+      console.warn(`[dashboard] Device ${tag} not found`);
+    }
+
+    dlg.open(tag);
+  };
+
   render() {
     const { tagNumber, description, type, status = 'unknown' } = this.device;
 
     return html`
-      <div class="p-4 rounded-xl shadow bg-white space-y-2">
+      <div
+        class="p-4 rounded-xl shadow bg-white space-y-2 cursor-pointer"
+        @click=${() => this.openDetail(tagNumber)}
+      >
         <div class="text-lg font-semibold text-green-600">${tagNumber}</div>
         <div class="text-xs font-mono text-gray-800">${description}</div>
         <div class="text-sm text-gray-500 capitalize">${type}</div>
