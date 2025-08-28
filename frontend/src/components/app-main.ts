@@ -106,6 +106,42 @@ export class AppMain extends LitElement {
       },
       { path: '/', component: 'page-home' },
       {
+        path: '/produksi/hidroponik',
+        action: async (ctx, commands) => {
+          const g = requireRoleAtLeast('operator')(ctx, commands);
+          if (g) return g;
+          await import('../pages/produksi/hidroponik');
+        },
+        component: 'hidroponik-page',
+      },
+      {
+        path: '/produksi/hortikultura',
+        action: async (ctx, commands) => {
+          const g = requireRoleAtLeast('operator')(ctx, commands);
+          if (g) return g;
+          await import('../pages/produksi/hortikultura');
+        },
+        component: 'hortikultura-page',
+      },
+      {
+        path: '/produksi/perikanan',
+        action: async (ctx, commands) => {
+          const g = requireRoleAtLeast('operator')(ctx, commands);
+          if (g) return g;
+          await import('../pages/produksi/perikanan');
+        },
+        component: 'perikanan-page',
+      },
+      {
+        path: '/produksi/peternakan',
+        action: async (ctx, commands) => {
+          const g = requireRoleAtLeast('operator')(ctx, commands);
+          if (g) return g;
+          await import('../pages/produksi/peternakan');
+        },
+        component: 'peternakan-page',
+      },
+      {
         path: '(.*)',
         action: async () => {
           await import('../pages/not-found');
