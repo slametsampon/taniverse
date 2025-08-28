@@ -80,8 +80,12 @@ export class PageProduksiHidroponik extends LitElement {
                       ${plant?.name || b.plantId}
                     </td>
 
-                    <td class="border px-2 py-1">${b.startDate}</td>
-                    <td class="border px-2 py-1">${b.expectedHarvestDate}</td>
+                    <td class="border px-2 py-1">
+                      ${this.formatDate(b.startDate)}
+                    </td>
+                    <td class="border px-2 py-1">
+                      ${this.formatDate(b.expectedHarvestDate)}
+                    </td>
                     <td class="border px-2 py-1 text-center">
                       ${b.totalPlants}
                     </td>
@@ -117,7 +121,9 @@ export class PageProduksiHidroponik extends LitElement {
                     <td class="border px-2 py-1">
                       ${batch?.code || h.batchId}
                     </td>
-                    <td class="border px-2 py-1">${h.harvestDate}</td>
+                    <td class="border px-2 py-1">
+                      ${this.formatDate(h.harvestDate)}
+                    </td>
                     <td class="border px-2 py-1 text-right">
                       ${h.totalWeightG}
                     </td>
@@ -135,5 +141,14 @@ export class PageProduksiHidroponik extends LitElement {
         </div>
       </section>
     `;
+  }
+  private formatDate(dateStr: string): string {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: '2-digit',
+      month: 'short', // atau 'long' untuk nama bulan lengkap
+      year: 'numeric',
+    }).format(d);
   }
 }

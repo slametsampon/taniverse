@@ -61,6 +61,16 @@ export class PlantDetailDialog extends LitElement {
     `;
   }
 
+  private formatDate(value: string | Date): string {
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(date.getTime())) return value.toString(); // fallback
+
+    return date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
   private formatKey(key: string): string {
     return key
       .replace(/([a-z])([A-Z])/g, '$1 $2')
@@ -70,11 +80,22 @@ export class PlantDetailDialog extends LitElement {
 
   private renderValue(value: any): unknown {
     if (value === null || value === undefined) return '-';
+
+    // Deteksi ISO date string
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) {
+      return this.formatDate(value);
+    }
+
+    if (value instanceof Date) {
+      return this.formatDate(value);
+    }
+
     if (typeof value === 'object') {
       return html`<pre class="text-xs bg-gray-100 p-2 rounded">
 ${JSON.stringify(value, null, 2)}</pre
       >`;
     }
+
     return value.toString();
   }
 }
