@@ -1,3 +1,5 @@
+// backend/src/api/sensor-logs.route.ts
+
 import type { FastifyPluginAsync } from 'fastify';
 import {
   SensorLogService,

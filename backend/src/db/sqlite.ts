@@ -1,3 +1,5 @@
+// backend/src/db/sqlite.ts
+
 import Database from 'better-sqlite3';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';

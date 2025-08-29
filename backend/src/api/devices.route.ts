@@ -1,3 +1,5 @@
+// backend/src/api/devices.route.ts
+
 import type { FastifyPluginAsync } from 'fastify';
 import { DeviceService } from '../services/device.service';
 import type { DeviceConfig } from '@models/device.model';
