@@ -3,6 +3,7 @@
 const esbuild = require('esbuild');
 const path = require('path');
 const fs = require('fs');
+const mime = require('mime');
 
 const isDev = process.env.NODE_ENV === 'development';
 const isPreRelease = process.env.NODE_ENV === 'pre-release';
@@ -12,13 +13,15 @@ let publicPath = '/';
 if (isPreRelease) publicPath = '/taniverse';
 if (isProd) publicPath = '';
 
+const outputDir = path.resolve(__dirname, '../build/frontend');
+
 const buildOptions = {
-  absWorkingDir: path.resolve(__dirname), // working dir: frontend/
+  absWorkingDir: path.resolve(__dirname),
   entryPoints: ['src/main.ts'],
   bundle: true,
   sourcemap: isDev || isPreRelease,
   minify: isProd,
-  outdir: path.resolve(__dirname, '../build/frontend'),
+  outdir: outputDir,
   target: ['es2020'],
   format: 'esm',
   tsconfig: path.resolve(__dirname, 'tsconfig.json'),
@@ -40,11 +43,11 @@ const buildOptions = {
   logLevel: 'info',
 };
 
-// 🔹 Folder & File Helpers
+// Helpers
 const ensureDirExists = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
-    console.log(`Created directory: ${dirPath}`);
+    console.log(`📁 Created directory: ${dirPath}`);
   }
 };
 
@@ -54,15 +57,15 @@ const copyFile = (src, dest) => {
       throw new Error(`Source file ${src} not found.`);
     }
     fs.copyFileSync(src, dest);
-    console.log(`Copied ${src} to ${dest}`);
+    console.log(`📄 Copied ${src} → ${dest}`);
   } catch (error) {
-    console.error(`Failed to copy ${src}:`, error.message);
+    console.error(`❌ Failed to copy ${src}:`, error.message);
   }
 };
 
 const copyFolderRecursive = (src, dest) => {
   if (!fs.existsSync(src)) {
-    console.warn(`Warning: Source folder ${src} does not exist. Skipping.`);
+    console.warn(`⚠️ Warning: Source folder ${src} does not exist. Skipping.`);
     return;
   }
 
@@ -81,7 +84,40 @@ const copyFolderRecursive = (src, dest) => {
   });
 };
 
-// 🔹 Build & Watch Logic
+// Dev Server (fallback to index.html)
+function startDevServer(serveDir, port) {
+  const http = require('http');
+
+  const server = http.createServer((req, res) => {
+    let reqPath = req.url.split('?')[0];
+    let filePath = path.join(
+      serveDir,
+      reqPath === '/' ? '/index.html' : reqPath
+    );
+
+    if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+      filePath = path.join(serveDir, 'index.html');
+    }
+
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('500: Internal Server Error');
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': mime.getType(filePath) || 'text/html',
+      });
+      res.end(data);
+    });
+  });
+
+  server.listen(port, () => {
+    console.log(`🌐 Dev server running at http://127.0.0.1:${port}`);
+  });
+}
+
+// Build Logic
 const startBuild = async () => {
   console.log(
     `🔧 Starting esbuild in ${process.env.NODE_ENV || 'development'} mode...`
@@ -98,21 +134,39 @@ const startBuild = async () => {
       console.log('✅ Build complete.');
     }
   } catch (err) {
-    console.error('Build failed:', err);
+    console.error('❌ Build failed:', err);
     process.exit(1);
   }
 };
 
-// 🔹 Build pipeline
+// Main Build Process
 const main = async () => {
-  const outputDir = path.resolve(__dirname, '../build/frontend');
   ensureDirExists(outputDir);
 
   await startBuild();
 
-  // Copy public/static assets
-  copyFile('frontend/src/index.html', path.join(outputDir, 'index.html'));
+  // ⬇️ Copy and patch index.html → base href injection
+  const indexSrc = fs.readFileSync('frontend/src/index.html', 'utf8');
+  const basePathFinal = publicPath.endsWith('/')
+    ? publicPath
+    : publicPath + '/';
+  const indexHtmlFinal = indexSrc.replace('__BASE_PATH__', basePathFinal);
+
+  fs.writeFileSync(path.join(outputDir, 'index.html'), indexHtmlFinal);
+
+  if (isProd || isPreRelease) {
+    fs.writeFileSync(path.join(outputDir, '404.html'), indexHtmlFinal);
+    fs.writeFileSync(path.join(outputDir, '.nojekyll'), '');
+    console.log('📝 Wrote 404.html for GitHub Pages SPA fallback.');
+  }
+
+  // ⬇️ Copy assets
   copyFolderRecursive('frontend/src/assets', path.join(outputDir, 'assets'));
+
+  // Start dev server if needed
+  if (isDev || process.argv.includes('--serve')) {
+    startDevServer(outputDir, 51451);
+  }
 };
 
 main();

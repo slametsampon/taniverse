@@ -1,3 +1,5 @@
+// frontend/src/components/app-footer.ts
+
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
@@ -18,7 +20,7 @@ export class AppFooter extends LitElement {
             <a href="https://github.com/slametsampon/taniverse" target="_blank"
               >GitHub</a
             >
-            <a href="/about">About</a>
+            <a href="about">About</a>
           </div>
         </div>
       </footer>

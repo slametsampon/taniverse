@@ -1,3 +1,5 @@
+// frontend/src/pages/device-config.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { DeviceConfig } from '@models/device.model';
@@ -14,6 +16,7 @@ import '../views/ui-tabs';
 import '../views/dev-config-general';
 import '../views/dev-config-hw-comm';
 import '../views/dev-config-loc-meta';
+import '../views/dev-config-mqtt'; // ⬅️ Tambahkan ini
 
 import { TabId } from 'src/types/tab-id';
 
@@ -178,7 +181,8 @@ export class PageDeviceConfig extends LitElement {
   }
 
   private fieldTab(path: string): TabId {
-    if (path.startsWith('io.') || path.startsWith('mqtt.')) return 'hw-comm';
+    if (path.startsWith('io.')) return 'hw-comm';
+    if (path.startsWith('mqtt.')) return 'mqtt';
     if (path.startsWith('location.') || path.startsWith('meta.'))
       return 'loc-meta';
     return 'general';
@@ -549,6 +553,7 @@ export class PageDeviceConfig extends LitElement {
             { id: 'general', label: 'General', icon: '🧾' },
             { id: 'hw-comm', label: 'H/W & Comm', icon: '🔌' },
             { id: 'loc-meta', label: 'Lokasi & Metadata', icon: '📍' },
+            { id: 'mqtt', label: 'MQTT', icon: '📡' }, // ⬅️ Baru
           ] as const}
           .active=${this.activeTab}
           .badges=${badges}
@@ -578,6 +583,15 @@ export class PageDeviceConfig extends LitElement {
                 >
                 </dev-config-hw-comm>
               `
+            : this.activeTab === 'mqtt'
+            ? html`
+                <dev-config-mqtt
+                  .model=${{ tags: this.tags }}
+                  .deviceList=${this.tags
+                    .map((tag) => getByTag(tag))
+                    .filter(Boolean)}
+                ></dev-config-mqtt>
+              `
             : html`
                 <dev-config-loc-meta
                   .model=${this.device}
@@ -587,34 +601,78 @@ export class PageDeviceConfig extends LitElement {
               `}
         </div>
 
-        <div
-          class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-2 justify-end"
-        >
-          <button
-            class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            @click=${this.onBack}
-            ?disabled=${this.saving || this.deleting}
-          >
-            Kembali
-          </button>
-
-          <button
-            class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            @click=${this.onReset}
-            ?disabled=${this.saving || this.deleting}
-          >
-            Cancel
-          </button>
-
-          ${this.mode === 'edit'
-            ? html`
+        ${this.activeTab === 'mqtt'
+          ? null
+          : html`
+              <div
+                class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-2 justify-end"
+              >
                 <button
-                  class="relative px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click=${this.onDelete}
+                  class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click=${this.onBack}
                   ?disabled=${this.saving || this.deleting}
-                  title="Hapus device ini"
                 >
-                  ${this.deleting
+                  Kembali
+                </button>
+
+                <button
+                  class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click=${this.onReset}
+                  ?disabled=${this.saving || this.deleting}
+                >
+                  Cancel
+                </button>
+
+                ${this.mode === 'edit'
+                  ? html`
+                      <button
+                        class="relative px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        @click=${this.onDelete}
+                        ?disabled=${this.saving || this.deleting}
+                        title="Hapus device ini"
+                      >
+                        ${this.deleting
+                          ? html` <span class="inline-flex items-center gap-2">
+                              <svg
+                                class="animate-spin h-4 w-4 text-white"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  class="opacity-30"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  stroke-width="4"
+                                  fill="none"
+                                ></circle>
+                                <path
+                                  class="opacity-90"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
+                                ></path>
+                              </svg>
+                              Deleting…
+                            </span>`
+                          : html`Delete`}
+                      </button>
+                    `
+                  : null}
+
+                <button
+                  class="relative px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  @click=${this.onSave}
+                  ?disabled=${this.saving ||
+                  this.deleting ||
+                  this.errors.length > 0 ||
+                  (!this.dirty && this.mode === 'edit')}
+                  title=${this.errors.length
+                    ? 'Perbaiki error dulu'
+                    : this.saving
+                    ? 'Saving...'
+                    : 'Save'}
+                >
+                  ${this.saving
                     ? html` <span class="inline-flex items-center gap-2">
                         <svg
                           class="animate-spin h-4 w-4 text-white"
@@ -635,58 +693,18 @@ export class PageDeviceConfig extends LitElement {
                             d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
                           ></path>
                         </svg>
-                        Deleting…
+                        Saving…
                       </span>`
-                    : html`Delete`}
+                    : html`Save`}
                 </button>
-              `
-            : null}
 
-          <button
-            class="relative px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            @click=${this.onSave}
-            ?disabled=${this.saving ||
-            this.deleting ||
-            this.errors.length > 0 ||
-            (!this.dirty && this.mode === 'edit')}
-            title=${this.errors.length
-              ? 'Perbaiki error dulu'
-              : this.saving
-              ? 'Saving...'
-              : 'Save'}
-          >
-            ${this.saving
-              ? html` <span class="inline-flex items-center gap-2">
-                  <svg
-                    class="animate-spin h-4 w-4 text-white"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-30"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                      fill="none"
-                    ></circle>
-                    <path
-                      class="opacity-90"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
-                    ></path>
-                  </svg>
-                  Saving…
-                </span>`
-              : html`Save`}
-          </button>
-
-          ${this.dirty
-            ? html`<span class="self-center text-xs text-amber-600"
-                >unsaved changes…</span
-              >`
-            : null}
-        </div>
+                ${this.dirty
+                  ? html`<span class="self-center text-xs text-amber-600"
+                      >unsaved changes…</span
+                    >`
+                  : null}
+              </div>
+            `}
       </section>
     `;
   }

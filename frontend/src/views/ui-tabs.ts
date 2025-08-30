@@ -1,3 +1,5 @@
+// frontend/src/views/ui-tabs.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { TabId } from 'src/types/tab-id';
