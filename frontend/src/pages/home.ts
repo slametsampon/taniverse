@@ -1,7 +1,9 @@
+// frontend/src/pages/home.ts
+
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-import '../components/feature-card.ts';
+import '../components/cards/feature-card.js';
 
 @customElement('page-home')
 export class PageHome extends LitElement {

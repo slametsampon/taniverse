@@ -6,11 +6,11 @@ import '../views/domains/dashboard-hidoponik.js';
 import '../views/domains/dashboard-aquakultur.js';
 import '../views/domains/dashboard-peternakan.js';
 import '../components/mode-selector.js';
-import '../components/device-dialog.ts';
+import '../components/dialogs/device-dialog.js';
 import '../components/dashboard-mqtt.ts';
 
 // Import tab UI
-import '../views/ui-tabs.js';
+import '../components/ui/ui-tabs.js';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {

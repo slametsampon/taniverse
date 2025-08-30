@@ -1,11 +1,11 @@
-// frontend/src/components/app-header.ts
+// frontend/src/components/layout/app-header.ts
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { consume } from '@lit/context';
 
-import './app-nav';
-import './user-info';
-import { themeContext, Theme } from '../context/theme-context';
+import '../app-nav';
+import '../user-info';
+import { themeContext, Theme } from '../../context/theme-context';
 
 @customElement('app-header')
 export class AppHeader extends LitElement {

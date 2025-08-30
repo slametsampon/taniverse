@@ -1,7 +1,9 @@
+// frontend/src/components/dialogs/plant-detail-dialog.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Plant } from '../../../models/plant.model';
-import { formatDate } from '../utils/format';
+import type { Plant } from '../../../../models/plant.model';
+import { formatDate } from '../../utils/format';
 
 @customElement('plant-detail-dialog')
 export class PlantDetailDialog extends LitElement {

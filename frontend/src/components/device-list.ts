@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore } from '../services/devices-service';
 import type { Device } from '../services/devices-service';
-import './device-card';
+import './cards/device-card';
 
 @customElement('device-list')
 export class DeviceList extends LitElement {

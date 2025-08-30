@@ -1,7 +1,9 @@
+// frontend/src/components/cards/device-card.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Device } from '../services/devices-service';
-import { devicesStore } from '../services/devices-service';
+import type { Device } from '../../services/devices-service';
+import { devicesStore } from '../../services/devices-service';
 
 @customElement('device-card')
 export class DeviceCard extends LitElement {

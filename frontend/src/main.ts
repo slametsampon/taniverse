@@ -1,1 +1,1 @@
-import './components/app-shell.ts';
+import './components/layout/app-shell.js';

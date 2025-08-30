@@ -1,22 +1,22 @@
-// frontend/src/components/app-shell.ts
+// frontend/src/components/layout/app-shell.ts
 import { LitElement, html } from 'lit';
 import { customElement, state, query } from 'lit/decorators.js';
 import { provide } from '@lit/context';
 
-import './app-header.ts';
-import './app-footer.ts';
-import './app-main.ts';
+import './app-header.js';
+import './app-footer.js';
+import '../app-main.js';
 
-import { AuthService } from '../services/auth-service.js';
-import { themeContext, Theme } from '../context/theme-context';
-import { userContext } from '../context/user-context';
-import type { AuthUser } from '../services/auth-service';
+import { AuthService } from '../../services/auth-service.js';
+import { themeContext, Theme } from '../../context/theme-context.js';
+import { userContext } from '../../context/user-context.js';
+import type { AuthUser } from '../../services/auth-service.js';
 
 import {
   mqttContext,
   type MqttContextValue,
   createMqttContext,
-} from '../context/mqtt-context';
+} from '../../context/mqtt-context.js';
 
 @customElement('app-shell')
 export class AppShell extends LitElement {

@@ -7,7 +7,7 @@ import { customElement, state } from 'lit/decorators.js';
 import type { Plant } from '../../../../models/plant.model';
 import type { PlantingBatch } from '../../../../models/batch.model';
 import type { HarvestResult } from '../../../../models/harvest-result.model';
-import '../../components/plant-detail-dialog'; // pastikan path sesuai
+import '../../components/dialogs/plant-detail-dialog'; // pastikan path sesuai
 
 @customElement('hidroponik-page')
 export class PageProduksiHidroponik extends LitElement {

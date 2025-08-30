@@ -12,7 +12,7 @@ import {
   deleteDevice,
 } from '../services/devices-config.service';
 
-import '../views/ui-tabs';
+import '../components/ui/ui-tabs';
 import '../views/dev-config-general';
 import '../views/dev-config-hw-comm';
 import '../views/dev-config-loc-meta';
