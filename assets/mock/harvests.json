@@ -1,0 +1,13 @@
+[
+  {
+    "id": "H001",
+    "batchId": "B002",
+    "harvestDate": "2025-08-20",
+    "totalWeightG": 2600,
+    "pricePerKg": 12000,
+    "holesUsed": 40,
+    "totalCost": 20000,
+    "revenue": 31200,
+    "netProfit": 11200
+  }
+]

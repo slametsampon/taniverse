@@ -1,0 +1,26 @@
+[
+  {
+    "id": "B001",
+    "plantId": "PC01",
+    "code": "B001",
+    "startDate": "2025-08-01",
+    "expectedHarvestDate": "2025-08-26",
+    "holesUsed": 30,
+    "totalPlants": 30,
+    "location": "Rak A1",
+    "status": "Planted",
+    "note": "Tanam pagi, suhu 25°C"
+  },
+  {
+    "id": "B002",
+    "plantId": "KT01",
+    "code": "B002",
+    "startDate": "2025-08-10",
+    "expectedHarvestDate": "2025-08-20",
+    "holesUsed": 40,
+    "totalPlants": 40,
+    "location": "Rak B2",
+    "status": "Harvested",
+    "note": "Hujan lebat saat tanam"
+  }
+]

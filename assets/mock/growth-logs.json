@@ -1,0 +1,32 @@
+[
+  {
+    "id": "GL001",
+    "batchId": "B001",
+    "logDate": "2025-08-05",
+    "plantAge": 4,
+    "avgHeightCm": 9.5,
+    "leafCount": 4,
+    "leafColor": "Hijau muda",
+    "note": "Pertumbuhan cepat"
+  },
+  {
+    "id": "GL002",
+    "batchId": "B001",
+    "logDate": "2025-08-10",
+    "plantAge": 9,
+    "avgHeightCm": 17.8,
+    "leafCount": 7,
+    "leafColor": "Hijau cerah",
+    "note": "Normal"
+  },
+  {
+    "id": "GL003",
+    "batchId": "B002",
+    "logDate": "2025-08-15",
+    "plantAge": 5,
+    "avgHeightCm": 14.2,
+    "leafCount": 5,
+    "leafColor": "Hijau agak pucat",
+    "note": "Kurang nutrisi"
+  }
+]
