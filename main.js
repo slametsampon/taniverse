@@ -17247,7 +17247,7 @@ var AppFooter = class extends i4 {
             <a href="https://github.com/slametsampon/taniverse" target="_blank"
               >GitHub</a
             >
-            <a href="/about">About</a>
+            <a href="about">About</a>
           </div>
         </div>
       </footer>
