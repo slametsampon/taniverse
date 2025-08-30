@@ -1,10 +1,12 @@
+// frontend/src/pages/dashboard.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 // Import komponen dashboard
-import '../views/domains/dashboard-hidoponik.js';
-import '../views/domains/dashboard-aquakultur.js';
-import '../views/domains/dashboard-peternakan.js';
+import '../views/dashboard-hidoponik.js';
+import '../views/dashboard-aquakultur.js';
+import '../views/dashboard-peternakan.js';
 import '../components/mode-selector.js';
 import '../components/dialogs/device-dialog.js';
 import '../components/dashboard-mqtt.ts';

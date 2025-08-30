@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Plant } from '../../../../models/plant.model';
+import type { Plant } from '@models/plant.model';
 import { formatDate } from '../../utils/format';
 
 @customElement('plant-detail-dialog')

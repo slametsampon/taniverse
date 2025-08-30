@@ -1,8 +1,8 @@
-// backend/scripts/seed-devices.ts
+// scripts/seed-devices.ts
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DeviceService } from '../backend/src/services/device.service';
-import type { DeviceConfig } from '../models/device.model';
+import type { DeviceConfig } from '@models/device.model';
 
 async function main() {
   const file = process.argv[2] ?? '../frontend/src/assets/mock/devices.json';

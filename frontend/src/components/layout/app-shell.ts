@@ -5,7 +5,7 @@ import { provide } from '@lit/context';
 
 import './app-header.js';
 import './app-footer.js';
-import '../app-main.js';
+import './app-main.js';
 
 import { AuthService } from '../../services/auth-service.js';
 import { themeContext, Theme } from '../../context/theme-context.js';

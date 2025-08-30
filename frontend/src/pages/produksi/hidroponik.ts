@@ -1,12 +1,12 @@
-// c:\Users\sam294\Documents\Projects\Agro\taniverse\frontend\src\pages\produksi\hidroponik.ts
+// frontend/src/pages/produksi/hidroponik.ts
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 // import type definitions dari models
-import type { Plant } from '../../../../models/plant.model';
-import type { PlantingBatch } from '../../../../models/batch.model';
-import type { HarvestResult } from '../../../../models/harvest-result.model';
+import type { Plant } from '@models/plant.model';
+import type { PlantingBatch } from '@models/batch.model';
+import type { HarvestResult } from '@models/harvest-result.model';
 import '../../components/dialogs/plant-detail-dialog'; // pastikan path sesuai
 
 @customElement('hidroponik-page')

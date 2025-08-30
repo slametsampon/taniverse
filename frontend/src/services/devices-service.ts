@@ -1,6 +1,8 @@
+// frontend/src/services/devices-service.ts
+
 import { mqttService, TOPIC_PREFIX } from './mqtt-service';
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
-import type { DeviceConfig } from '../../../models/device.model';
+import type { DeviceConfig } from '@models/device.model';
 
 type Device = DeviceConfig & {
   status?: DeviceStatus;

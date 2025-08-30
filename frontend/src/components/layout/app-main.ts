@@ -1,9 +1,9 @@
-// frontend/src/components/app-main.ts
+// frontend/src/components/layout/app-main.ts
 import { LitElement, html } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { AuthService, PERMS, type Role } from '../services/auth-service';
-import '../pages/home.ts';
+import { AuthService, PERMS, type Role } from '../../services/auth-service';
+import '../../pages/home';
 
 @customElement('app-main')
 export class AppMain extends LitElement {
@@ -50,7 +50,7 @@ export class AppMain extends LitElement {
       {
         path: '/login',
         action: async () => {
-          await import('../pages/login');
+          await import('../../pages/login');
         },
         component: 'page-login',
       },
@@ -59,7 +59,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/dashboard');
+          await import('../../pages/dashboard');
         },
         component: 'page-dashboard',
       },
@@ -68,7 +68,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/histori');
+          await import('../../pages/histori');
         },
         component: 'page-histori',
       },
@@ -77,7 +77,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('engineer')(ctx, commands);
           if (g) return g;
-          await import('../pages/device-config');
+          await import('../../pages/device-config');
         },
         component: 'page-device-config',
       },
@@ -93,14 +93,14 @@ export class AppMain extends LitElement {
       {
         path: '/about',
         action: async () => {
-          await import('../pages/about');
+          await import('../../pages/about');
         },
         component: 'page-about',
       },
       {
         path: '/not-authorized',
         action: async () => {
-          await import('../pages/not-authorized');
+          await import('../../pages/not-authorized');
         },
         component: 'page-not-authorized',
       },
@@ -110,7 +110,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/produksi/hidroponik');
+          await import('../../pages/produksi/hidroponik');
         },
         component: 'hidroponik-page',
       },
@@ -119,7 +119,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/produksi/hortikultura');
+          await import('../../pages/produksi/hortikultura');
         },
         component: 'hortikultura-page',
       },
@@ -128,7 +128,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/produksi/perikanan');
+          await import('../../pages/produksi/perikanan');
         },
         component: 'perikanan-page',
       },
@@ -137,14 +137,14 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../pages/produksi/peternakan');
+          await import('../../pages/produksi/peternakan');
         },
         component: 'peternakan-page',
       },
       {
         path: '(.*)',
         action: async () => {
-          await import('../pages/not-found');
+          await import('../../pages/not-found');
         },
         component: 'page-not-found',
       },

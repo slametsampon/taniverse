@@ -1,6 +1,8 @@
+// frontend/src/views/dashboard-aquakultur.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore, type Device } from '../../services/devices-service';
+import { devicesStore, type Device } from '../services/devices-service';
 import { DeviceHelper } from 'src/services/device-helper';
 
 @customElement('dashboard-aquakultur')
