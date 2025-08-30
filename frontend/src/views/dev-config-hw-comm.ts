@@ -1,6 +1,8 @@
+// frontend/src/views/dev-config-hw-comm.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { DeviceConfig } from '../../domains/devices/device.model';
+import type { DeviceConfig } from '@models/device.model';
 
 @customElement('dev-config-hw-comm')
 export class DevConfigHwComm extends LitElement {
