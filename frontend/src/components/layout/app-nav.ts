@@ -1,4 +1,4 @@
-// frontend/src/components/app-nav.ts
+// frontend/src/components/layout/app-nav.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -138,16 +138,16 @@ export class AppNav extends LitElement {
                   >🥬 Hortikultura</a
                 >
                 <a
-                  href="/produksi/perikanan"
+                  href="/produksi/akuakultur"
                   @click=${this._navigate}
-                  class=${this.isActive('perikanan')}
-                  >🐟 Perikanan</a
+                  class=${this.isActive('akuakultur')}
+                  >🐟 Akuakultur</a
                 >
                 <a
                   href="/produksi/peternakan"
                   @click=${this._navigate}
                   class=${this.isActive('peternakan')}
-                  >🐄 Peternakan</a
+                  >🐔 Peternakan</a
                 >
               </div>
             `

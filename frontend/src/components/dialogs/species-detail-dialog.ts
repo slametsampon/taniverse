@@ -1,17 +1,13 @@
-// frontend/src/components/dialogs/plant-detail-dialog.ts
+// frontend/src/components/dialogs/species-detail-dialog.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Plant } from '@models/plant.model';
-import {
-  formatDate,
-  formatDeviceValue,
-  formatKey,
-} from '../../utils/format-display';
+import type { AquaticSpecies } from '@models/aquatic-species.model';
+import { formatDeviceValue, formatKey } from '../../utils/format-display';
 
-@customElement('plant-detail-dialog')
-export class PlantDetailDialog extends LitElement {
-  @property({ type: Object }) plant!: Plant;
+@customElement('species-detail-dialog')
+export class SpeciesDetailDialog extends LitElement {
+  @property({ type: Object }) species!: AquaticSpecies;
   @property({ type: Boolean }) visible = false;
 
   createRenderRoot() {
@@ -39,7 +35,7 @@ export class PlantDetailDialog extends LitElement {
           @click=${(e: MouseEvent) => e.stopPropagation()}
         >
           <div class="flex justify-between items-center mb-4">
-            <div class="text-lg font-bold">Detail Tanaman</div>
+            <div class="text-lg font-bold">Detail Spesies</div>
             <button
               @click=${() => this.close()}
               class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
@@ -51,7 +47,7 @@ export class PlantDetailDialog extends LitElement {
 
           <table class="w-full text-sm">
             <tbody>
-              ${Object.entries(this.plant || {}).map(
+              ${Object.entries(this.species || {}).map(
                 ([key, value]) => html`
                   <tr class="border-b">
                     <td class="py-1 px-2 font-medium text-gray-600 w-1/3">

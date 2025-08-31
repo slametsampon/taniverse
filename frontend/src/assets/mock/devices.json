@@ -108,7 +108,7 @@
     "tagNumber": "AI-005",
     "type": "sensor",
     "description": "PH Meter",
-    "unit": "-",
+    "unit": "pH",
     "ranges": { "low": 0, "high": 14 },
     "alarms": { "low": 5, "high": 8 },
     "allowedStates": null,
@@ -129,7 +129,7 @@
     "tagNumber": "AI-105",
     "type": "sensor",
     "description": "PH Meter",
-    "unit": "-",
+    "unit": "pH",
     "ranges": { "low": 0, "high": 14 },
     "alarms": { "low": 5, "high": 8 },
     "allowedStates": null,
@@ -238,6 +238,208 @@
     "writable": true,
     "io": { "bus": "gpio", "pin": 16, "address": null, "channel": null },
     "location": "Kolam - 1/pump-1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "state": "OFF"
+  },
+  {
+    "tagNumber": "TI-301",
+    "type": "sensor",
+    "description": "Temperature Kandang",
+    "unit": "°C",
+    "ranges": { "low": -10, "high": 50 },
+    "alarms": { "low": 18, "high": 35 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x48", "channel": null },
+    "sample": { "periodMs": 1000, "deadband": 0.5 },
+    "display": { "precision": 1 },
+    "location": "Kandang Ayam - Zone 1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 29.3
+  },
+  {
+    "tagNumber": "AI-301",
+    "type": "sensor",
+    "description": "Humidity Kandang",
+    "unit": "%",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 40, "high": 85 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x40", "channel": 1 },
+    "sample": { "periodMs": 2000, "deadband": 2 },
+    "display": { "precision": 0 },
+    "location": "Kandang Ayam - Zone 1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 72
+  },
+  {
+    "tagNumber": "AI-302",
+    "type": "sensor",
+    "description": "Konsentrasi Amoniak",
+    "unit": "ppm",
+    "ranges": { "low": 0, "high": 200 },
+    "alarms": { "low": 0, "high": 50 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "adc", "pin": 34, "address": null, "channel": 0 },
+    "sample": { "periodMs": 3000, "deadband": 1 },
+    "display": { "precision": 0 },
+    "location": "Kandang Ayam - Zone 1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 15
+  },
+  {
+    "tagNumber": "H-301",
+    "type": "actuator",
+    "description": "Pemanas",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 25, "address": null, "channel": null },
+    "location": "Kandang Ayam - Zone 1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "state": "OFF"
+  },
+  {
+    "tagNumber": "B-301",
+    "type": "actuator",
+    "description": "Blower/Kipas",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 26, "address": null, "channel": null },
+    "location": "Kandang Ayam - Zone 1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "state": "ON"
+  },
+  {
+    "tagNumber": "TI-401",
+    "type": "sensor",
+    "description": "Temperature Bed/Guludan",
+    "unit": "°C",
+    "ranges": { "low": 10, "high": 50 },
+    "alarms": { "low": 15, "high": 35 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x48", "channel": null },
+    "sample": { "periodMs": 3000, "deadband": 0.5 },
+    "display": { "precision": 1 },
+    "location": "bed-1/zone-a",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 29.3
+  },
+  {
+    "tagNumber": "AI-401",
+    "type": "sensor",
+    "description": "Humidity Udara",
+    "unit": "%",
+    "ranges": { "low": 0, "high": 100 },
+    "alarms": { "low": 40, "high": 90 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x44", "channel": null },
+    "sample": { "periodMs": 3000, "deadband": 2 },
+    "display": { "precision": 0 },
+    "location": "greenhouse-a/zone-1",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 78
+  },
+  {
+    "tagNumber": "AI-402",
+    "type": "sensor",
+    "description": "Intensitas Cahaya",
+    "unit": "lux",
+    "ranges": { "low": 0, "high": 100000 },
+    "alarms": { "low": 2000, "high": 80000 },
+    "allowedStates": null,
+    "defaultState": null,
+    "writable": false,
+    "io": { "bus": "i2c", "pin": null, "address": "0x23", "channel": null },
+    "sample": { "periodMs": 2000, "deadband": 100 },
+    "display": { "precision": 0 },
+    "location": "greenhouse-a/top-light",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "value": 36500
+  },
+  {
+    "tagNumber": "P-401",
+    "type": "actuator",
+    "description": "Pompa Irigasi",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 17, "address": null, "channel": null },
+    "location": "bed-1/pompa-air",
+    "meta": {
+      "createdAt": "2025-08-10T00:00:00Z",
+      "updatedAt": "2025-08-10T00:00:00Z"
+    },
+    "status": "ok",
+    "state": "OFF"
+  },
+  {
+    "tagNumber": "P-402",
+    "type": "actuator",
+    "description": "Pompa Pupuk",
+    "unit": null,
+    "ranges": { "low": null, "high": null },
+    "alarms": { "low": null, "high": null },
+    "allowedStates": ["OFF", "ON"],
+    "defaultState": "OFF",
+    "writable": true,
+    "io": { "bus": "gpio", "pin": 18, "address": null, "channel": null },
+    "location": "bed-1/pompa-nutrisi",
     "meta": {
       "createdAt": "2025-08-10T00:00:00Z",
       "updatedAt": "2025-08-10T00:00:00Z"

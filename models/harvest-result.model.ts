@@ -1,3 +1,5 @@
+// models/harvest-result.model.ts
+
 export interface HarvestResult {
   id: string;
   batchId: string;
@@ -9,4 +11,3 @@ export interface HarvestResult {
   revenue: number;
   netProfit: number;
 }
-// c:\Users\sam294\Documents\Projects\Agro\taniverse\models\harvest-result.model.ts

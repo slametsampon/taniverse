@@ -124,13 +124,13 @@ export class AppMain extends LitElement {
         component: 'hortikultura-page',
       },
       {
-        path: '/produksi/perikanan',
+        path: '/produksi/akuakultur',
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('operator')(ctx, commands);
           if (g) return g;
-          await import('../../pages/produksi/perikanan');
+          await import('../../pages/produksi/akuakultur');
         },
-        component: 'perikanan-page',
+        component: 'akuakultur-page',
       },
       {
         path: '/produksi/peternakan',

@@ -9,7 +9,8 @@
     "paths": {
       "@frontend/*": ["frontend/src/*"],
       "@backend/*": ["backend/src/*"],
-      "@models/*": ["models/*"]
+      "@models/*": ["models/*"],
+      "@utils/*": ["frontend/src/utils/*"]
     }
   }
 }

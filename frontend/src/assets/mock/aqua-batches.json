@@ -1,0 +1,25 @@
+[
+  {
+    "id": "batch1",
+    "speciesId": "sp1",
+    "code": "BATCH-NILA-01",
+    "pond": "Kolam A1",
+    "startDate": "2025-06-01",
+    "expectedHarvestDate": "2025-09-15",
+    "initialPopulation": 1000,
+    "currentPopulation": 980,
+    "status": "Growing",
+    "note": "Pertumbuhan bagus, pakan 2x sehari"
+  },
+  {
+    "id": "batch2",
+    "speciesId": "sp2",
+    "code": "BATCH-LELE-02",
+    "pond": "Biofloc B2",
+    "startDate": "2025-05-10",
+    "expectedHarvestDate": "2025-08-10",
+    "initialPopulation": 1500,
+    "currentPopulation": 1480,
+    "status": "Harvested"
+  }
+]

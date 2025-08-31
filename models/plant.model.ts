@@ -1,3 +1,5 @@
+// models/plant.model.ts
+
 export interface Plant {
   id: string;
   code: string;

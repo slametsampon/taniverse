@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sp1",
+    "code": "NILA01",
+    "name": "Ikan Nila Merah",
+    "image": "/images/ikan-nila.jpg",
+    "growthDaysMin": 90,
+    "growthDaysMax": 120,
+    "minTempC": 25,
+    "maxTempC": 30,
+    "avgWeightG": 500,
+    "pricePerKg": 28000,
+    "costPerSeed": 500,
+    "salinityMinPpt": 0,
+    "salinityMaxPpt": 5,
+    "phMin": 6.5,
+    "phMax": 8.0,
+    "systemType": "KolamTanah"
+  },
+  {
+    "id": "sp2",
+    "code": "LELE01",
+    "name": "Lele Sangkuriang",
+    "image": "/images/lele.jpg",
+    "growthDaysMin": 60,
+    "growthDaysMax": 90,
+    "minTempC": 26,
+    "maxTempC": 32,
+    "avgWeightG": 300,
+    "pricePerKg": 23000,
+    "costPerSeed": 350,
+    "salinityMinPpt": 0,
+    "salinityMaxPpt": 2,
+    "phMin": 6.0,
+    "phMax": 8.5,
+    "systemType": "Biofloc"
+  }
+]

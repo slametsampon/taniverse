@@ -4,9 +4,9 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 // Import komponen dashboard
-import '../views/dashboard-hidoponik.js';
-import '../views/dashboard-aquakultur.js';
-import '../views/dashboard-peternakan.js';
+import '../views/hidroponik-devices.js';
+import '../views/aquakultur-devices.js';
+import '../views/peternakan-devices.js';
 import '../components/mode-selector.js';
 import '../components/dialogs/device-dialog.js';
 import '../components/dashboard-mqtt.ts';
@@ -39,9 +39,9 @@ export class PageDashboard extends LitElement {
       return html`
         <mode-selector></mode-selector>
         <section>
-          <dashboard-hidroponik style=${cardStyle}></dashboard-hidroponik>
-          <dashboard-aquakultur style=${cardStyle}></dashboard-aquakultur>
-          <dashboard-peternakan style=${cardStyle}></dashboard-peternakan>
+          <hidroponik-devices style=${cardStyle}></hidroponik-devices>
+          <aquakultur-devices style=${cardStyle}></aquakultur-devices>
+          <peternakan-devices style=${cardStyle}></peternakan-devices>
         </section>
       `;
     } else if (this.activeTab === 'mqtt') {

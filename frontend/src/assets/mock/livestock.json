@@ -1,0 +1,50 @@
+[
+  {
+    "id": "ls1",
+    "code": "AYAM01",
+    "name": "Ayam Broiler",
+    "type": "Ayam",
+    "breed": "Broiler",
+    "image": "/images/ayam-broiler.jpg",
+    "growthDaysMin": 28,
+    "growthDaysMax": 35,
+    "avgWeightKg": 2.2,
+    "pricePerKg": 23000,
+    "costPerHead": 5000,
+    "tempMinC": 25,
+    "tempMaxC": 32,
+    "systemType": "Kandang Litter"
+  },
+  {
+    "id": "ls2",
+    "code": "AYAM02",
+    "name": "Ayam Layer",
+    "type": "Ayam",
+    "breed": "Layer (Petelur)",
+    "image": "/images/ayam-layer.jpg",
+    "growthDaysMin": 120,
+    "growthDaysMax": 150,
+    "avgWeightKg": 1.8,
+    "pricePerKg": 18000,
+    "costPerHead": 8500,
+    "tempMinC": 24,
+    "tempMaxC": 30,
+    "systemType": "Kandang Baterai"
+  },
+  {
+    "id": "ls3",
+    "code": "AYAM03",
+    "name": "Ayam Kampung",
+    "type": "Ayam",
+    "breed": "Ayam Kampung",
+    "image": "/images/ayam-kampung.jpg",
+    "growthDaysMin": 70,
+    "growthDaysMax": 90,
+    "avgWeightKg": 1.2,
+    "pricePerKg": 35000,
+    "costPerHead": 9000,
+    "tempMinC": 23,
+    "tempMaxC": 30,
+    "systemType": "Semi Intensif"
+  }
+]
