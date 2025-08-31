@@ -2,7 +2,7 @@
 
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { PlantingBatch } from '@models/batch.model';
+import type { PlantingBatch } from '@models/plant-batch.model';
 import type { Plant } from '@models/plant.model';
 import { formatDate } from '../utils/format-display';
 

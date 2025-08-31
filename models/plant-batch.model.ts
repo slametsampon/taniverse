@@ -1,4 +1,4 @@
-// models/batch.model.ts
+// models/plant-batch.model.ts
 
 export interface PlantingBatch {
   id: string;

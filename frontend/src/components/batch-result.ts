@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import type { HarvestResult } from '@models/harvest-result.model';
-import type { PlantingBatch } from '@models/batch.model';
+import type { PlantingBatch } from '@models/plant-batch.model';
 
 import { formatDate } from '../utils/format-display';
 

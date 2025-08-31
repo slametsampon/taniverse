@@ -4,7 +4,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import type { Livestock } from '@models/livestock.model';
-import type { FarmingBatch } from '@models/farming-batch.model';
+import type { LivestockBatch } from '@models/livestock-plant-batch.model';
 import type { HarvestResult } from '@models/harvest-result.model';
 
 import '../../components/dialogs/livestock-detail-dialog';
@@ -20,7 +20,7 @@ export class PeternakanPage extends LitElement {
   }
 
   @state() livestockList: Livestock[] = [];
-  @state() batches: FarmingBatch[] = [];
+  @state() batches: LivestockBatch[] = [];
   @state() harvests: HarvestResult[] = [];
 
   async connectedCallback() {

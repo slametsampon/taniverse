@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 // import type definitions dari models
 import type { Plant } from '@models/plant.model';
-import type { PlantingBatch } from '@models/batch.model';
+import type { PlantingBatch } from '@models/plant-batch.model';
 import type { HarvestResult } from '@models/harvest-result.model';
 import '../../components/dialogs/plant-detail-dialog'; // pastikan path sesuai
 import '../../components/dialogs/device-dialog';
@@ -26,7 +26,9 @@ export class PageProduksiHidroponik extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     this.plants = await (await fetch('/assets/mock/plants.json')).json();
-    this.batches = await (await fetch('/assets/mock/batches.json')).json();
+    this.batches = await (
+      await fetch('/assets/mock/plant-batches.json')
+    ).json();
     this.harvests = await (await fetch('/assets/mock/harvests.json')).json();
   }
 

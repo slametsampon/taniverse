@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 // import model type definitions
 import type { Plant } from '@models/plant.model';
-import type { PlantingBatch } from '@models/batch.model';
+import type { PlantingBatch } from '@models/plant-batch.model';
 import type { HarvestResult } from '@models/harvest-result.model';
 
 import '../../components/dialogs/plant-detail-dialog';

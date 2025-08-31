@@ -1,6 +1,6 @@
-// models/aquaculture-batch.model.ts
+// models/aquatic-batch.model.ts
 
-export interface AquacultureBatch {
+export interface AquaticBatch {
   id: string;
   speciesId: string;
   code: string;

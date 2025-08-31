@@ -3,7 +3,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Livestock } from '@models/livestock.model';
-import type { FarmingBatch } from '@models/farming-batch.model';
+import type { LivestockBatch } from '@models/livestock-plant-batch.model';
 import { formatDate } from '../utils/format-display';
 
 @customElement('livestock-batch')
@@ -12,7 +12,7 @@ export class LivestockBatchTable extends LitElement {
     return this;
   }
 
-  @property({ type: Array }) batches: FarmingBatch[] = [];
+  @property({ type: Array }) batches: LivestockBatch[] = [];
   @property({ type: Array }) livestockList: Livestock[] = [];
 
   private getLivestockById(id: string): Livestock | undefined {

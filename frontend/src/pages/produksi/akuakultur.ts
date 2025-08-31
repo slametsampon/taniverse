@@ -5,7 +5,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 // import type definitions dari models
 import type { AquaticSpecies } from '@models/aquatic-species.model';
-import type { AquacultureBatch } from '@models/aquaculture-batch.model';
+import type { AquaticBatch } from '@models/aquaculture-plant-batch.model';
 import type { HarvestResult } from '@models/harvest-result.model';
 
 import '../../components/dialogs/species-detail-dialog';
@@ -21,13 +21,15 @@ export class PageProduksiAkuakultur extends LitElement {
   }
 
   @state() species: AquaticSpecies[] = [];
-  @state() batches: AquacultureBatch[] = [];
+  @state() batches: AquaticBatch[] = [];
   @state() harvests: HarvestResult[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
     this.species = await (await fetch('/assets/mock/species.json')).json();
-    this.batches = await (await fetch('/assets/mock/aqua-batches.json')).json();
+    this.batches = await (
+      await fetch('/assets/mock/aquatic-batches.json')
+    ).json();
     this.harvests = await (
       await fetch('/assets/mock/aqua-harvests.json')
     ).json();

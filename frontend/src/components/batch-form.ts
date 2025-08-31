@@ -1,7 +1,7 @@
 // frontend/src/components/batch-form.ts
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { PlantingBatch } from '@models/batch.model';
+import type { PlantingBatch } from '@models/plant-batch.model';
 import './crud-buttons';
 
 @customElement('batch-form')

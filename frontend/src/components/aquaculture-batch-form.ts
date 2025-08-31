@@ -2,11 +2,11 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { AquacultureBatch } from '@models/aquaculture-batch.model';
+import type { AquaticBatch } from '@models/aquaculture-plant-batch.model';
 import './crud-buttons';
 
 @customElement('aquaculture-batch-form')
-export class AquacultureBatchForm extends LitElement {
+export class AquaticBatchForm extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -14,10 +14,10 @@ export class AquacultureBatchForm extends LitElement {
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
 
   @state()
-  private allBatches: AquacultureBatch[] = [];
+  private allBatches: AquaticBatch[] = [];
 
   @state()
-  private draft: AquacultureBatch = this.emptyBatch();
+  private draft: AquaticBatch = this.emptyBatch();
 
   @state()
   private selectedId = '';
@@ -44,7 +44,7 @@ export class AquacultureBatchForm extends LitElement {
   }
 
   async loadMockData() {
-    const res = await fetch('/assets/mock/aqua-batches.json');
+    const res = await fetch('/assets/mock/aquatic-batches.json');
     this.allBatches = await res.json();
     console.log('[MOCK BATCHES]', this.allBatches);
 
@@ -63,7 +63,7 @@ export class AquacultureBatchForm extends LitElement {
     }
   }
 
-  emptyBatch(): AquacultureBatch {
+  emptyBatch(): AquaticBatch {
     return {
       id: '',
       speciesId: '',
@@ -78,14 +78,14 @@ export class AquacultureBatchForm extends LitElement {
     };
   }
 
-  handleChange(e: Event, key: keyof AquacultureBatch) {
+  handleChange(e: Event, key: keyof AquaticBatch) {
     const target = e.target as
       | HTMLInputElement
       | HTMLSelectElement
       | HTMLTextAreaElement;
     let value: any = target.value;
 
-    const numericFields: (keyof AquacultureBatch)[] = [
+    const numericFields: (keyof AquaticBatch)[] = [
       'initialPopulation',
       'currentPopulation',
     ];
@@ -101,7 +101,7 @@ export class AquacultureBatchForm extends LitElement {
     this.loadSelectedBatch();
   }
 
-  validate(batch: AquacultureBatch) {
+  validate(batch: AquaticBatch) {
     if (!batch.id) return { valid: false, message: 'ID wajib diisi.' };
     if (!batch.speciesId)
       return { valid: false, message: 'Spesies wajib diisi.' };
@@ -132,7 +132,7 @@ export class AquacultureBatchForm extends LitElement {
 
   private renderInput(
     label: string,
-    key: keyof AquacultureBatch,
+    key: keyof AquaticBatch,
     value: string | number,
     type: 'text' | 'number' | 'date' = 'text'
   ) {

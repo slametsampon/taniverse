@@ -1,6 +1,6 @@
-// models/farming-batch.model.ts
+// models/livestock-plant-batch.model.ts
 
-export interface FarmingBatch {
+export interface LivestockBatch {
   id: string;
   livestockId: string;
   code: string;

@@ -2,16 +2,16 @@
 
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { AquacultureBatch } from '@models/aquaculture-batch.model';
+import type { AquaticBatch } from '@models/aquaculture-plant-batch.model';
 import type { AquaticSpecies } from '@models/aquatic-species.model';
 
 @customElement('aquaculture-batch')
-export class AquacultureBatchTable extends LitElement {
+export class AquaticBatchTable extends LitElement {
   createRenderRoot() {
     return this;
   }
 
-  @property({ type: Array }) batches: AquacultureBatch[] = [];
+  @property({ type: Array }) batches: AquaticBatch[] = [];
   @property({ type: Array }) species: AquaticSpecies[] = [];
 
   private getSpeciesById(id: string): AquaticSpecies | undefined {
