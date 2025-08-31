@@ -2,7 +2,6 @@
   {
     "id": "B001",
     "plantId": "PC01",
-    "code": "B001",
     "startDate": "2025-08-01",
     "expectedHarvestDate": "2025-08-26",
     "holesUsed": 30,
@@ -14,7 +13,6 @@
   {
     "id": "B002",
     "plantId": "KT01",
-    "code": "B002",
     "startDate": "2025-08-10",
     "expectedHarvestDate": "2025-08-20",
     "holesUsed": 40,
