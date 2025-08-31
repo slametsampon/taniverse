@@ -1,3 +1,5 @@
+// frontend/src/pages/histori.ts
+
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
@@ -11,7 +13,7 @@ export class PageHistori extends LitElement {
     return html`
       <section class="bg-white shadow rounded p-6">
         <div class="mb-4">
-          <h2 class="text-2xl font-bold text-green-800">📜 Riwayat Sensor</h2>
+          <h2 class="text-2xl font-bold text-green-800">📜 Riwayat Kejadian</h2>
           <p class="text-gray-500 text-sm">
             Histori pembacaan data sensor hidroponik
           </p>

@@ -1,3 +1,5 @@
+// frontend/src/components/mode-selector.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit/context';

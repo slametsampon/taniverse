@@ -3,50 +3,107 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-// Import komponen dashboard
-import '../views/hidroponik-devices.js';
-import '../views/aquakultur-devices.js';
-import '../views/peternakan-devices.js';
-import '../components/mode-selector.js';
-import '../components/dialogs/device-dialog.js';
-import '../components/dashboard-mqtt.ts';
-
-// Import tab UI
 import '../components/ui/ui-tabs.js';
+import '../components/dashboard-mqtt.ts';
+import '../components/mode-selector.js';
+
+// Impor komponen halaman domain produksi
+import './produksi/hidroponik.ts';
+import './produksi/hortikultura.ts';
+import './produksi/akuakultur.ts';
+import './produksi/peternakan.ts';
+
+// ✨ Tab baru: History
+import './histori.ts';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {
-  @state() private activeTab: 'operation' | 'mqtt' = 'operation';
+  @state() private activeTab: 'produksi' | 'devices' | 'history' = 'produksi';
+  @state() private domain:
+    | 'hidroponik'
+    | 'hortikultura'
+    | 'akuakultur'
+    | 'peternakan' = 'hidroponik';
 
   createRenderRoot() {
-    return this;
+    return this; // light DOM
   }
 
-  private get tabs() {
-    return [
-      { id: 'operation', label: 'Operation', icon: '⚙️' },
-      { id: 'mqtt', label: 'MQTT Devices', icon: '🧪' },
-    ];
+  private handleTabChange(e: CustomEvent<{ id: string }>) {
+    this.activeTab = e.detail.id as 'produksi' | 'devices' | 'history';
   }
 
-  private onTabChange(e: CustomEvent<{ id: String }>) {
-    this.activeTab = e.detail.id as 'operation' | 'mqtt';
+  private handleDomainSelect(e: Event) {
+    const selected = (e.target as HTMLSelectElement).value;
+    this.domain = selected as any;
   }
 
-  private renderContent() {
-    const cardStyle = 'display:block;margin-bottom:1.5rem;';
-    if (this.activeTab === 'operation') {
-      return html`
+  private renderProduksiContent() {
+    return html`
+      <div class="mb-4">
+        <label class="block mb-2 text-sm font-medium text-gray-700">
+          Pilih Domain Produksi:
+        </label>
+        <select
+          @change=${this.handleDomainSelect}
+          class="w-full p-2 border border-gray-300 rounded-md text-sm text-gray-800"
+        >
+          <option value="hidroponik" ?selected=${this.domain === 'hidroponik'}>
+            🌱 Hidroponik
+          </option>
+          <option
+            value="hortikultura"
+            ?selected=${this.domain === 'hortikultura'}
+          >
+            🥬 Hortikultura
+          </option>
+          <option value="akuakultur" ?selected=${this.domain === 'akuakultur'}>
+            🐟 Akuakultur
+          </option>
+          <option value="peternakan" ?selected=${this.domain === 'peternakan'}>
+            🐔 Peternakan
+          </option>
+        </select>
+      </div>
+
+      <section>
+        ${this.domain === 'hidroponik'
+          ? html`<hidroponik-page class="block mb-6"></hidroponik-page>`
+          : this.domain === 'hortikultura'
+          ? html`<hortikultura-page class="block mb-6"></hortikultura-page>`
+          : this.domain === 'akuakultur'
+          ? html`<akuakultur-page class="block mb-6"></akuakultur-page>`
+          : this.domain === 'peternakan'
+          ? html`<peternakan-page class="block mb-6"></peternakan-page>`
+          : null}
+      </section>
+    `;
+  }
+
+  // 🔌 Konten untuk tab "Devices" (dashboard-mqtt)
+  private renderMqttContent() {
+    return html`
+      <div class="mb-4">
+        <label class="block mb-2 text-sm font-medium text-gray-700">
+          Konfigurasi & Mode:
+        </label>
+        <!-- mode-selector tetap di dalam tab ini -->
         <mode-selector></mode-selector>
-        <section>
-          <hidroponik-devices style=${cardStyle}></hidroponik-devices>
-          <aquakultur-devices style=${cardStyle}></aquakultur-devices>
-          <peternakan-devices style=${cardStyle}></peternakan-devices>
-        </section>
-      `;
-    } else if (this.activeTab === 'mqtt') {
-      return html`<dashboard-mqtt></dashboard-mqtt>`;
-    }
+      </div>
+
+      <section class="space-y-6">
+        <dashboard-mqtt class="block"></dashboard-mqtt>
+      </section>
+    `;
+  }
+
+  // 📜 Konten untuk tab "History"
+  private renderHistoryContent() {
+    return html`
+      <section class="space-y-6">
+        <page-histori class="block"></page-histori>
+      </section>
+    `;
   }
 
   render() {
@@ -54,14 +111,19 @@ export class PageDashboard extends LitElement {
       <div class="p-4 space-y-4">
         <ui-tabs
           .tabs=${[
-            { id: 'operation', label: 'Operation', icon: '⚙️' },
-            { id: 'mqtt', label: 'MQTT Devices', icon: '🧪' },
-          ] as const}
+            { id: 'produksi', label: 'Produksi', icon: '🏭' },
+            { id: 'devices', label: 'Devices', icon: '🔌' },
+            { id: 'history', label: 'History', icon: '📜' },
+          ]}
           .active=${this.activeTab}
-          @dev-tab-change=${this.onTabChange}
+          @dev-tab-change=${this.handleTabChange}
         ></ui-tabs>
 
-        ${this.renderContent()}
+        ${this.activeTab === 'produksi'
+          ? this.renderProduksiContent()
+          : this.activeTab === 'devices'
+          ? this.renderMqttContent()
+          : this.renderHistoryContent()}
       </div>
     `;
   }

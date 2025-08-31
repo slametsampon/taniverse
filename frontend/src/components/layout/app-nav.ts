@@ -102,57 +102,11 @@ export class AppNav extends LitElement {
         >📊 Dashboard</a
       >
       <a
-        href="/histori"
-        @click=${this._navigate}
-        class=${this.isActive('histori')}
-        >📈 Histori</a
-      >
-      <a
         href="/config"
         @click=${this._navigate}
         class=${this.isActive('config')}
         >⚙️ Konfigurasi</a
       >
-
-      <!-- Produksi Dropdown -->
-      <div>
-        <button
-          @click=${() => (this.produksiOpen = !this.produksiOpen)}
-          class="hover:bg-green-200 rounded px-2 py-1 w-full text-left"
-        >
-          📦 Produksi ${this.produksiOpen ? '▾' : '▸'}
-        </button>
-        ${this.produksiOpen
-          ? html`
-              <div class="ml-4 flex flex-col gap-1">
-                <a
-                  href="/produksi/hidroponik"
-                  @click=${this._navigate}
-                  class=${this.isActive('hidroponik')}
-                  >🌱 Hidroponik</a
-                >
-                <a
-                  href="/produksi/hortikultura"
-                  @click=${this._navigate}
-                  class=${this.isActive('hortikultura')}
-                  >🥬 Hortikultura</a
-                >
-                <a
-                  href="/produksi/akuakultur"
-                  @click=${this._navigate}
-                  class=${this.isActive('akuakultur')}
-                  >🐟 Akuakultur</a
-                >
-                <a
-                  href="/produksi/peternakan"
-                  @click=${this._navigate}
-                  class=${this.isActive('peternakan')}
-                  >🐔 Peternakan</a
-                >
-              </div>
-            `
-          : ''}
-      </div>
     `;
   }
 }
