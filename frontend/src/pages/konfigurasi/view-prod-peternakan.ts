@@ -1,23 +1,43 @@
 // frontend/src/pages/konfigurasi/view-prod-peternakan.ts
 
 import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+import '../../components/livestock-batch-form';
 
 @customElement('view-prod-peternakan')
-export class ViewProdpeternakan extends LitElement {
+export class ViewProdPeternakan extends LitElement {
   createRenderRoot() {
     return this;
   }
 
+  @state()
+  private formMode: 'new' | 'edit' = 'new';
+
+  private toggleMode(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    this.formMode = target.value as 'new' | 'edit';
+  }
+
   render() {
     return html`
-      <div class="p-4 border rounded shadow-sm bg-green-50">
-        <h2 class="text-lg font-semibold text-green-700 mb-2">
-          Konfigurasi peternakan
+      <div class="p-4 space-y-6">
+        <h2 class="text-xl font-semibold text-green-700">
+          Manajemen Batch Peternakan (Ayam)
         </h2>
-        <p class="text-sm text-gray-600">
-          Ini adalah placeholder untuk setup domain peternakan.
-        </p>
+
+        <div class="mb-4">
+          <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
+          <select
+            class="px-3 py-1 border rounded bg-white"
+            .value=${this.formMode}
+            @change=${this.toggleMode}
+          >
+            <option value="new">Tambah Baru</option>
+            <option value="edit">Edit Data</option>
+          </select>
+        </div>
+
+        <livestock-batch-form .mode=${this.formMode}></livestock-batch-form>
       </div>
     `;
   }

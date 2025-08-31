@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/aquaculture-batch-form'; // pastikan path benar
+import '../../components/aquatic-batch-form';
 
 @customElement('view-prod-akuakultur')
 export class ViewProdAkuakultur extends LitElement {
@@ -21,11 +21,10 @@ export class ViewProdAkuakultur extends LitElement {
   render() {
     return html`
       <div class="p-4 space-y-6">
-        <h2 class="text-xl font-semibold text-green-700">
+        <h2 class="text-xl font-semibold text-blue-700">
           Manajemen Batch Akuakultur
         </h2>
 
-        <!-- Mode Switcher -->
         <div class="mb-4">
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
@@ -38,8 +37,7 @@ export class ViewProdAkuakultur extends LitElement {
           </select>
         </div>
 
-        <!-- Form Komponen -->
-        <aquaculture-batch-form .mode=${this.formMode}></aquaculture-batch-form>
+        <aquatic-batch-form .mode=${this.formMode}></aquatic-batch-form>
       </div>
     `;
   }

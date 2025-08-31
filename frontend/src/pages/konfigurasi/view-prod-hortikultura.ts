@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/batch-form'; // pastikan path benar
+import 'src/components/planting-batch-form';
 
 @customElement('view-prod-hortikultura')
 export class ViewProdHortikultura extends LitElement {
@@ -39,7 +39,7 @@ export class ViewProdHortikultura extends LitElement {
         </div>
 
         <!-- Form -->
-        <batch-form .mode=${this.formMode}></batch-form>
+        <planting-batch-form .mode=${this.formMode}></planting-batch-form>
       </div>
     `;
   }

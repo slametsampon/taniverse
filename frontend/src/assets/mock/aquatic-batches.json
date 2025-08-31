@@ -1,25 +1,46 @@
 [
   {
-    "id": "batch1",
-    "speciesId": "sp1",
-    "code": "BATCH-NILA-01",
-    "pond": "Kolam A1",
-    "startDate": "2025-06-01",
-    "expectedHarvestDate": "2025-09-15",
-    "initialPopulation": 1000,
-    "currentPopulation": 980,
-    "status": "Growing",
-    "note": "Pertumbuhan bagus, pakan 2x sehari"
+    "id": "batch-fsh-001",
+    "itemId": "lele-jumbo",
+    "location": "Kolam-A1",
+    "startDate": "2025-07-01",
+    "expectedHarvestDate": "2025-08-20",
+    "initialCount": 2000,
+    "currentCount": 1960,
+    "status": "Active",
+    "note": "40 ekor mati minggu pertama"
   },
   {
-    "id": "batch2",
-    "speciesId": "sp2",
-    "code": "BATCH-LELE-02",
-    "pond": "Biofloc B2",
-    "startDate": "2025-05-10",
+    "id": "batch-fsh-002",
+    "itemId": "nila-merah",
+    "location": "Kolam-B2",
+    "startDate": "2025-06-15",
     "expectedHarvestDate": "2025-08-10",
-    "initialPopulation": 1500,
-    "currentPopulation": 1480,
-    "status": "Harvested"
+    "initialCount": 1500,
+    "currentCount": 0,
+    "status": "Harvested",
+    "note": "Panen sukses"
+  },
+  {
+    "id": "batch-fsh-003",
+    "itemId": "patin-super",
+    "location": "Kolam-C1",
+    "startDate": "2025-08-05",
+    "expectedHarvestDate": "2025-09-15",
+    "initialCount": 1800,
+    "currentCount": 1775,
+    "status": "Active",
+    "note": "Kondisi air bagus"
+  },
+  {
+    "id": "batch-fsh-004",
+    "itemId": "gurame-lokal",
+    "location": "Kolam-D3",
+    "startDate": "2025-07-10",
+    "expectedHarvestDate": "2025-09-01",
+    "initialCount": 1200,
+    "currentCount": 0,
+    "status": "Failed",
+    "note": "Gagal akibat pencemaran"
   }
 ]

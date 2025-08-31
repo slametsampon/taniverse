@@ -1,7 +1,8 @@
 // frontend/src/pages/konfigurasi/view-prod-hidroponik.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/batch-form';
+import 'src/components/planting-batch-form';
 
 @customElement('view-prod-hidroponik')
 export class ViewProdHidroponik extends LitElement {
@@ -24,6 +25,7 @@ export class ViewProdHidroponik extends LitElement {
           Manajemen Batch Hidroponik
         </h2>
 
+        <!-- Mode Switcher -->
         <div class="mb-4">
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
@@ -36,7 +38,8 @@ export class ViewProdHidroponik extends LitElement {
           </select>
         </div>
 
-        <batch-form .mode=${this.formMode}></batch-form>
+        <!-- Form -->
+        <planting-batch-form .mode=${this.formMode}></planting-batch-form>
       </div>
     `;
   }

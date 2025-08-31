@@ -10,6 +10,7 @@
       "@frontend/*": ["frontend/src/*"],
       "@backend/*": ["backend/src/*"],
       "@models/*": ["models/*"],
+      "@schema/*": ["frontend/src/utils/schema/*"],
       "@utils/*": ["frontend/src/utils/*"]
     }
   }

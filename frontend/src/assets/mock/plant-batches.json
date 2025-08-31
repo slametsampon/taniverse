@@ -1,24 +1,46 @@
 [
   {
-    "id": "B001",
-    "plantId": "PC01",
+    "id": "batch-001",
+    "itemId": "lettuce-a",
+    "location": "Tray-A1",
     "startDate": "2025-08-01",
-    "expectedHarvestDate": "2025-08-26",
-    "holesUsed": 30,
-    "totalPlants": 30,
-    "location": "Rak A1",
-    "status": "Planted",
-    "note": "Tanam pagi, suhu 25°C"
+    "expectedHarvestDate": "2025-08-28",
+    "initialCount": 36,
+    "currentCount": 34,
+    "status": "Active",
+    "note": "Pertumbuhan normal"
   },
   {
-    "id": "B002",
-    "plantId": "KT01",
-    "startDate": "2025-08-10",
-    "expectedHarvestDate": "2025-08-20",
-    "holesUsed": 40,
-    "totalPlants": 40,
-    "location": "Rak B2",
+    "id": "batch-002",
+    "itemId": "kale-b",
+    "location": "Tray-B3",
+    "startDate": "2025-07-20",
+    "expectedHarvestDate": "2025-08-18",
+    "initialCount": 42,
+    "currentCount": 41,
     "status": "Harvested",
-    "note": "Hujan lebat saat tanam"
+    "note": "Panen berhasil, 1 tanaman mati"
+  },
+  {
+    "id": "batch-003",
+    "itemId": "pakcoy-c",
+    "location": "Tray-C2",
+    "startDate": "2025-08-10",
+    "expectedHarvestDate": "2025-09-05",
+    "initialCount": 30,
+    "currentCount": 28,
+    "status": "Active",
+    "note": "2 tanaman kuning, sedang diamati"
+  },
+  {
+    "id": "batch-004",
+    "itemId": "bayam-d",
+    "location": "Tray-D1",
+    "startDate": "2025-07-15",
+    "expectedHarvestDate": "2025-08-12",
+    "initialCount": 40,
+    "currentCount": 0,
+    "status": "Failed",
+    "note": "Gagal karena serangan jamur"
   }
 ]
