@@ -1,11 +1,12 @@
-// frontend/src/components/batch-form.ts
+// frontend/src/components/aquaculture-batch-form.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import type { PlantingBatch } from '@models/batch.model';
+import type { AquacultureBatch } from '@models/aquaculture-batch.model';
 import './crud-buttons';
 
-@customElement('batch-form')
-export class BatchForm extends LitElement {
+@customElement('aquaculture-batch-form')
+export class AquacultureBatchForm extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -13,10 +14,10 @@ export class BatchForm extends LitElement {
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
 
   @state()
-  private allBatches: PlantingBatch[] = [];
+  private allBatches: AquacultureBatch[] = [];
 
   @state()
-  private draft: PlantingBatch = this.emptyBatch();
+  private draft: AquacultureBatch = this.emptyBatch();
 
   @state()
   private selectedId = '';
@@ -26,81 +27,90 @@ export class BatchForm extends LitElement {
     this.loadMockData();
   }
 
-  updated(changedProps: Map<string, any>) {
-    if (changedProps.has('mode')) {
-      console.log(`[MODE CHANGED]: ${this.mode}`);
-
+  updated(changed: Map<string, any>) {
+    if (changed.has('mode')) {
+      console.log(`[MODE]: ${this.mode}`);
       if (this.mode === 'edit') {
         if (!this.allBatches.length) {
-          console.log('[INFO] No batch data yet, fetching...');
           this.loadMockData();
         } else {
-          console.log('[INFO] Batch data already loaded, using first entry');
           this.selectedId = this.allBatches[0]?.id ?? '';
           this.loadSelectedBatch();
         }
-      }
-
-      if (this.mode === 'new') {
-        console.log('[INFO] Switching to NEW mode, clearing form...');
+      } else {
         this.draft = this.emptyBatch();
       }
     }
   }
 
   async loadMockData() {
-    const res = await fetch('/assets/mock/batches.json');
+    const res = await fetch('/assets/mock/aqua-batches.json');
     this.allBatches = await res.json();
-
-    console.log('[MOCK DATA LOADED]', this.allBatches);
+    console.log('[MOCK BATCHES]', this.allBatches);
 
     if (this.mode === 'edit') {
       this.selectedId = this.allBatches[0]?.id ?? '';
-      console.log('[EDIT MODE] Default selectedId:', this.selectedId);
       this.loadSelectedBatch();
     }
   }
 
   loadSelectedBatch() {
-    console.log('[LOAD SELECTED BATCH] ID:', this.selectedId);
-
     const found = this.allBatches.find((b) => b.id === this.selectedId);
     if (found) {
-      console.log('[LOADING BATCH]', found);
       this.draft = { ...found };
     } else {
-      console.warn('[BATCH NOT FOUND]', this.selectedId);
       this.draft = this.emptyBatch();
     }
   }
 
-  emptyBatch(): PlantingBatch {
+  emptyBatch(): AquacultureBatch {
     return {
       id: '',
-      plantId: '',
+      speciesId: '',
+      code: '',
+      pond: '',
       startDate: '',
       expectedHarvestDate: '',
-      holesUsed: 0,
-      totalPlants: 0,
-      location: '',
-      status: 'Planted',
+      initialPopulation: 0,
+      currentPopulation: 0,
+      status: 'Growing',
       note: '',
     };
   }
 
-  handleChange(e: Event, key: keyof PlantingBatch) {
+  handleChange(e: Event, key: keyof AquacultureBatch) {
     const target = e.target as
       | HTMLInputElement
       | HTMLSelectElement
       | HTMLTextAreaElement;
     let value: any = target.value;
-    if (key === 'holesUsed' || key === 'totalPlants') value = parseInt(value);
+
+    const numericFields: (keyof AquacultureBatch)[] = [
+      'initialPopulation',
+      'currentPopulation',
+    ];
+    if (numericFields.includes(key)) {
+      value = parseInt(value);
+    }
+
     this.draft = { ...this.draft, [key]: value };
   }
 
   handleSelectChange(e: Event) {
     this.selectedId = (e.target as HTMLSelectElement).value;
     this.loadSelectedBatch();
+  }
+
+  validate(batch: AquacultureBatch) {
+    if (!batch.id) return { valid: false, message: 'ID wajib diisi.' };
+    if (!batch.speciesId)
+      return { valid: false, message: 'Spesies wajib diisi.' };
+    if (!batch.code)
+      return { valid: false, message: 'Kode batch wajib diisi.' };
+    if (!batch.pond) return { valid: false, message: 'Kolam wajib diisi.' };
+    if (!batch.startDate)
+      return { valid: false, message: 'Tanggal mulai wajib diisi.' };
+    return { valid: true };
   }
 
   submit = () => {
@@ -120,22 +130,10 @@ export class BatchForm extends LitElement {
     }
   };
 
-  validate(batch: PlantingBatch) {
-    if (!batch.id) return { valid: false, message: 'ID wajib diisi.' };
-    if (!batch.plantId)
-      return { valid: false, message: 'Plant ID wajib diisi.' };
-    if (!batch.location)
-      return { valid: false, message: 'Lokasi wajib diisi.' };
-    if (!batch.startDate)
-      return { valid: false, message: 'Tanggal mulai wajib diisi.' };
-    return { valid: true };
-  }
-
-  // ✅ Type untuk input field
   private renderInput(
     label: string,
-    key: keyof PlantingBatch,
-    value: string,
+    key: keyof AquacultureBatch,
+    value: string | number,
     type: 'text' | 'number' | 'date' = 'text'
   ) {
     return html`
@@ -143,7 +141,7 @@ export class BatchForm extends LitElement {
         <label class="block text-sm text-gray-700 font-medium">${label}</label>
         <input
           class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
-          .value=${value}
+          .value=${String(value)}
           type=${type}
           @input=${(e: Event) => this.handleChange(e, key)}
         />
@@ -153,31 +151,50 @@ export class BatchForm extends LitElement {
 
   render() {
     return html`
-      <div class="border rounded p-4 bg-white space-y-4 text-sm">
+      <div
+        class="border border-gray-300 rounded-lg p-6 bg-white shadow-sm space-y-6 text-sm"
+      >
+        <!-- Judul Form -->
+        <div>
+          <h3 class="text-lg font-semibold text-green-700">
+            ${this.mode === 'new'
+              ? 'Tambah Batch Baru'
+              : 'Edit Batch Akuakultur'}
+          </h3>
+          <p class="text-gray-500">
+            ${this.mode === 'new'
+              ? 'Isi data berikut untuk menambahkan batch akuakultur baru.'
+              : 'Pilih dan edit batch akuakultur yang sudah ada.'}
+          </p>
+        </div>
+
+        <!-- Pilih Batch (edit mode) -->
         ${this.mode === 'edit'
           ? html`
-              <div>
-                <label class="block text-gray-600">Pilih Batch</label>
+              <div class="space-y-1">
+                <label class="block text-sm text-gray-700 font-medium"
+                  >Pilih Batch</label
+                >
                 <select
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
                   .value=${this.selectedId}
                   @change=${this.handleSelectChange}
                 >
                   ${this.allBatches.map(
                     (b) =>
-                      html`<option value=${b.id}>
-                        ${b.id} - ${b.location}
-                      </option>`
+                      html`<option value=${b.id}>${b.code} — ${b.pond}</option>`
                   )}
                 </select>
               </div>
             `
           : null}
 
+        <!-- Form Fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           ${this.renderInput('ID', 'id', this.draft.id)}
-          ${this.renderInput('Plant ID', 'plantId', this.draft.plantId)}
-          ${this.renderInput('Lokasi', 'location', this.draft.location)}
+          ${this.renderInput('Kode Batch', 'code', this.draft.code)}
+          ${this.renderInput('Kolam', 'pond', this.draft.pond)}
+          ${this.renderInput('Spesies ID', 'speciesId', this.draft.speciesId)}
           ${this.renderInput(
             'Tanggal Mulai',
             'startDate',
@@ -191,34 +208,38 @@ export class BatchForm extends LitElement {
             'date'
           )}
           ${this.renderInput(
-            'Lubang Terpakai',
-            'holesUsed',
-            this.draft.holesUsed.toString(),
+            'Populasi Awal',
+            'initialPopulation',
+            String(this.draft.initialPopulation),
             'number'
           )}
           ${this.renderInput(
-            'Jumlah Tanaman',
-            'totalPlants',
-            this.draft.totalPlants.toString(),
+            'Populasi Saat Ini',
+            'currentPopulation',
+            String(this.draft.currentPopulation),
             'number'
           )}
 
-          <div>
-            <label class="block text-gray-600">Status</label>
+          <!-- Status Select -->
+          <div class="space-y-1">
+            <label class="block text-sm text-gray-700 font-medium"
+              >Status</label
+            >
             <select
               class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
               .value=${this.draft.status}
               @change=${(e: Event) => this.handleChange(e, 'status')}
             >
-              <option value="Planted">Planted</option>
+              <option value="Growing">Growing</option>
               <option value="Harvested">Harvested</option>
               <option value="Failed">Failed</option>
             </select>
           </div>
         </div>
 
-        <div>
-          <label class="block text-gray-600">Catatan</label>
+        <!-- Catatan -->
+        <div class="space-y-1">
+          <label class="block text-sm text-gray-700 font-medium">Catatan</label>
           <textarea
             class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition resize-none min-h-[80px]"
             .value=${this.draft.note ?? ''}
@@ -226,6 +247,7 @@ export class BatchForm extends LitElement {
           ></textarea>
         </div>
 
+        <!-- Tombol Aksi -->
         <crud-buttons
           .mode=${this.mode}
           @submit=${this.submit}

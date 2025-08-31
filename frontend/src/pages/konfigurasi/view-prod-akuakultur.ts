@@ -1,23 +1,45 @@
 // frontend/src/pages/konfigurasi/view-prod-akuakultur.ts
 
 import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
+import '../../components/aquaculture-batch-form'; // pastikan path benar
 
 @customElement('view-prod-akuakultur')
-export class ViewProdakuakultur extends LitElement {
+export class ViewProdAkuakultur extends LitElement {
   createRenderRoot() {
     return this;
   }
 
+  @state()
+  private formMode: 'new' | 'edit' = 'new';
+
+  private toggleMode(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    this.formMode = target.value as 'new' | 'edit';
+  }
+
   render() {
     return html`
-      <div class="p-4 border rounded shadow-sm bg-green-50">
-        <h2 class="text-lg font-semibold text-green-700 mb-2">
-          Konfigurasi akuakultur
+      <div class="p-4 space-y-6">
+        <h2 class="text-xl font-semibold text-green-700">
+          Manajemen Batch Akuakultur
         </h2>
-        <p class="text-sm text-gray-600">
-          Ini adalah placeholder untuk setup domain akuakultur.
-        </p>
+
+        <!-- Mode Switcher -->
+        <div class="mb-4">
+          <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
+          <select
+            class="px-3 py-1 border rounded bg-white"
+            .value=${this.formMode}
+            @change=${this.toggleMode}
+          >
+            <option value="new">Tambah Baru</option>
+            <option value="edit">Edit Data</option>
+          </select>
+        </div>
+
+        <!-- Form Komponen -->
+        <aquaculture-batch-form .mode=${this.formMode}></aquaculture-batch-form>
       </div>
     `;
   }
