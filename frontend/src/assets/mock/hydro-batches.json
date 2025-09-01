@@ -1,0 +1,28 @@
+[
+  {
+    "id": "H001",
+    "plantId": "PC01",
+    "code": "H001",
+    "system": "NFT",
+    "location": "Rak-A1",
+    "startDate": "2025-08-01",
+    "expectedHarvestDate": "2025-08-26",
+    "initialCount": 30,
+    "currentCount": 30,
+    "status": "Planted",
+    "note": "Tray penuh"
+  },
+  {
+    "id": "H002",
+    "plantId": "KT01",
+    "code": "H002",
+    "system": "DWC",
+    "location": "Rak-B2",
+    "startDate": "2025-08-05",
+    "expectedHarvestDate": "2025-08-28",
+    "initialCount": 40,
+    "currentCount": 40,
+    "status": "Planted",
+    "note": "Perlu cek pH harian"
+  }
+]

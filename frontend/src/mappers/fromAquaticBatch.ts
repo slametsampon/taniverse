@@ -11,8 +11,8 @@ export function fromAquaticBatch(batch: AquaticBatch): GenericBatch {
     location: batch.pond,
     startDate: batch.startDate,
     expectedHarvestDate: batch.expectedHarvestDate,
-    initialCount: batch.initialCount,
-    currentCount: batch.currentCount,
+    initialCount: batch.initialPopulation,
+    currentCount: batch.currentPopulation,
     status: batch.status === 'Growing' ? 'Active' : batch.status,
     note: batch.note ?? '-',
   };
