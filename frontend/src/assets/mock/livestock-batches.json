@@ -1,8 +1,8 @@
 [
   {
     "id": "batch-chk-001",
-    "itemId": "broiler-ayam-01",
-    "location": "Kandang-A1",
+    "livestockId": "broiler-ayam-01",
+    "pen": "Kandang-A1",
     "startDate": "2025-08-01",
     "expectedHarvestDate": "2025-09-10",
     "initialCount": 500,
@@ -12,8 +12,8 @@
   },
   {
     "id": "batch-chk-002",
-    "itemId": "layer-ayam-02",
-    "location": "Kandang-B2",
+    "livestockId": "layer-ayam-02",
+    "pen": "Kandang-B2",
     "startDate": "2025-07-15",
     "expectedHarvestDate": "2025-08-25",
     "initialCount": 300,
@@ -23,8 +23,8 @@
   },
   {
     "id": "batch-chk-003",
-    "itemId": "broiler-ayam-03",
-    "location": "Kandang-C1",
+    "livestockId": "broiler-ayam-03",
+    "pen": "Kandang-C1",
     "startDate": "2025-08-10",
     "expectedHarvestDate": "2025-09-18",
     "initialCount": 450,
@@ -34,8 +34,8 @@
   },
   {
     "id": "batch-chk-004",
-    "itemId": "layer-ayam-04",
-    "location": "Kandang-D4",
+    "livestockId": "layer-ayam-04",
+    "pen": "Kandang-D4",
     "startDate": "2025-06-20",
     "expectedHarvestDate": "2025-08-01",
     "initialCount": 200,

@@ -6,8 +6,8 @@ export interface PlantingBatch {
   location: string;
   startDate: string; // ISO format
   expectedHarvestDate: string;
-  holesUsed: number;
+  initialCount: number;
   totalPlants: number;
   status: 'Planted' | 'Harvested' | 'Failed';
-  note?: string;
+  note: string;
 }

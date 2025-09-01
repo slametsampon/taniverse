@@ -1,7 +1,7 @@
 [
   {
     "id": "batch-fsh-001",
-    "itemId": "lele-jumbo",
+    "speciesId": "lele-jumbo",
     "location": "Kolam-A1",
     "startDate": "2025-07-01",
     "expectedHarvestDate": "2025-08-20",
@@ -12,18 +12,18 @@
   },
   {
     "id": "batch-fsh-002",
-    "itemId": "nila-merah",
+    "speciesId": "nila-merah",
     "location": "Kolam-B2",
     "startDate": "2025-06-15",
     "expectedHarvestDate": "2025-08-10",
     "initialCount": 1500,
-    "currentCount": 0,
+    "currentCount": 1445,
     "status": "Harvested",
     "note": "Panen sukses"
   },
   {
     "id": "batch-fsh-003",
-    "itemId": "patin-super",
+    "speciesId": "patin-super",
     "location": "Kolam-C1",
     "startDate": "2025-08-05",
     "expectedHarvestDate": "2025-09-15",
@@ -34,12 +34,12 @@
   },
   {
     "id": "batch-fsh-004",
-    "itemId": "gurame-lokal",
+    "speciesId": "gurame-lokal",
     "location": "Kolam-D3",
     "startDate": "2025-07-10",
     "expectedHarvestDate": "2025-09-01",
     "initialCount": 1200,
-    "currentCount": 0,
+    "currentCount": 1150,
     "status": "Failed",
     "note": "Gagal akibat pencemaran"
   }

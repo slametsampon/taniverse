@@ -1,6 +1,6 @@
 [
   {
-    "id": "ls1",
+    "id": "broiler-ayam-01",
     "code": "AYAM01",
     "name": "Ayam Broiler",
     "type": "Ayam",
@@ -16,7 +16,7 @@
     "systemType": "Kandang Litter"
   },
   {
-    "id": "ls2",
+    "id": "layer-ayam-02",
     "code": "AYAM02",
     "name": "Ayam Layer",
     "type": "Ayam",
@@ -32,7 +32,7 @@
     "systemType": "Kandang Baterai"
   },
   {
-    "id": "ls3",
+    "id": "broiler-ayam-03",
     "code": "AYAM03",
     "name": "Ayam Kampung",
     "type": "Ayam",

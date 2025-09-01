@@ -2,17 +2,15 @@
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-
-// import model type definitions
 import type { Plant } from '@models/plant.model';
 import type { PlantingBatch } from '@models/plant-batch.model';
-import type { HarvestResult } from '@models/harvest-result.model';
-
-import '../../components/dialogs/plant-detail-dialog';
-import '../../components/dialogs/device-dialog';
-import '../../components/plant-batch';
-import '../../components/batch-result';
+import type { GenericBatch } from '@models/generic-batch.model';
+import { fromPlantingBatch } from 'src/mappers/fromPlantingBatch';
 import 'src/views/hortikultura-devices';
+
+import '../../components/plant-batch';
+import '../../components/dialogs/entity-detail-dialog';
+import type { HarvestResult } from '@models/harvest-result.model';
 
 @customElement('hortikultura-page')
 export class PageProduksiHortikultura extends LitElement {
@@ -21,40 +19,78 @@ export class PageProduksiHortikultura extends LitElement {
   }
 
   @state() plants: Plant[] = [];
-  @state() batches: PlantingBatch[] = [];
+  @state() batches: GenericBatch[] = [];
   @state() harvests: HarvestResult[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
-    this.plants = await (await fetch('/assets/mock/plants.json')).json();
-    this.batches = await (
+
+    const plants = (await (
+      await fetch('/assets/mock/plants.json')
+    ).json()) as Plant[];
+    const rawBatches = (await (
       await fetch('/assets/mock/horti-batches.json')
-    ).json();
+    ).json()) as PlantingBatch[];
+
+    this.plants = plants;
+    this.batches = rawBatches.map(fromPlantingBatch);
+
     this.harvests = await (
       await fetch('/assets/mock/horti-harvests.json')
     ).json();
+
+    // (opsional) verifikasi cepat
+    console.groupCollapsed('[Horti] mapped GenericBatch');
+    console.table(
+      this.batches.map((b) => ({
+        id: b.id,
+        itemId: b.itemId,
+        initial: b.initialCount,
+        current: b.currentCount,
+      }))
+    );
+    console.groupEnd();
   }
 
-  private handlePlantClick(e: CustomEvent) {
-    const dialogEl = document.querySelector('plant-detail-dialog') as any;
-    if (dialogEl) {
-      dialogEl.plant = e.detail;
-      dialogEl.show();
-    }
-  }
+  private handlePlantClick = (e: CustomEvent<Plant | undefined>) => {
+    console.groupCollapsed('[Horti] open plant dialog');
+    console.log('plant payload:', e.detail);
+    console.groupEnd();
+
+    const dlg = document.querySelector('entity-detail-dialog') as any;
+    dlg?.show({ '🌱 Tanaman': e.detail ?? {} }, 'Detail Tanaman');
+  };
+
+  private handleBatchClick = (e: CustomEvent<GenericBatch>) => {
+    const batch = e.detail;
+    const plant = this.plants.find((p) => p.id === batch.itemId);
+
+    console.groupCollapsed('[Horti] open batch dialog');
+    console.log('batch payload:', batch);
+    console.log('plant payload:', plant);
+    console.groupEnd();
+
+    const dlg = document.querySelector('entity-detail-dialog') as any;
+    dlg?.show(
+      { '📦 Batch': batch, '🌱 Tanaman': plant ?? {} },
+      'Detail Batch Tanam'
+    );
+  };
 
   render() {
     const cardStyle = 'display:block;margin-top:1.5rem;margin-bottom:1.5rem;';
     return html`
-      <section class="p-4 space-y-6" @plant-click=${this.handlePlantClick}>
-        <h1 class="text-2xl font-bold mb-2">🌾 Produksi Hortikultura</h1>
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">🌿 Produksi Hortikultura</h1>
 
         <div>
-          <h2 class="text-xl font-semibold mb-2">Batch Tanam Aktif</h2>
           <plant-batch
             .batches=${this.batches}
             .plants=${this.plants}
+            @plant-click=${this.handlePlantClick}
+            @batch-click=${this.handleBatchClick}
           ></plant-batch>
+
           <hortikultura-devices style=${cardStyle}></hortikultura-devices>
         </div>
 
@@ -65,6 +101,8 @@ export class PageProduksiHortikultura extends LitElement {
             .batches=${this.batches}
           ></batch-result>
         </div>
+
+        <entity-detail-dialog></entity-detail-dialog>
       </section>
     `;
   }

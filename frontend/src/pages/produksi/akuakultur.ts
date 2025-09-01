@@ -2,16 +2,14 @@
 
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-
-// import type definitions dari models
+import type { AquaticBatch } from '@models/aquatic-batch.model';
+import type { GenericBatch } from '@models/generic-batch.model';
 import type { AquaticSpecies } from '@models/aquatic-species.model';
-import type { AquaticBatch } from '@models/aquaculture-plant-batch.model';
+import { fromAquaticBatch } from 'src/mappers/fromAquaticBatch';
 import type { HarvestResult } from '@models/harvest-result.model';
 
-import '../../components/dialogs/species-detail-dialog';
-import '../../components/dialogs/device-dialog';
-import '../../components/aquaculture-batch';
-import '../../components/batch-result';
+import 'src/components/aquaculture-batch';
+import 'src/components/dialogs/entity-detail-dialog';
 import 'src/views/aquakultur-devices';
 
 @customElement('akuakultur-page')
@@ -21,40 +19,71 @@ export class PageProduksiAkuakultur extends LitElement {
   }
 
   @state() species: AquaticSpecies[] = [];
-  @state() batches: AquaticBatch[] = [];
+  @state() batches: GenericBatch[] = [];
   @state() harvests: HarvestResult[] = [];
 
   async connectedCallback() {
     super.connectedCallback();
-    this.species = await (await fetch('/assets/mock/species.json')).json();
-    this.batches = await (
+    const species = (await (
+      await fetch('/assets/mock/species.json')
+    ).json()) as AquaticSpecies[];
+    const raw = (await (
       await fetch('/assets/mock/aquatic-batches.json')
-    ).json();
+    ).json()) as AquaticBatch[];
     this.harvests = await (
       await fetch('/assets/mock/aqua-harvests.json')
     ).json();
+
+    this.species = species;
+    this.batches = raw.map(fromAquaticBatch);
+
+    console.groupCollapsed('[Akuakultur] mapped GenericBatch');
+    console.table(
+      this.batches.map((b) => ({
+        id: b.id,
+        itemId: b.itemId,
+        location: b.location,
+      }))
+    );
+    console.groupEnd();
   }
 
-  private handleSpeciesClick(e: CustomEvent) {
-    const dialogEl = document.querySelector('species-detail-dialog') as any;
-    if (dialogEl) {
-      dialogEl.species = e.detail;
-      dialogEl.show();
-    }
-  }
+  private onSpeciesClick = (
+    e: CustomEvent<{ itemId: string; item?: AquaticSpecies }>
+  ) => {
+    const { itemId, item } = e.detail;
+    const dlg = document.querySelector('entity-detail-dialog') as any;
+    dlg?.show(
+      { '🐟 Spesies': item ?? { _warn: 'not found', wantedId: itemId } },
+      'Detail Spesies'
+    );
+  };
+
+  private onBatchClick = (e: CustomEvent<GenericBatch>) => {
+    const batch = e.detail;
+    const sp = this.species.find(
+      (s) => (s.id ?? (s as any).speciesId) === batch.itemId
+    );
+    const dlg = document.querySelector('entity-detail-dialog') as any;
+    dlg?.show(
+      { '📦 Batch': batch, '🐟 Spesies': sp ?? {} },
+      'Detail Batch Akuakultur'
+    );
+  };
 
   render() {
     const cardStyle = 'display:block;margin-top:1.5rem;margin-bottom:1.5rem;';
-    return html`
-      <section class="p-4 space-y-6" @species-click=${this.handleSpeciesClick}>
-        <h1 class="text-2xl font-bold mb-2">🐟 Produksi Akuakultur</h1>
 
+    return html`
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">🐟 Produksi Akuakultur</h1>
         <div>
-          <h2 class="text-xl font-semibold mb-2">Kolam / Batch Aktif</h2>
-          <aquaculture-batch
+          <aquatic-batch
             .batches=${this.batches}
             .species=${this.species}
-          ></aquaculture-batch>
+            @species-click=${this.onSpeciesClick}
+            @batch-click=${this.onBatchClick}
+          ></aquatic-batch>
           <aquakultur-devices style=${cardStyle}></aquakultur-devices>
         </div>
 
@@ -65,6 +94,8 @@ export class PageProduksiAkuakultur extends LitElement {
             .batches=${this.batches}
           ></batch-result>
         </div>
+
+        <entity-detail-dialog></entity-detail-dialog>
       </section>
     `;
   }
