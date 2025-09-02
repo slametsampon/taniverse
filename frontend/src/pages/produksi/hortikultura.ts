@@ -77,6 +77,30 @@ export class PageProduksiHortikultura extends LitElement {
     );
   };
 
+  private handleHarvestBatchClick = (
+    e: CustomEvent<{ batchId: string; batch?: GenericBatch }>
+  ) => {
+    const { batchId, batch } = e.detail || {};
+    console.groupCollapsed('[Page] handleHarvestBatchClick');
+    console.log('payload:', e.detail);
+    console.groupEnd();
+
+    const dlg = document.querySelector('entity-detail-dialog') as any;
+    if (!dlg) return;
+
+    // fallback: kalau batch belum dipetakan di props, cari manual
+    const resolved = batch ?? this.batches.find((b) => b.id === batchId);
+    if (!resolved) {
+      dlg.show(
+        { '⚠️ Info': { message: 'Batch tidak ditemukan', batchId } },
+        'Detail Batch'
+      );
+      return;
+    }
+
+    dlg.show({ '📦 Batch': resolved }, 'Detail Batch');
+  };
+
   render() {
     const cardStyle = 'display:block;margin-top:1.5rem;margin-bottom:1.5rem;';
     return html`
@@ -99,6 +123,7 @@ export class PageProduksiHortikultura extends LitElement {
           <batch-result
             .harvests=${this.harvests}
             .batches=${this.batches}
+            @batch-click=${this.handleHarvestBatchClick}
           ></batch-result>
         </div>
 
