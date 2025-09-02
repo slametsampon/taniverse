@@ -13,8 +13,8 @@ import './produksi/hortikultura.ts';
 import './produksi/akuakultur.ts';
 import './produksi/peternakan.ts';
 
-// ✨ Tab baru: History
-import './histori.ts';
+// ✨ Tab baru: Event
+import 'src/components/event-table';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {
@@ -101,7 +101,8 @@ export class PageDashboard extends LitElement {
   private renderHistoryContent() {
     return html`
       <section class="space-y-6">
-        <page-histori class="block"></page-histori>
+        <h1 class="text-xl font-bold mb-4">Event History</h1>
+        <event-table class="block"></event-table>
       </section>
     `;
   }

@@ -1,0 +1,142 @@
+[
+  {
+    "timestamp": "2025-09-01T12:00:00Z",
+    "id": "TANK01",
+    "description": "High temperature alarm",
+    "event": "ALARM_HI",
+    "value": 87.4
+  },
+  {
+    "timestamp": "2025-09-01T12:05:00Z",
+    "id": "BATCH0925",
+    "description": "Hidroponik NFT",
+    "event": "Panen",
+    "value": 235
+  },
+  {
+    "timestamp": "2025-09-01T12:10:00Z",
+    "id": "TI-001",
+    "description": "Temperature ruangan",
+    "event": "alarmHi",
+    "value": 34
+  },
+  {
+    "timestamp": "2025-09-01T12:15:00Z",
+    "id": "AI-001",
+    "description": "Humidity tanah",
+    "event": "alarmLow",
+    "value": 25
+  },
+  {
+    "timestamp": "2025-09-01T12:20:00Z",
+    "id": "VALVE01",
+    "description": "Valve dibuka otomatis",
+    "event": "STATUS",
+    "value": "OPEN"
+  },
+  {
+    "timestamp": "2025-09-01T12:22:00Z",
+    "id": "PUMP01",
+    "description": "Pompa start manual",
+    "event": "INFO",
+    "value": "ON"
+  },
+  {
+    "timestamp": "2025-09-01T12:25:00Z",
+    "id": "TI-002",
+    "description": "Suhu nutrisi",
+    "event": "ALARM_LO",
+    "value": 17.6
+  },
+  {
+    "timestamp": "2025-09-01T12:28:00Z",
+    "id": "PH-001",
+    "description": "pH terlalu tinggi",
+    "event": "ERROR",
+    "value": 8.1
+  },
+  {
+    "timestamp": "2025-09-01T12:30:00Z",
+    "id": "EC-001",
+    "description": "Electrical Conductivity normal",
+    "event": "STATUS",
+    "value": 1.9
+  },
+  {
+    "timestamp": "2025-09-01T12:35:00Z",
+    "id": "TANK01-BATCH0930",
+    "description": "Monitoring suhu saat fermentasi",
+    "event": "INFO",
+    "value": 42.2
+  },
+  {
+    "timestamp": "2025-09-01T12:40:00Z",
+    "id": "TI-003",
+    "description": "Sensor suhu tidak terdeteksi",
+    "event": "ERROR",
+    "value": "N/A"
+  },
+  {
+    "timestamp": "2025-09-01T12:45:00Z",
+    "id": "AI-002",
+    "description": "Kelembaban tanah kembali normal",
+    "event": "STATUS",
+    "value": 35
+  },
+  {
+    "timestamp": "2025-09-01T12:50:00Z",
+    "id": "LINE01-MIX01",
+    "description": "Batch mixing selesai",
+    "event": "INFO",
+    "value": "OK"
+  },
+  {
+    "timestamp": "2025-09-01T12:55:00Z",
+    "id": "BATCH0926",
+    "description": "Pindah ke tangki fermentasi",
+    "event": "STATUS",
+    "value": "PROGRESS"
+  },
+  {
+    "timestamp": "2025-09-01T13:00:00Z",
+    "id": "TI-004",
+    "description": "Suhu ruang pengeringan",
+    "event": "ALARM_HI",
+    "value": 61.4
+  },
+  {
+    "timestamp": "2025-09-01T13:05:00Z",
+    "id": "PUMP02",
+    "description": "Pompa gagal start",
+    "event": "ERROR",
+    "value": "OFF"
+  },
+  {
+    "timestamp": "2025-09-01T13:10:00Z",
+    "id": "TANK02",
+    "description": "Level nutrisi minimum tercapai",
+    "event": "ALARM_LO",
+    "value": 13.2
+  },
+  {
+    "timestamp": "2025-09-01T13:15:00Z",
+    "id": "BATCH0927",
+    "description": "Sterilisasi selesai",
+    "event": "INFO",
+    "value": "DONE"
+  },
+  {
+    "timestamp": "2025-09-01T13:20:00Z",
+    "id": "AI-003",
+    "description": "Sensor kelembaban error",
+    "event": "ERROR",
+    "value": "Disconnected"
+  },
+  {
+    "timestamp": "2025-09-01T13:25:00Z",
+    "id": "TANK03-BATCH0928",
+    "description": "Suhu fermentasi stabil",
+    "event": "STATUS",
+    "value": 38.5
+  }
+]
