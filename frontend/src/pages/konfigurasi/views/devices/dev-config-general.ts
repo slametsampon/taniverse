@@ -1,7 +1,7 @@
 // frontend/src/views/dev-config-general.ts
 import { LitElement, html, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { STANDARD_UNITS } from '../../../models/device.model';
+import { STANDARD_UNITS } from '../../../../../../models/device.model';
 import type { DeviceConfig } from '@models/device.model';
 
 @customElement('dev-config-general')

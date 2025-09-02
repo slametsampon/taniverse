@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/aquatic-batch-form';
+import '../../../../components/aquatic-batch-form';
 
 @customElement('view-prod-akuakultur')
 export class ViewProdAkuakultur extends LitElement {

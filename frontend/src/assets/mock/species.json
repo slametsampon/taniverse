@@ -10,11 +10,13 @@
     "maxTempC": 30,
     "avgWeightG": 500,
     "pricePerKg": 28000,
-    "costPerSeed": 500,
+    "costPerUnit": 500,
     "salinityMinPpt": 0,
     "salinityMaxPpt": 5,
     "phMin": 6.5,
     "phMax": 8.0,
+    "tempMinC": 25,
+    "tempMaxC": 30,
     "systemType": "KolamTanah"
   },
   {
@@ -28,11 +30,13 @@
     "maxTempC": 32,
     "avgWeightG": 300,
     "pricePerKg": 23000,
-    "costPerSeed": 350,
+    "costPerUnit": 350,
     "salinityMinPpt": 0,
     "salinityMaxPpt": 2,
     "phMin": 6.0,
     "phMax": 8.5,
+    "tempMinC": 26,
+    "tempMaxC": 32,
     "systemType": "Biofloc"
   },
   {
@@ -46,11 +50,13 @@
     "maxTempC": 30,
     "avgWeightG": 800,
     "pricePerKg": 40000,
-    "costPerSeed": 1200,
+    "costPerUnit": 1200,
     "salinityMinPpt": 0,
     "salinityMaxPpt": 3,
     "phMin": 6.5,
     "phMax": 8.0,
+    "tempMinC": 24,
+    "tempMaxC": 30,
     "systemType": "KolamTerpal"
   },
   {
@@ -64,11 +70,13 @@
     "maxTempC": 32,
     "avgWeightG": 1000,
     "pricePerKg": 27000,
-    "costPerSeed": 800,
+    "costPerUnit": 800,
     "salinityMinPpt": 0,
     "salinityMaxPpt": 4,
     "phMin": 6.5,
     "phMax": 8.5,
+    "tempMinC": 25,
+    "tempMaxC": 32,
     "systemType": "KolamBeton"
   },
   {
@@ -82,11 +90,13 @@
     "maxTempC": 32,
     "avgWeightG": 20,
     "pricePerKg": 70000,
-    "costPerSeed": 400,
+    "costPerUnit": 400,
     "salinityMinPpt": 10,
     "salinityMaxPpt": 30,
     "phMin": 7.5,
     "phMax": 8.5,
+    "tempMinC": 26,
+    "tempMaxC": 32,
     "systemType": "Tambak"
   },
   {
@@ -100,11 +110,13 @@
     "maxTempC": 32,
     "avgWeightG": 600,
     "pricePerKg": 25000,
-    "costPerSeed": 700,
+    "costPerUnit": 700,
     "salinityMinPpt": 5,
     "salinityMaxPpt": 35,
     "phMin": 7.0,
     "phMax": 8.5,
+    "tempMinC": 26,
+    "tempMaxC": 32,
     "systemType": "Tambak Air Payau"
   }
 ]

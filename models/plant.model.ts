@@ -1,20 +1,16 @@
 // models/plant.model.ts
 
-export interface Plant {
-  id: string;
-  code: string;
-  name: string;
-  image: string;
-  growthDaysMin: number;
-  growthDaysMax: number;
+import { BaseSpecies } from './base-species.model';
+import { EnvironmentalRequirement } from './environmental-requirement.model';
+import { EconomicModel } from './economic.model';
+
+export interface Plant
+  extends BaseSpecies,
+    EnvironmentalRequirement,
+    EconomicModel {
   heightMinCm: number;
   heightMaxCm: number;
-  avgWeightG: number;
-  pricePerKg: number;
-  costPerPlant: number;
-  ecMin: number;
-  ecMax: number;
-  phMin: number;
-  phMax: number;
-  hydroponicSystem: 'NFT' | 'DFT' | 'Wick' | 'DWC' | 'DutchBucket' | string;
+
+  spacingRowCm: number; // Jarak antar baris (cm)
+  spacingColCm: number; // Jarak antar tanaman dalam baris (cm)
 }

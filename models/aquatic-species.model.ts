@@ -1,20 +1,13 @@
 // models/aquatic-species.model.ts
 
-export interface AquaticSpecies {
-  id: string;
-  code: string;
-  name: string;
-  image: string;
-  growthDaysMin: number;
-  growthDaysMax: number;
-  minTempC: number;
-  maxTempC: number;
-  avgWeightG: number;
-  pricePerKg: number;
-  costPerSeed: number;
-  salinityMinPpt: number;
-  salinityMaxPpt: number;
-  phMin: number;
-  phMax: number;
-  systemType: 'Biofloc' | 'RAS' | 'KolamTanah' | 'Tambak' | string;
+import { BaseSpecies } from './base-species.model';
+import { EnvironmentalRequirement } from './environmental-requirement.model';
+import { EconomicModel } from './economic.model';
+
+export interface AquaticSpecies
+  extends BaseSpecies,
+    EnvironmentalRequirement,
+    EconomicModel {
+  // Tidak perlu tambahan field spesifik saat ini,
+  // tetapi bisa ditambahkan jika ada: e.g. oxygenRange, DO, dll.
 }

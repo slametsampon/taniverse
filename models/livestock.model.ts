@@ -1,20 +1,12 @@
 // models/livestock.model.ts
 
-export interface Livestock {
-  id: string;
-  code: string;
-  name: string; // ✅ Tambahkan ini
-  type: 'Sapi' | 'Kambing' | 'Ayam' | string;
+import { BaseSpecies } from './base-species.model';
+import { EnvironmentalRequirement } from './environmental-requirement.model';
+import { EconomicModel } from './economic.model';
+
+export interface Livestock
+  extends BaseSpecies,
+    EnvironmentalRequirement,
+    EconomicModel {
   breed: string;
-  image: string;
-  growthDaysMin: number;
-  growthDaysMax: number;
-  avgWeightKg: number;
-  pricePerKg: number;
-  costPerHead: number;
-  tempMinC: number;
-  tempMaxC: number;
-  phMin?: number;
-  phMax?: number;
-  systemType: 'Intensif' | 'Semi-Intensif' | 'Ekstensif' | string;
 }

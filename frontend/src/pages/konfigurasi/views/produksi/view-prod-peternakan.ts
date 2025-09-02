@@ -1,8 +1,8 @@
-// frontend/src/pages/konfigurasi/view-prod-peternakan.ts
+// frontend/src/pages/konfigurasi/views/produksi/view-prod-peternakan.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/livestock-batch-form';
+import '../../../../components/livestock-batch-form';
 
 @customElement('view-prod-peternakan')
 export class ViewProdPeternakan extends LitElement {

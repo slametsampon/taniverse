@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/device-config.ts
+// frontend/src/pages/konfigurasi/page-config.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
@@ -6,30 +6,33 @@ import type { TabId } from 'src/types/tab-id';
 import type { DeviceStateModel } from './state/device-state';
 import { DeviceStateHandler } from './state/device-state';
 import { DeviceEvents } from './events/device-events';
-import { DeviceUI } from './device-ui';
+import { DeviceUI } from './components/device-ui';
 
 import 'src/components/ui/ui-tabs';
-import 'src/views/dev-config-general';
-import 'src/views/dev-config-hw-comm';
-import 'src/views/dev-config-loc-meta';
-import 'src/views/dev-config-mqtt';
 
-import './device-mode-switch';
-import './device-tab-content';
-import './device-footer';
-import './device-tab-selector'; // <-- new dropdown component
+import './components/device-mode-switch';
+import './components/device-tab-content';
+import './components/device-footer';
+import './components/device-tab-selector';
+import './components/production-tab-selector';
+import './components/entitas-tab-selector';
 
-import './production-tab-selector';
-import './view-prod-hidroponik';
-import './view-prod-hortikultura';
-import './view-prod-akuakultur';
-import './view-prod-peternakan';
+import './views/devices/dev-config-general';
+import './views/devices/dev-config-hw-comm';
+import './views/devices/dev-config-loc-meta';
+import './views/devices/dev-config-mqtt';
 
-@customElement('page-device-config')
+import './views/produksi/view-prod-hidroponik';
+import './views/produksi/view-prod-hortikultura';
+import './views/produksi/view-prod-akuakultur';
+import './views/produksi/view-prod-peternakan';
+
+import './views/entitas/entitas-container';
+
+@customElement('page-config')
 export class PageDeviceConfig extends LitElement {
   createRenderRoot() {
-    // ✅ Light DOM enabled
-    return this;
+    return this; // ✅ Light DOM
   }
 
   @state() private device!: DeviceStateModel;
@@ -48,6 +51,7 @@ export class PageDeviceConfig extends LitElement {
   @state() private dirty = false;
   @state() private saving = false;
   @state() private deleting = false;
+  @state() private entitasKind: 'tanaman' | 'ikan' | 'ayam' = 'tanaman';
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
@@ -186,14 +190,19 @@ export class PageDeviceConfig extends LitElement {
     this.productionDomain = e.detail.domain as any;
   };
 
+  private onEntitasKindChange = (e: CustomEvent<{ kind: string }>) => {
+    this.entitasKind = e.detail.kind as any;
+  };
+
   render() {
     return html`
       <section class="max-w-6xl mx-auto px-4 py-6">
         <ui-tabs
           .tabs=${[
-            { id: 'produksi', label: 'Produksi', icon: '🏭' }, // Tab baru
+            { id: 'produksi', label: 'Produksi', icon: '🏭' },
             { id: 'devices', label: 'Devices', icon: '🧾' },
             { id: 'mqtt', label: 'MQTT', icon: '📡' },
+            { id: 'entitas', label: 'Entitas', icon: '🧬' },
           ]}
           .active=${this.activeTab}
           @dev-tab-change=${this.onTabChange}
@@ -267,6 +276,21 @@ export class PageDeviceConfig extends LitElement {
                   : this.productionDomain === 'akuakultur'
                   ? html`<view-prod-akuakultur></view-prod-akuakultur>`
                   : html`<view-prod-peternakan></view-prod-peternakan>`}
+              </div>
+            `
+          : this.activeTab === 'entitas'
+          ? html`
+              <div class="my-4 flex justify-between items-center">
+                <entitas-tab-selector
+                  .selected=${this.entitasKind}
+                  @entitas-kind-change=${this.onEntitasKindChange}
+                ></entitas-tab-selector>
+              </div>
+
+              <div class="mt-4">
+                <entitas-container
+                  .kind=${this.entitasKind}
+                ></entitas-container>
               </div>
             `
           : null}

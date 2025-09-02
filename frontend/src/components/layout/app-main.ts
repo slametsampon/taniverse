@@ -64,22 +64,13 @@ export class AppMain extends LitElement {
         component: 'page-dashboard',
       },
       {
-        path: '/histori', // operator+ bisa
-        action: async (ctx, commands) => {
-          const g = requireRoleAtLeast('operator')(ctx, commands);
-          if (g) return g;
-          await import('../../pages/histori');
-        },
-        component: 'page-histori',
-      },
-      {
         path: '/config', // minimal engineer (admin juga boleh)
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('engineer')(ctx, commands);
           if (g) return g;
-          await import('../../pages/konfigurasi/device-config');
+          await import('../../pages/konfigurasi/page-config');
         },
-        component: 'page-device-config',
+        component: 'page-config',
       },
       // {
       //   path: '/control', // perlu permission spesifik operate equipment
