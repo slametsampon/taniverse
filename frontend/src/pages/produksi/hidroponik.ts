@@ -12,7 +12,7 @@ import 'src/components/hydroponic-batch';
 import 'src/components/dialogs/entity-detail-dialog';
 import 'src/components/dialogs/device-dialog';
 import 'src/components/batch-result';
-import 'src/views/hidroponik-devices';
+import 'src/pages/produksi/views/hidroponik-devices';
 
 @customElement('hidroponik-page')
 export class PageProduksiHidroponik extends LitElement {

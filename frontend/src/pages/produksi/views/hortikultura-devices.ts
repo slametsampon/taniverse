@@ -1,29 +1,31 @@
-// frontend/src/views/peternakan-devices.ts
+// frontend/src/views/hortikultura-devices.ts
+
+// 🌾 Hortikultura Devices View – Dashboard Komponen Perangkat
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore } from '../services/devices-service';
+import { devicesStore } from '../../../services/devices-service';
 import { DeviceHelper } from 'src/services/device-helper';
+
+import '../../../components/cards/dashboard-device-card';
 import { formatDeviceValue } from 'src/utils/format-display';
 
-import '../components/cards/dashboard-device-card';
-
-@customElement('peternakan-devices')
-export class PeternakanDevices extends LitElement {
+@customElement('hortikultura-devices')
+export class DashboardHortikultura extends LitElement {
   createRenderRoot() {
-    return this; // Light DOM agar Tailwind aktif
+    return this;
   }
 
   private off?: () => void;
 
   @state() private statusMap: Record<string, string> = {};
 
-  // daftar device untuk kandang ayam
-  private deviceTags = ['TI-301', 'AI-301', 'AI-302', 'H-301', 'B-301'];
+  // 🌱 Daftar TAG perangkat hortikultura
+  private deviceTags = ['TI-401', 'AI-401', 'AI-402', 'P-401', 'P-402'];
 
   async connectedCallback() {
     super.connectedCallback();
-    await devicesStore.init(true);
+    await devicesStore.init();
     this.pull();
     this.off = devicesStore.onChange(() => this.pull());
   }
@@ -50,20 +52,18 @@ export class PeternakanDevices extends LitElement {
   render() {
     return html`
       <section
-        class="bg-white rounded shadow p-4"
+        class="bg-white rounded-2xl shadow-md p-6 border border-gray-100"
         @device-click=${this.handleDeviceClick}
       >
-        <!-- 🧠 Header Seksi Dashboard -->
         <div class="mb-6">
           <h2
             class="text-xl font-semibold text-gray-800 flex items-center gap-3"
           >
-            🌡️💧 Peternakan Sensor & Aktuator
+            🌾 Hortikultura Sensor & Aktuator
           </h2>
         </div>
 
-        <!-- 📊 Grid Tampilan Perangkat -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           ${this.deviceTags.map((tag) => {
             const device = devicesStore.get(tag);
             if (!device) return null;

@@ -13,7 +13,7 @@ import 'src/components/dialogs/entity-detail-dialog';
 import 'src/components/dialogs/device-dialog';
 import 'src/components/livestock-batch';
 import 'src/components/batch-result';
-import 'src/views/peternakan-devices';
+import 'src/pages/produksi/views/peternakan-devices';
 
 @customElement('peternakan-page')
 export class PeternakanPage extends LitElement {

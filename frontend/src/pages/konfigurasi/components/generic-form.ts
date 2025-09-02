@@ -10,6 +10,7 @@ export interface FieldConfig {
   type: 'text' | 'number' | 'date' | 'textarea';
   required?: boolean;
   disabled?: boolean;
+  widthClass?: string; // ✅ Tambahkan ini
 }
 
 @customElement('generic-form')
@@ -68,22 +69,27 @@ export class GenericForm extends LitElement {
           e.preventDefault();
           this.handleSubmit();
         }}
-        class="space-y-4"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
       >
         ${this.fields.map(
           (field) => html`
-            <div>
-              <label class="block text-sm text-gray-700">${field.label}</label>
+            <div
+              class="${field.widthClass?.includes('max-w') ? 'col-span-2' : ''}"
+            >
+              <label class="block text-sm text-gray-700 mb-1"
+                >${field.label}</label
+              >
               ${field.type === 'textarea'
                 ? html`<textarea
-                    class="w-full border rounded p-2"
+                    class="${field.widthClass ?? 'w-full'} border rounded p-2"
                     .value=${this.draft[field.key] ?? ''}
                     ?disabled=${field.disabled ?? false}
                     @input=${(e: Event) => this.handleInput(e, field.key)}
                   ></textarea>`
                 : html`<input
                     type=${field.type}
-                    class="w-full border rounded px-2 py-1"
+                    class="${field.widthClass ??
+                    'w-full'} border rounded px-2 py-1"
                     .value=${this.draft[field.key] ?? ''}
                     ?required=${field.required ?? false}
                     ?disabled=${field.disabled ?? false}
@@ -93,7 +99,7 @@ export class GenericForm extends LitElement {
           `
         )}
 
-        <div class="flex gap-2 mt-4">
+        <div class="flex gap-2 mt-4 col-span-2">
           <button
             type="submit"
             class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

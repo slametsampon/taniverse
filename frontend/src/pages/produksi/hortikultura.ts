@@ -6,7 +6,7 @@ import type { Plant } from '@models/plant.model';
 import type { PlantingBatch } from '@models/plant-batch.model';
 import type { GenericBatch } from '@models/generic-batch.model';
 import { fromPlantingBatch } from 'src/mappers/fromPlantingBatch';
-import 'src/views/hortikultura-devices';
+import 'src/pages/produksi/views/hortikultura-devices';
 
 import '../../components/plant-batch';
 import '../../components/dialogs/entity-detail-dialog';

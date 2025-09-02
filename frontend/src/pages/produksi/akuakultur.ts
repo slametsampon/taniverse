@@ -10,7 +10,7 @@ import type { HarvestResult } from '@models/harvest-result.model';
 
 import 'src/components/aquaculture-batch';
 import 'src/components/dialogs/entity-detail-dialog';
-import 'src/views/aquakultur-devices';
+import 'src/pages/produksi/views/aquakultur-devices';
 
 @customElement('akuakultur-page')
 export class PageProduksiAkuakultur extends LitElement {

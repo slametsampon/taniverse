@@ -6,10 +6,10 @@ import type { TabId } from 'src/types/tab-id';
 import type { DeviceStateModel } from './state/device-state';
 import { DeviceStateHandler } from './state/device-state';
 import { DeviceEvents } from './events/device-events';
-import { DeviceUI } from './components/device-ui';
 
 import 'src/components/ui/ui-tabs';
 
+import { DeviceUI } from './components/device-ui';
 import './components/device-mode-switch';
 import './components/device-tab-content';
 import './components/device-footer';

@@ -101,8 +101,7 @@ export class PageDashboard extends LitElement {
   private renderHistoryContent() {
     return html`
       <section class="space-y-6">
-        <h1 class="text-xl font-bold mb-4">Event History</h1>
-        <event-table class="block"></event-table>
+        <event-table class="block mt-6"></event-table>
       </section>
     `;
   }
@@ -114,7 +113,7 @@ export class PageDashboard extends LitElement {
           .tabs=${[
             { id: 'produksi', label: 'Produksi', icon: '🏭' },
             { id: 'devices', label: 'Devices', icon: '🔌' },
-            { id: 'history', label: 'History', icon: '📜' },
+            { id: 'history', label: 'Event History', icon: '📜' },
           ]}
           .active=${this.activeTab}
           @dev-tab-change=${this.handleTabChange}
