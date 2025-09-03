@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import 'src/components/crud-buttons';
+import './crud-buttons';
 import { FieldConfig } from 'src/schema/field-config';
 
 @customElement('generic-batch-form')
