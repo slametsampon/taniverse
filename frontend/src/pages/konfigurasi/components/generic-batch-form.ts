@@ -3,7 +3,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import './crud-buttons';
-import { FieldConfig } from 'src/schema/field-config';
+import { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
 
 @customElement('generic-batch-form')
 export class GenericBatchForm extends LitElement {

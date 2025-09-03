@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/components/hydroponic-batch-fields.ts
 
-import type { FieldConfig } from 'src/schema/field-config';
+import type { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
 
 export const hydroponicBatchFields: FieldConfig[] = [
   { key: 'plantId', label: 'ID Tanaman', type: 'text', required: true },

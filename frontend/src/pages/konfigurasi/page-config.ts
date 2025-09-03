@@ -22,10 +22,10 @@ import './views/devices/dev-config-hw-comm';
 import './views/devices/dev-config-loc-meta';
 import './views/devices/dev-config-mqtt';
 
-import './views/produksi/view-prod-hidroponik';
-import './views/produksi/view-prod-hortikultura';
-import './views/produksi/view-prod-akuakultur';
-import './views/produksi/view-prod-peternakan';
+import './views/batch/batch-hidroponik';
+import './views/batch/batch-hortikultura';
+import './views/batch/batch-akuakultur';
+import './views/batch/batch-peternakan';
 
 import './views/entitas/entitas-container';
 
@@ -199,7 +199,7 @@ export class PageDeviceConfig extends LitElement {
       <section class="max-w-6xl mx-auto px-4 py-6">
         <ui-tabs
           .tabs=${[
-            { id: 'produksi', label: 'Produksi', icon: '🏭' },
+            { id: 'produksi', label: 'Batch', icon: '🏭' },
             { id: 'devices', label: 'Devices', icon: '🧾' },
             { id: 'mqtt', label: 'MQTT', icon: '📡' },
             { id: 'entitas', label: 'Entitas', icon: '🧬' },
@@ -270,12 +270,12 @@ export class PageDeviceConfig extends LitElement {
 
               <div class="mt-4">
                 ${this.productionDomain === 'hidroponik'
-                  ? html`<view-prod-hidroponik></view-prod-hidroponik>`
+                  ? html`<batch-hidroponik></batch-hidroponik>`
                   : this.productionDomain === 'hortikultura'
-                  ? html`<view-prod-hortikultura></view-prod-hortikultura>`
+                  ? html`<batch-hortikultura></batch-hortikultura>`
                   : this.productionDomain === 'akuakultur'
-                  ? html`<view-prod-akuakultur></view-prod-akuakultur>`
-                  : html`<view-prod-peternakan></view-prod-peternakan>`}
+                  ? html`<batch-akuakultur></batch-akuakultur>`
+                  : html`<batch-peternakan></batch-peternakan>`}
               </div>
             `
           : this.activeTab === 'entitas'

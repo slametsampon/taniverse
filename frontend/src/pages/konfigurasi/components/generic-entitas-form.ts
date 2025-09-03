@@ -3,17 +3,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import './crud-buttons';
-
-// Tipe konfigurasi untuk field dinamis
-export interface FieldConfig {
-  key: string;
-  label: string;
-  type: 'text' | 'number' | 'date' | 'textarea';
-  required?: boolean;
-  disabled?: boolean;
-  widthClass?: string;
-  colSpan?: number; // ✅ Tambahkan ini
-}
+import { FieldConfig } from '../schema/field-config';
 
 @customElement('generic-entitas-form')
 export class GenericForm extends LitElement {

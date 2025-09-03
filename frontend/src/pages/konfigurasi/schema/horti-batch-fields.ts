@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/components/horti-batch-fields.ts
 
-import type { FieldConfig } from 'src/schema/field-config';
+import type { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
 
 export const hortiBatchFields: FieldConfig[] = [
   { key: 'plantId', label: 'ID Tanaman', type: 'text', required: true },

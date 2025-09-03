@@ -1,11 +1,10 @@
-// frontend/src/pages/konfigurasi/views/produksi/view-prod-peternakan.ts
+// frontend/src/pages/konfigurasi/views/produksi/batch-peternakan.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-//import '../../components/livestock-batch-form';
 import '../../components/generic-batch-form';
-import { livestockBatchFields } from '../../components/livestock-batch-fields';
-@customElement('view-prod-peternakan')
+import { livestockBatchFields } from '../../schema/livestock-batch-fields';
+@customElement('batch-peternakan')
 export class ViewProdPeternakan extends LitElement {
   createRenderRoot() {
     return this;

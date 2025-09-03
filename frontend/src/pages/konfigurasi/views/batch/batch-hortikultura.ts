@@ -1,38 +1,37 @@
-// frontend/src/pages/konfigurasi/views/produksi/view-prod-hidroponik.ts
+// frontend/src/pages/konfigurasi/views/produksi/batch-hortikultura.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/generic-batch-form'; // ✅ gunakan form generik
-import { hydroponicBatchFields } from '../../components/hydroponic-batch-fields';
-@customElement('view-prod-hidroponik')
-export class ViewProdHidroponik extends LitElement {
+import '../../components/generic-batch-form';
+import { hortiBatchFields } from '../../schema/horti-batch-fields';
+
+@customElement('batch-hortikultura')
+export class ViewProdHortikultura extends LitElement {
   createRenderRoot() {
     return this;
   }
 
   @state() private formMode: 'new' | 'edit' = 'new';
-  @state() private batchValue: Record<string, any> = {}; // nilai untuk form (edit/new)
+  @state() private batchValue: Record<string, any> = {};
 
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
     this.formMode = target.value as 'new' | 'edit';
 
-    // contoh dummy data untuk mode edit
     if (this.formMode === 'edit') {
       this.batchValue = {
-        id: 'BATCH001',
-        plantId: 'TOM001',
-        code: 'HYP-2025-A1',
-        system: 'NFT',
-        location: 'Rak-1A',
-        initialCount: 20,
-        currentCount: 18,
+        id: 'HORTI-001',
+        plantId: 'CABAI001',
+        initialCount: 100,
+        totalPlants: 95,
         startDate: '2025-09-01',
-        expectedHarvestDate: '2025-10-01',
-        length: 120,
-        width: 60,
-        height: 30,
-        note: 'Pemupukan ke-2',
+        expectedHarvestDate: '2025-11-01',
+        location: 'Lahan-1B',
+        description: 'Percobaan varietas baru cabai merah',
+        length: 500,
+        width: 300,
+        height: 0,
+        note: 'Perlu monitoring intensif.',
       };
     } else {
       this.batchValue = {};
@@ -41,24 +40,24 @@ export class ViewProdHidroponik extends LitElement {
 
   private handleSubmit(e: CustomEvent) {
     const data = e.detail;
-    console.log('📝 SUBMIT DATA:', data);
-    // TODO: Simpan ke backend atau kirim via MQTT
+    console.log('📝 SUBMIT BATCH HORTIKULTURA:', data);
+    // TODO: Simpan ke backend / MQTT
   }
 
   private handleCancel() {
-    console.log('❌ Batal input');
+    console.log('❌ Batal input hortikultura');
   }
 
   private handleDelete(e: CustomEvent) {
     const id = e.detail;
-    console.log('🗑️ Hapus batch dengan ID:', id);
+    console.log('🗑️ Hapus batch hortikultura dengan ID:', id);
   }
 
   render() {
     return html`
       <div class="p-4 space-y-6">
         <h2 class="text-xl font-semibold text-green-700">
-          Manajemen Batch Hidroponik
+          Manajemen Batch Hortikultura
         </h2>
 
         <!-- Mode Switcher -->
@@ -74,10 +73,9 @@ export class ViewProdHidroponik extends LitElement {
           </select>
         </div>
 
-        <!-- ✅ Gunakan generic-batch-form -->
         <generic-batch-form
           .mode=${this.formMode}
-          .fields=${hydroponicBatchFields}
+          .fields=${hortiBatchFields}
           .value=${this.batchValue}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}

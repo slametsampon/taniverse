@@ -1,6 +1,6 @@
-// frontend/src/pages/konfigurasi/components/aquatic-batch-fields.ts
+// frontend/src/pages/konfigurasi/schema/aquatic-batch-fields.ts
 
-import type { FieldConfig } from '../../components/generic-batch-form';
+import type { FieldConfig } from '../schema/field-config';
 
 export const aquaticBatchFields: FieldConfig[] = [
   { key: 'speciesId', label: 'ID Spesies', type: 'text', required: true },

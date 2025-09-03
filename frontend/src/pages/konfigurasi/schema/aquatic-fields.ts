@@ -1,6 +1,6 @@
-// frontend/src/pages/konfigurasi/components/aquatic-fields.ts
+// frontend/src/pages/konfigurasi/schema/aquatic-fields.ts
 
-import type { FieldConfig } from './generic-entitas-form';
+import type { FieldConfig } from '../schema/field-config';
 
 export const aquaticFormFields: FieldConfig[] = [
   {

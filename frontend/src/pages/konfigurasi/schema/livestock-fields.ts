@@ -1,6 +1,6 @@
-// frontend/src/pages/konfigurasi/components/livestock-fields.ts
+// frontend/src/pages/konfigurasi/schema/livestock-fields.ts
 
-import type { FieldConfig } from './generic-entitas-form';
+import type { FieldConfig } from '../schema/field-config';
 
 export const livestockFormFields: FieldConfig[] = [
   {
