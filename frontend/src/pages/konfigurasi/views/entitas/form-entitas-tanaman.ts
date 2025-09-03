@@ -3,8 +3,8 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Plant } from '@/models/plant.model';
-import { plantFormFields } from '../../components/plant-fields';
-import '../../components/generic-form';
+import { plantFormFields } from '../../schema/plant-fields';
+import '../../components/generic-entitas-form';
 
 @customElement('form-entitas-tanaman')
 export class FormEntitasTanaman extends LitElement {
@@ -50,14 +50,14 @@ export class FormEntitasTanaman extends LitElement {
           🪴 Jenis Tanaman
         </h2>
 
-        <generic-form
+        <generic-entitas-form
           .fields=${plantFormFields}
           .value=${this.value}
           .mode=${this.mode}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}
-        ></generic-form>
+        ></generic-entitas-form>
       </section>
     `;
   }

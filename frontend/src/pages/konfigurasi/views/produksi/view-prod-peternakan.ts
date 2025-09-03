@@ -2,8 +2,8 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../components/generic-batch-form';
-import { livestockBatchFields } from '../../components/livestock-batch-fields';
+import '../../../../components/livestock-batch-form';
+
 @customElement('view-prod-peternakan')
 export class ViewProdPeternakan extends LitElement {
   createRenderRoot() {

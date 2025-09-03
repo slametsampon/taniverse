@@ -4,7 +4,6 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../../components/generic-batch-form'; // ✅ gunakan form generik
 import { hydroponicBatchFields } from '../../components/hydroponic-batch-fields';
-
 @customElement('view-prod-hidroponik')
 export class ViewProdHidroponik extends LitElement {
   createRenderRoot() {

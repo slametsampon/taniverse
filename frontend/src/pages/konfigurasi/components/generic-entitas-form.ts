@@ -1,7 +1,8 @@
-// frontend/src/pages/konfigurasi/components/generic-form.ts
+// frontend/src/pages/konfigurasi/components/generic-entitas-form.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import './crud-buttons';
 
 // Tipe konfigurasi untuk field dinamis
 export interface FieldConfig {
@@ -10,10 +11,11 @@ export interface FieldConfig {
   type: 'text' | 'number' | 'date' | 'textarea';
   required?: boolean;
   disabled?: boolean;
-  widthClass?: string; // ✅ Tambahkan ini
+  widthClass?: string;
+  colSpan?: number; // ✅ Tambahkan ini
 }
 
-@customElement('generic-form')
+@customElement('generic-entitas-form')
 export class GenericForm extends LitElement {
   createRenderRoot() {
     return this; // ✅ Light DOM
@@ -69,13 +71,11 @@ export class GenericForm extends LitElement {
           e.preventDefault();
           this.handleSubmit();
         }}
-        class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
       >
         ${this.fields.map(
           (field) => html`
-            <div
-              class="${field.widthClass?.includes('max-w') ? 'col-span-2' : ''}"
-            >
+            <div class="col-span-${field.colSpan ?? 1}">
               <label class="block text-sm text-gray-700 mb-1"
                 >${field.label}</label
               >
@@ -99,29 +99,13 @@ export class GenericForm extends LitElement {
           `
         )}
 
-        <div class="flex gap-2 mt-4 col-span-2">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            💾 Simpan
-          </button>
-          <button
-            type="button"
-            @click=${this.handleCancel}
-            class="px-4 py-2 rounded border"
-          >
-            ❌ Batal
-          </button>
-          ${this.mode === 'edit'
-            ? html`<button
-                type="button"
-                @click=${this.handleDelete}
-                class="px-4 py-2 rounded border text-red-600"
-              >
-                🗑️ Hapus
-              </button>`
-            : null}
+        <div class="col-span-2">
+          <crud-buttons
+            .mode=${this.mode}
+            @submit=${this.handleSubmit}
+            @cancel=${this.handleCancel}
+            @delete=${this.handleDelete}
+          ></crud-buttons>
         </div>
       </form>
     `;
