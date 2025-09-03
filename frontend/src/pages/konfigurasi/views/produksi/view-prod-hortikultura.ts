@@ -1,8 +1,9 @@
-// frontend/src/pages/konfigurasi/view-prod-hortikultura.ts
+// frontend/src/pages/konfigurasi/views/produksi/view-prod-hortikultura.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import 'src/components/planting-batch-form';
+import '../../components/generic-batch-form';
+import { hortiBatchFields } from 'src/schema/horti-batch-fields';
 
 @customElement('view-prod-hortikultura')
 export class ViewProdHortikultura extends LitElement {
@@ -10,12 +11,46 @@ export class ViewProdHortikultura extends LitElement {
     return this;
   }
 
-  @state()
-  private formMode: 'new' | 'edit' = 'new';
+  @state() private formMode: 'new' | 'edit' = 'new';
+  @state() private batchValue: Record<string, any> = {};
 
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
     this.formMode = target.value as 'new' | 'edit';
+
+    if (this.formMode === 'edit') {
+      this.batchValue = {
+        id: 'HORTI-001',
+        plantId: 'CABAI001',
+        initialCount: 100,
+        totalPlants: 95,
+        startDate: '2025-09-01',
+        expectedHarvestDate: '2025-11-01',
+        location: 'Lahan-1B',
+        description: 'Percobaan varietas baru cabai merah',
+        length: 500,
+        width: 300,
+        height: 0,
+        note: 'Perlu monitoring intensif.',
+      };
+    } else {
+      this.batchValue = {};
+    }
+  }
+
+  private handleSubmit(e: CustomEvent) {
+    const data = e.detail;
+    console.log('📝 SUBMIT BATCH HORTIKULTURA:', data);
+    // TODO: Simpan ke backend / MQTT
+  }
+
+  private handleCancel() {
+    console.log('❌ Batal input hortikultura');
+  }
+
+  private handleDelete(e: CustomEvent) {
+    const id = e.detail;
+    console.log('🗑️ Hapus batch hortikultura dengan ID:', id);
   }
 
   render() {
@@ -38,8 +73,14 @@ export class ViewProdHortikultura extends LitElement {
           </select>
         </div>
 
-        <!-- Form -->
-        <planting-batch-form .mode=${this.formMode}></planting-batch-form>
+        <generic-batch-form
+          .mode=${this.formMode}
+          .fields=${hortiBatchFields}
+          .value=${this.batchValue}
+          @submit=${this.handleSubmit}
+          @cancel=${this.handleCancel}
+          @delete=${this.handleDelete}
+        ></generic-batch-form>
       </div>
     `;
   }

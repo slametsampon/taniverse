@@ -1,14 +1,10 @@
-// models/livestock-plant-batch.model.ts
+// models/livestock-batch.model.ts
 
-export interface LivestockBatch {
-  id: string;
+import { BaseBatch } from './base-batch.model';
+
+export interface LivestockBatch extends BaseBatch {
   livestockId: string;
-  code: string;
-  pen: string;
-  startDate: string;
-  expectedHarvestDate: string;
-  initialCount: number;
-  currentCount: number;
-  status: 'Growing' | 'Harvested' | 'Failed';
-  note?: string;
+  initialPopulation: number;
+  currentPopulation: number;
+  status: 'Growing' | 'Harvested' | 'Failed'; // khusus ternak
 }

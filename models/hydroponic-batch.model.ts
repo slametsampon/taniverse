@@ -1,14 +1,12 @@
 // models/hydroponic-batch.model.ts
-export interface HydroponicBatch {
-  id: string;
+
+import { BaseBatch } from './base-batch.model';
+
+export interface HydroponicBatch extends BaseBatch {
   plantId: string;
-  code: string;
-  system: 'NFT' | 'DFT' | 'DWC' | 'Aeroponik' | string; // jenis sistem hidroponik
-  location: string; // rak / gully / modul
-  startDate: string; // ISO
-  expectedHarvestDate: string;
-  initialCount: number; // jumlah lubang tanam terpakai
-  currentCount: number; // total bibit ditanam
+  system: 'NFT' | 'DFT' | 'DWC' | 'Aeroponik' | string;
+  code: string; // ID batch internal atau display
+  initialCount: number;
+  currentCount: number;
   status: 'Planted' | 'Harvested' | 'Failed';
-  note?: string;
 }
