@@ -5,10 +5,10 @@ import { customElement, property } from 'lit/decorators.js';
 
 // Model & Field Definitions
 import { AquaticSpecies } from '@models/aquatic-species.model';
-import { aquaticFormFields } from '../../components/aquatic-fields';
+import { aquaticFormFields } from '../../schema/aquatic-fields';
 
 // Components
-import '../../components/generic-form';
+import '../../components/generic-entitas-form';
 
 @customElement('form-entitas-ikan')
 export class FormEntitasIkan extends LitElement {
@@ -54,14 +54,14 @@ export class FormEntitasIkan extends LitElement {
           🐟 Jenis Ikan / Akuatik
         </h2>
 
-        <generic-form
+        <generic-entitas-form
           .fields=${aquaticFormFields}
           .value=${this.value}
           .mode=${this.mode}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}
-        ></generic-form>
+        ></generic-entitas-form>
       </section>
     `;
   }

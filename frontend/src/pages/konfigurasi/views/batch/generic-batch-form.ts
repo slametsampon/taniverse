@@ -1,10 +1,10 @@
-// frontend/src/components/generic-batch-form.ts
+// frontend/src/pages/konfigurasi/views/batch/generic-batch-form.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { GenericBatch } from '@/models/generic-batch.model';
 import type { FormFieldSchema } from '@/models/form-field.schema';
-import './crud-buttons';
+import 'src/components/crud-buttons';
 
 @customElement('generic-batch-form')
 export class GenericBatchForm extends LitElement {

@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../../../components/livestock-batch-form';
+import '../batch/livestock-batch-form';
 
 @customElement('view-prod-peternakan')
 export class ViewProdPeternakan extends LitElement {

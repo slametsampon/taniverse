@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/components/generic-form.ts
+// frontend/src/pages/konfigurasi/components/generic-entitas-form.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -10,10 +10,11 @@ export interface FieldConfig {
   type: 'text' | 'number' | 'date' | 'textarea';
   required?: boolean;
   disabled?: boolean;
-  widthClass?: string; // ✅ Tambahkan ini
+  widthClass?: string;
+  colSpan?: number; // ✅ Tambahkan ini
 }
 
-@customElement('generic-form')
+@customElement('generic-entitas-form')
 export class GenericForm extends LitElement {
   createRenderRoot() {
     return this; // ✅ Light DOM
@@ -69,13 +70,11 @@ export class GenericForm extends LitElement {
           e.preventDefault();
           this.handleSubmit();
         }}
-        class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
       >
         ${this.fields.map(
           (field) => html`
-            <div
-              class="${field.widthClass?.includes('max-w') ? 'col-span-2' : ''}"
-            >
+            <div class="col-span-${field.colSpan ?? 1}">
               <label class="block text-sm text-gray-700 mb-1"
                 >${field.label}</label
               >

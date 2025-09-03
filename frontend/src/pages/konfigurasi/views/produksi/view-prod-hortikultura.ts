@@ -1,8 +1,8 @@
-// frontend/src/pages/konfigurasi/view-prod-hortikultura.ts
+// frontend/src/pages/konfigurasi/views/produksi/view-prod-hortikultura.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import 'src/components/planting-batch-form';
+import '../batch/planting-batch-form';
 
 @customElement('view-prod-hortikultura')
 export class ViewProdHortikultura extends LitElement {

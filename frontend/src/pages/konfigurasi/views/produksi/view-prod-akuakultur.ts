@@ -1,8 +1,8 @@
-// frontend/src/pages/konfigurasi/view-prod-akuakultur.ts
+// frontend/src/pages/konfigurasi/views/produksi/view-prod-akuakultur.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import '../../../../components/aquatic-batch-form';
+import '../batch/aquatic-batch-form';
 
 @customElement('view-prod-akuakultur')
 export class ViewProdAkuakultur extends LitElement {

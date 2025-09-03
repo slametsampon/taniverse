@@ -5,10 +5,10 @@ import { customElement, property } from 'lit/decorators.js';
 
 // Model & Field Definitions
 import { Livestock } from '@models/livestock.model';
-import { livestockFormFields } from '../../components/livestock-fields';
+import { livestockFormFields } from '../../schema/livestock-fields';
 
 // Components
-import '../../components/generic-form';
+import '../../components/generic-entitas-form';
 
 @customElement('form-entitas-ayam')
 export class FormEntitasAyam extends LitElement {
@@ -54,14 +54,14 @@ export class FormEntitasAyam extends LitElement {
           🐔 Jenis Ternak Ayam
         </h2>
 
-        <generic-form
+        <generic-entitas-form
           .fields=${livestockFormFields}
           .value=${this.value}
           .mode=${this.mode}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}
-        ></generic-form>
+        ></generic-entitas-form>
       </section>
     `;
   }
