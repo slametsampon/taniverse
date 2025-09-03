@@ -2,6 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
+import './crud-buttons';
 
 // Tipe konfigurasi untuk field dinamis
 export interface FieldConfig {
@@ -98,29 +99,13 @@ export class GenericForm extends LitElement {
           `
         )}
 
-        <div class="flex gap-2 mt-4 col-span-2">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            💾 Simpan
-          </button>
-          <button
-            type="button"
-            @click=${this.handleCancel}
-            class="px-4 py-2 rounded border"
-          >
-            ❌ Batal
-          </button>
-          ${this.mode === 'edit'
-            ? html`<button
-                type="button"
-                @click=${this.handleDelete}
-                class="px-4 py-2 rounded border text-red-600"
-              >
-                🗑️ Hapus
-              </button>`
-            : null}
+        <div class="col-span-2">
+          <crud-buttons
+            .mode=${this.mode}
+            @submit=${this.handleSubmit}
+            @cancel=${this.handleCancel}
+            @delete=${this.handleDelete}
+          ></crud-buttons>
         </div>
       </form>
     `;

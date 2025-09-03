@@ -4,7 +4,7 @@ import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type { GenericBatch } from '@/models/generic-batch.model';
 import type { FormFieldSchema } from '@/models/form-field.schema';
-import 'src/components/crud-buttons';
+import 'src/pages/konfigurasi/components/crud-buttons';
 
 @customElement('generic-batch-form')
 export class GenericBatchForm extends LitElement {
