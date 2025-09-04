@@ -1,9 +1,8 @@
 // frontend/src/services/event.service.ts
 
-import { EventHistory } from '@models/event.model';
+import { getEventRepository } from '../repositories/factory';
 
-export async function fetchMockEvents(): Promise<EventHistory[]> {
-  const res = await fetch('/assets/mock/event.json');
-  if (!res.ok) throw new Error('Failed to fetch mock event data');
-  return await res.json();
-}
+const repo = getEventRepository();
+
+export const fetchAllEvents = () => repo.getAll();
+export const fetchEventById = (id: string) => repo.getById(id);

@@ -3,6 +3,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { EventHistory } from '@models/event.model';
 import { getRowColor } from 'src/utils/color.utils';
+import { fetchAllEvents } from 'src/services/event.service';
 
 @customElement('event-table')
 export class EventTable extends LitElement {
@@ -24,9 +25,7 @@ export class EventTable extends LitElement {
 
   async loadMockEvents() {
     try {
-      const res = await fetch('/assets/mock/event.json');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data: EventHistory[] = await res.json();
+      const data: EventHistory[] = await fetchAllEvents();
 
       const prevKey = this.events[0] ? this.getEventKey(this.events[0]) : '';
       const newKey = data[0] ? this.getEventKey(data[0]) : '';
