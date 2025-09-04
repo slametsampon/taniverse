@@ -28,6 +28,7 @@ import './views/batch/form-batch-akuakultur';
 import './views/batch/form-batch-peternakan';
 
 import './views/entitas/entitas-container';
+import './views/batch/batch-container';
 
 @customElement('page-config')
 export class PageDeviceConfig extends LitElement {
@@ -269,22 +270,13 @@ export class PageDeviceConfig extends LitElement {
               </div>
 
               <div class="mt-4">
-                ${this.batchDomain === 'hidroponik'
-                  ? html`<form-batch-hidroponik></form-batch-hidroponik>`
-                  : this.batchDomain === 'hortikultura'
-                  ? html`<form-batch-hortikultura></form-batch-hortikultura>`
-                  : this.batchDomain === 'akuakultur'
-                  ? html`<form-batch-akuakultur></form-batch-akuakultur>`
-                  : html`<form-batch-peternakan></form-batch-peternakan>`}
+                <batch-container></batch-container>
               </div>
             `
           : this.activeTab === 'entitas'
           ? html`
-              <div class="my-4 flex justify-between items-center">
-                <entitas-tab-selector
-                  .selected=${this.entitasKind}
-                  @entitas-kind-change=${this.onEntitasKindChange}
-                ></entitas-tab-selector>
+              <div class="font-semibold text-lg mt-4 mb-2 text-gray-700">
+                Konfigurasi - Entitas
               </div>
 
               <div class="mt-4">
