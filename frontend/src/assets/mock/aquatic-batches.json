@@ -2,45 +2,49 @@
   {
     "id": "batch-fsh-001",
     "speciesId": "lele-jumbo",
-    "pond": "Kolam-A1",
+    "location": "Kolam-A1",
     "startDate": "2025-07-01",
     "expectedHarvestDate": "2025-08-20",
     "initialPopulation": 2000,
     "currentPopulation": 1960,
-    "status": "Active",
-    "note": "40 ekor mati minggu pertama"
+    "status": "Growing",
+    "note": "40 ekor mati minggu pertama",
+    "description": "Lele jumbo di Kolam-A1, 40 ekor mati pada minggu pertama."
   },
   {
     "id": "batch-fsh-002",
     "speciesId": "nila-merah",
-    "pond": "Kolam-B2",
+    "location": "Kolam-B2",
     "startDate": "2025-06-15",
     "expectedHarvestDate": "2025-08-10",
     "initialPopulation": 1500,
     "currentPopulation": 1445,
     "status": "Harvested",
-    "note": "Panen sukses"
+    "note": "Panen sukses",
+    "description": "Batch nila merah dipanen dengan hasil sukses di Kolam-B2."
   },
   {
     "id": "batch-fsh-003",
     "speciesId": "patin-super",
-    "pond": "Kolam-C1",
+    "location": "Kolam-C1",
     "startDate": "2025-08-05",
     "expectedHarvestDate": "2025-09-15",
     "initialPopulation": 1800,
     "currentPopulation": 1775,
-    "status": "Active",
-    "note": "Kondisi air bagus"
+    "status": "Growing",
+    "note": "Kondisi air bagus",
+    "description": "Batch patin super tumbuh dengan baik, kondisi air optimal."
   },
   {
     "id": "batch-fsh-004",
     "speciesId": "gurame-lokal",
-    "pond": "Kolam-D3",
+    "location": "Kolam-D3",
     "startDate": "2025-07-10",
     "expectedHarvestDate": "2025-09-01",
     "initialPopulation": 1200,
     "currentPopulation": 1150,
     "status": "Failed",
-    "note": "Gagal akibat pencemaran"
+    "note": "Gagal akibat pencemaran",
+    "description": "Batch gurame lokal gagal panen akibat pencemaran air di kolam."
   }
 ]

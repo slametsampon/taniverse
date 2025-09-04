@@ -2,61 +2,61 @@
   {
     "id": "B001",
     "plantId": "PC01",
-    "code": "B001",
     "startDate": "2025-08-01",
     "expectedHarvestDate": "2025-08-26",
     "initialCount": 30,
     "totalPlants": 30,
     "location": "Rak A1",
     "status": "Planted",
-    "note": "Tanam pagi, suhu 25°C"
+    "note": "Tanam pagi, suhu 25°C",
+    "description": "Batch tanaman PC01 di Rak A1, tanam pagi dengan suhu optimal."
   },
   {
     "id": "B002",
     "plantId": "KT01",
-    "code": "B002",
     "startDate": "2025-08-10",
     "expectedHarvestDate": "2025-08-20",
     "initialCount": 40,
     "totalPlants": 40,
     "location": "Rak B2",
     "status": "Harvested",
-    "note": "Hujan lebat saat tanam"
+    "note": "Hujan lebat saat tanam",
+    "description": "Batch tanaman KT01, kondisi awal hujan lebat saat penanaman."
   },
   {
     "id": "B003",
     "plantId": "TM01",
-    "code": "B003",
     "startDate": "2025-07-15",
     "expectedHarvestDate": "2025-09-30",
     "initialCount": 50,
     "totalPlants": 50,
     "location": "Lahan Blok C",
     "status": "Planted",
-    "note": "Tanam saat cuaca panas, siram pagi dan sore"
+    "note": "Tanam saat cuaca panas, siram pagi dan sore",
+    "description": "Batch TM01 ditanam saat cuaca panas, memerlukan penyiraman ekstra."
   },
   {
     "id": "B004",
     "plantId": "CB01",
-    "code": "B004",
     "startDate": "2025-06-01",
     "expectedHarvestDate": "2025-08-20",
     "initialCount": 60,
     "totalPlants": 60,
     "location": "Bedeng Selatan",
     "status": "Harvested",
-    "note": "Pemangkasan daun dilakukan rutin"
+    "note": "Pemangkasan daun dilakukan rutin",
+    "description": "Batch CB01 dengan perawatan pemangkasan daun rutin."
   },
   {
     "id": "B005",
     "plantId": "TR01",
-    "code": "B005",
     "startDate": "2025-08-05",
     "expectedHarvestDate": "2025-10-15",
     "initialCount": 25,
     "totalPlants": 25,
     "location": "Kebun Belakang",
     "status": "Planted",
-    "note": "Pertumbuhan cepat, mulai berbunga hari ke-20"
+    "note": "Pertumbuhan cepat, mulai berbunga hari ke-20",
+    "description": "Batch TR01 menunjukkan pertumbuhan cepat dan mulai berbunga awal."
   }
 ]

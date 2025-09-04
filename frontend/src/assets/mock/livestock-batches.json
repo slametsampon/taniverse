@@ -2,45 +2,49 @@
   {
     "id": "batch-chk-001",
     "livestockId": "broiler-ayam-01",
-    "pen": "Kandang-A1",
+    "location": "Kandang-A1",
     "startDate": "2025-08-01",
     "expectedHarvestDate": "2025-09-10",
-    "initialCount": 500,
-    "currentCount": 495,
-    "status": "Active",
-    "note": "5 mati saat transport, sisanya sehat"
+    "initialPopulation": 500,
+    "currentPopulation": 495,
+    "status": "Growing",
+    "note": "5 mati saat transport, sisanya sehat",
+    "description": "Batch broiler ayam 01 di Kandang-A1, 5 mati saat transportasi."
   },
   {
     "id": "batch-chk-002",
     "livestockId": "layer-ayam-02",
-    "pen": "Kandang-B2",
+    "location": "Kandang-B2",
     "startDate": "2025-07-15",
     "expectedHarvestDate": "2025-08-25",
-    "initialCount": 300,
-    "currentCount": 297,
+    "initialPopulation": 300,
+    "currentPopulation": 297,
     "status": "Harvested",
-    "note": "Panen sukses, 3 ayam afkir"
+    "note": "Panen sukses, 3 ayam afkir",
+    "description": "Layer ayam 02 berhasil dipanen dengan 3 ayam afkir."
   },
   {
     "id": "batch-chk-003",
     "livestockId": "broiler-ayam-03",
-    "pen": "Kandang-C1",
+    "location": "Kandang-C1",
     "startDate": "2025-08-10",
     "expectedHarvestDate": "2025-09-18",
-    "initialCount": 450,
-    "currentCount": 420,
-    "status": "Active",
-    "note": "30 ayam menunjukkan gejala sakit"
+    "initialPopulation": 450,
+    "currentPopulation": 420,
+    "status": "Growing",
+    "note": "30 ayam menunjukkan gejala sakit",
+    "description": "Broiler ayam 03, 30 ayam menunjukkan gejala sakit pada minggu ke-2."
   },
   {
     "id": "batch-chk-004",
     "livestockId": "layer-ayam-04",
-    "pen": "Kandang-D4",
+    "location": "Kandang-D4",
     "startDate": "2025-06-20",
     "expectedHarvestDate": "2025-08-01",
-    "initialCount": 200,
-    "currentCount": 0,
+    "initialPopulation": 200,
+    "currentPopulation": 0,
     "status": "Failed",
-    "note": "Kematian massal akibat gangguan ventilasi"
+    "note": "Kematian massal akibat gangguan ventilasi",
+    "description": "Layer ayam 04 gagal total akibat masalah ventilasi kandang."
   }
 ]

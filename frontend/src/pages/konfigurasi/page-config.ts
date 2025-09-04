@@ -262,13 +262,6 @@ export class PageDeviceConfig extends LitElement {
             `
           : this.activeTab === 'produksi'
           ? html`
-              <div class="my-4 flex justify-between items-center">
-                <production-tab-selector
-                  .selected=${this.batchDomain}
-                  @prod-domain-change=${this.onbatchDomainChange}
-                ></production-tab-selector>
-              </div>
-
               <div class="mt-4">
                 <batch-container></batch-container>
               </div>
@@ -278,7 +271,6 @@ export class PageDeviceConfig extends LitElement {
               <div class="font-semibold text-lg mt-4 mb-2 text-gray-700">
                 Konfigurasi - Entitas
               </div>
-
               <div class="mt-4">
                 <entitas-container
                   .kind=${this.entitasKind}

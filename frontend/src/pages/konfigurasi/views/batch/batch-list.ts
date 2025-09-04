@@ -31,16 +31,16 @@ export class BatchList extends LitElement {
   // ===== Data Loader (mock) =====
   async loadAll() {
     this.akuakultur = await this.load<AkuakulturBatch[]>(
-      '/assets/mock/batch-akuakultur.json'
+      '/assets/mock/aquatic-batches.json'
     );
     this.hidroponik = await this.load<HidroponikBatch[]>(
-      '/assets/mock/batch-hidroponik.json'
+      '/assets/mock/hydro-batches.json'
     );
     this.hortikultura = await this.load<HortikulturaBatch[]>(
-      '/assets/mock/batch-hortikultura.json'
+      '/assets/mock/horti-batches.json'
     );
     this.peternakan = await this.load<PeternakanBatch[]>(
-      '/assets/mock/batch-peternakan.json'
+      '/assets/mock/livestock-batches.json'
     );
   }
 
@@ -103,7 +103,7 @@ export class BatchList extends LitElement {
                       @click=${() => this.emitEdit(item)}
                     >
                       <div class="font-medium">
-                        ${item?.name ?? item?.title ?? 'Tanpa nama'}
+                        ${item?.name ?? item?.description ?? 'Tanpa nama'}
                       </div>
                       <div class="text-sm text-gray-500 flex gap-2">
                         <span>${item?.id ?? item?.code ?? '-'}</span>
