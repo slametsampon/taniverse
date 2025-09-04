@@ -43,6 +43,11 @@ export const aquaticFormFields: FieldConfig[] = [
     type: 'number',
     widthClass: 'w-full max-w-md',
   },
+  {
+    key: '__sep1',
+    type: 'separator',
+    label: '📊 Parameter Lingkungan',
+  },
 
   {
     key: 'minTempC',

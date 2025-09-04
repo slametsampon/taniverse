@@ -1,12 +1,11 @@
-// frontend/src/pages/konfigurasi/views/produksi/batch-hortikultura.ts
+// frontend/src/pages/konfigurasi/views/batch/form-batch-peternakan.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../../components/generic-batch-form';
-import { hortiBatchFields } from '../../schema/horti-batch-fields';
-
-@customElement('batch-hortikultura')
-export class ViewProdHortikultura extends LitElement {
+import { livestockBatchFields } from '../../schema/livestock-batch-fields';
+@customElement('form-batch-peternakan')
+export class ViewProdPeternakan extends LitElement {
   createRenderRoot() {
     return this;
   }
@@ -20,18 +19,18 @@ export class ViewProdHortikultura extends LitElement {
 
     if (this.formMode === 'edit') {
       this.batchValue = {
-        id: 'HORTI-001',
-        plantId: 'CABAI001',
-        initialCount: 100,
-        totalPlants: 95,
+        id: 'LIV-001',
+        livestockId: 'AYM-BROILER-01',
+        initialPopulation: 500,
+        currentPopulation: 480,
         startDate: '2025-09-01',
-        expectedHarvestDate: '2025-11-01',
-        location: 'Lahan-1B',
-        description: 'Percobaan varietas baru cabai merah',
-        length: 500,
-        width: 300,
-        height: 0,
-        note: 'Perlu monitoring intensif.',
+        expectedHarvestDate: '2025-10-15',
+        location: 'Kandang A1',
+        description: 'Periode broiler 45 hari',
+        length: 600,
+        width: 400,
+        height: 250,
+        note: 'Kematian awal 4%.',
       };
     } else {
       this.batchValue = {};
@@ -40,27 +39,26 @@ export class ViewProdHortikultura extends LitElement {
 
   private handleSubmit(e: CustomEvent) {
     const data = e.detail;
-    console.log('📝 SUBMIT BATCH HORTIKULTURA:', data);
-    // TODO: Simpan ke backend / MQTT
+    console.log('✅ SUBMIT BATCH TERNAK:', data);
+    // TODO: Kirim ke backend / MQTT broker
   }
 
   private handleCancel() {
-    console.log('❌ Batal input hortikultura');
+    console.log('❌ Batal input ternak');
   }
 
   private handleDelete(e: CustomEvent) {
     const id = e.detail;
-    console.log('🗑️ Hapus batch hortikultura dengan ID:', id);
+    console.log('🗑️ Hapus batch ternak dengan ID:', id);
   }
 
   render() {
     return html`
       <div class="p-4 space-y-6">
         <h2 class="text-xl font-semibold text-green-700">
-          Manajemen Batch Hortikultura
+          Manajemen Batch Peternakan (Ayam)
         </h2>
 
-        <!-- Mode Switcher -->
         <div class="mb-4">
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
@@ -75,7 +73,7 @@ export class ViewProdHortikultura extends LitElement {
 
         <generic-batch-form
           .mode=${this.formMode}
-          .fields=${hortiBatchFields}
+          .fields=${livestockBatchFields}
           .value=${this.batchValue}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}

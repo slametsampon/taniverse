@@ -63,8 +63,22 @@ export class GenericForm extends LitElement {
         }}
         class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
       >
-        ${this.fields.map(
-          (field) => html`
+        ${this.fields.map((field) => {
+          // 🔻 Separator logic
+          if (field.type === 'separator') {
+            return html`
+              <div class="col-span-2 border-b border-gray-300 mt-2 mb-1">
+                ${field.label
+                  ? html`<h3 class="text-sm font-semibold text-gray-600 mb-1">
+                      ${field.label}
+                    </h3>`
+                  : null}
+              </div>
+            `;
+          }
+
+          // 🔻 Normal field
+          return html`
             <div class="col-span-${field.colSpan ?? 1}">
               <label class="block text-sm text-gray-700 mb-1"
                 >${field.label}</label
@@ -86,8 +100,8 @@ export class GenericForm extends LitElement {
                     @input=${(e: Event) => this.handleInput(e, field.key)}
                   />`}
             </div>
-          `
-        )}
+          `;
+        })}
 
         <div class="col-span-2">
           <crud-buttons

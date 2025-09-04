@@ -94,6 +94,17 @@ export class GenericBatchForm extends LitElement {
   }
 
   private renderField(f: FieldConfig) {
+    if (f.type === 'separator') {
+      return html`
+        <div class="col-span-2 border-b border-gray-300 mt-2 mb-1">
+          ${f.label
+            ? html`<h3 class="text-sm font-semibold text-gray-600 mb-1">
+                ${f.label}
+              </h3>`
+            : null}
+        </div>
+      `;
+    }
     const v = this.draft[f.key] ?? '';
     const base = `${
       f.widthClass ?? 'w-full'

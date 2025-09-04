@@ -49,6 +49,11 @@ export const livestockFormFields: FieldConfig[] = [
     widthClass: 'w-full max-w-md',
   },
   {
+    key: '__sep1',
+    type: 'separator',
+    label: '📊 Parameter Lingkungan',
+  },
+  {
     key: 'tempMinC',
     label: 'Suhu Min (°C)',
     type: 'number',

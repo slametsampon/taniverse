@@ -26,11 +26,38 @@ export const plantFormFields: FieldConfig[] = [
   },
 
   {
+    key: 'pricePerKg',
+    label: 'Harga per Kg',
+    type: 'number',
+    widthClass: 'w-full max-w-md',
+  },
+  {
+    key: 'costPerUnit',
+    label: 'Biaya per Tanaman',
+    type: 'number',
+    widthClass: 'w-full max-w-md',
+  },
+
+  {
+    key: 'avgWeightG',
+    label: 'Berat Rata-rata (g)',
+    type: 'number',
+    widthClass: 'w-full max-w-md',
+  },
+
+  {
+    key: '__sep1',
+    type: 'separator',
+    label: '📊 Parameter karakter',
+  },
+
+  {
     key: 'heightMinCm',
     label: 'Tinggi Min (cm)',
     type: 'number',
     widthClass: 'w-full max-w-md',
   },
+
   {
     key: 'heightMaxCm',
     label: 'Tinggi Max (cm)',
@@ -49,6 +76,11 @@ export const plantFormFields: FieldConfig[] = [
     label: 'Jarak Kolom (cm)',
     type: 'number',
     widthClass: 'w-full max-w-md',
+  },
+  {
+    key: '__sep1',
+    type: 'separator',
+    label: '📊 Parameter Lingkungan',
   },
 
   {
@@ -73,25 +105,6 @@ export const plantFormFields: FieldConfig[] = [
   {
     key: 'phMax',
     label: 'pH Max',
-    type: 'number',
-    widthClass: 'w-full max-w-md',
-  },
-
-  {
-    key: 'avgWeightG',
-    label: 'Berat Rata-rata (g)',
-    type: 'number',
-    widthClass: 'w-full max-w-md',
-  },
-  {
-    key: 'pricePerKg',
-    label: 'Harga per Kg',
-    type: 'number',
-    widthClass: 'w-full max-w-md',
-  },
-  {
-    key: 'costPerUnit',
-    label: 'Biaya per Tanaman',
     type: 'number',
     widthClass: 'w-full max-w-md',
   },

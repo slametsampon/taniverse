@@ -1,9 +1,9 @@
-// frontend/src/schema/field-config.ts
+// frontend/src/pages/konfigurasi/schema/field-config.ts
 
 export interface FieldConfig {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'textarea' | 'select';
+  type: 'text' | 'number' | 'date' | 'textarea' | 'select' | 'separator';
   required?: boolean;
   disabled?: boolean;
   widthClass?: string;

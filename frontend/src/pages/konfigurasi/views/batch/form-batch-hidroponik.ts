@@ -1,10 +1,10 @@
-// frontend/src/pages/konfigurasi/views/produksi/batch-hidroponik.ts
+// frontend/src/pages/konfigurasi/views/batch/form-batch-hidroponik.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../../components/generic-batch-form'; // ✅ gunakan form generik
 import { hydroponicBatchFields } from '../../schema/hydroponic-batch-fields';
-@customElement('batch-hidroponik')
+@customElement('form-batch-hidroponik')
 export class ViewProdHidroponik extends LitElement {
   createRenderRoot() {
     return this;

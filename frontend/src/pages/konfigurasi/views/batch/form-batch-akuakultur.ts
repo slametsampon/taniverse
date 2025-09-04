@@ -1,10 +1,10 @@
-// frontend/src/pages/konfigurasi/views/batch/view-prod-akuakultur.ts
+// frontend/src/pages/konfigurasi/views/batch/form-batch-akuakultur.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import '../../components/generic-batch-form'; // ✅ Ganti form
 import { aquaticBatchFields } from '../../schema/aquatic-batch-fields';
-@customElement('batch-akuakultur')
+@customElement('form-batch-akuakultur')
 export class ViewProdAkuakultur extends LitElement {
   createRenderRoot() {
     return this;

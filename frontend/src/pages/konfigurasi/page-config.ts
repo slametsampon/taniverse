@@ -22,10 +22,10 @@ import './views/devices/dev-config-hw-comm';
 import './views/devices/dev-config-loc-meta';
 import './views/devices/dev-config-mqtt';
 
-import './views/batch/batch-hidroponik';
-import './views/batch/batch-hortikultura';
-import './views/batch/batch-akuakultur';
-import './views/batch/batch-peternakan';
+import './views/batch/form-batch-hidroponik';
+import './views/batch/form-batch-hortikultura';
+import './views/batch/form-batch-akuakultur';
+import './views/batch/form-batch-peternakan';
 
 import './views/entitas/entitas-container';
 
@@ -42,7 +42,7 @@ export class PageDeviceConfig extends LitElement {
   @state() private activeTab: TabId = 'devices';
   @state() private deviceView: 'general' | 'hw-comm' | 'loc-meta' = 'general';
   @state() private mode: 'new' | 'edit' = 'edit';
-  @state() private productionDomain:
+  @state() private batchDomain:
     | 'hidroponik'
     | 'hortikultura'
     | 'akuakultur'
@@ -186,8 +186,8 @@ export class PageDeviceConfig extends LitElement {
     window.history.back();
   };
 
-  private onProductionDomainChange = (e: CustomEvent<{ domain: string }>) => {
-    this.productionDomain = e.detail.domain as any;
+  private onbatchDomainChange = (e: CustomEvent<{ domain: string }>) => {
+    this.batchDomain = e.detail.domain as any;
   };
 
   private onEntitasKindChange = (e: CustomEvent<{ kind: string }>) => {
@@ -263,19 +263,19 @@ export class PageDeviceConfig extends LitElement {
           ? html`
               <div class="my-4 flex justify-between items-center">
                 <production-tab-selector
-                  .selected=${this.productionDomain}
-                  @prod-domain-change=${this.onProductionDomainChange}
+                  .selected=${this.batchDomain}
+                  @prod-domain-change=${this.onbatchDomainChange}
                 ></production-tab-selector>
               </div>
 
               <div class="mt-4">
-                ${this.productionDomain === 'hidroponik'
-                  ? html`<batch-hidroponik></batch-hidroponik>`
-                  : this.productionDomain === 'hortikultura'
-                  ? html`<batch-hortikultura></batch-hortikultura>`
-                  : this.productionDomain === 'akuakultur'
-                  ? html`<batch-akuakultur></batch-akuakultur>`
-                  : html`<batch-peternakan></batch-peternakan>`}
+                ${this.batchDomain === 'hidroponik'
+                  ? html`<form-batch-hidroponik></form-batch-hidroponik>`
+                  : this.batchDomain === 'hortikultura'
+                  ? html`<form-batch-hortikultura></form-batch-hortikultura>`
+                  : this.batchDomain === 'akuakultur'
+                  ? html`<form-batch-akuakultur></form-batch-akuakultur>`
+                  : html`<form-batch-peternakan></form-batch-peternakan>`}
               </div>
             `
           : this.activeTab === 'entitas'
