@@ -4,6 +4,12 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const livestockFormFields: FieldConfig[] = [
   {
+    key: 'id',
+    label: 'ID Ayam',
+    type: 'text',
+    widthClass: 'w-full max-w-md',
+  },
+  {
     key: 'name',
     label: 'Nama Ternak',
     type: 'text',

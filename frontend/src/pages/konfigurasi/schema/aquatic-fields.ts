@@ -4,6 +4,12 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const aquaticFormFields: FieldConfig[] = [
   {
+    key: 'id',
+    label: 'ID Ikan',
+    type: 'text',
+    widthClass: 'w-full max-w-md',
+  },
+  {
     key: 'name',
     label: 'Nama Spesies',
     type: 'text',

@@ -43,16 +43,10 @@ export class PageDeviceConfig extends LitElement {
   @state() private activeTab: TabId = 'devices';
   @state() private deviceView: 'general' | 'hw-comm' | 'loc-meta' = 'general';
   @state() private mode: 'new' | 'edit' = 'edit';
-  @state() private batchDomain:
-    | 'hidroponik'
-    | 'hortikultura'
-    | 'akuakultur'
-    | 'peternakan' = 'hidroponik';
   @state() private tags: string[] = [];
   @state() private dirty = false;
   @state() private saving = false;
   @state() private deleting = false;
-  @state() private entitasKind: 'tanaman' | 'ikan' | 'ayam' = 'tanaman';
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
@@ -187,14 +181,6 @@ export class PageDeviceConfig extends LitElement {
     window.history.back();
   };
 
-  private onbatchDomainChange = (e: CustomEvent<{ domain: string }>) => {
-    this.batchDomain = e.detail.domain as any;
-  };
-
-  private onEntitasKindChange = (e: CustomEvent<{ kind: string }>) => {
-    this.entitasKind = e.detail.kind as any;
-  };
-
   render() {
     return html`
       <section class="max-w-6xl mx-auto px-4 py-6">
@@ -272,9 +258,7 @@ export class PageDeviceConfig extends LitElement {
                 Konfigurasi - Entitas
               </div>
               <div class="mt-4">
-                <entitas-container
-                  .kind=${this.entitasKind}
-                ></entitas-container>
+                <entitas-container></entitas-container>
               </div>
             `
           : null}

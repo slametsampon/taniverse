@@ -4,6 +4,12 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const plantFormFields: FieldConfig[] = [
   {
+    key: 'id',
+    label: 'ID Tanaman',
+    type: 'text',
+    widthClass: 'w-full max-w-md',
+  },
+  {
     key: 'name',
     label: 'Nama Tanaman',
     type: 'text',
