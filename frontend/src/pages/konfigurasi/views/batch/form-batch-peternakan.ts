@@ -1,7 +1,7 @@
 // frontend/src/pages/konfigurasi/views/batch/form-batch-peternakan.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import '../../components/generic-batch-form';
 import { livestockBatchFields } from '../../schema/livestock-batch-fields';
 @customElement('form-batch-peternakan')
@@ -10,15 +10,20 @@ export class ViewProdPeternakan extends LitElement {
     return this;
   }
 
-  @state() private formMode: 'new' | 'edit' = 'new';
-  @state() private batchValue: Record<string, any> = {};
+  @property() private mode: 'new' | 'edit' = 'new';
+  @property() private value: Record<string, any> = {};
+  @property({ type: String }) kind!:
+    | 'akuakultur'
+    | 'hidroponik'
+    | 'hortikultura'
+    | 'peternakan'; // ✅ TAMBAH
 
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
-    this.formMode = target.value as 'new' | 'edit';
+    this.mode = target.value as 'new' | 'edit';
 
-    if (this.formMode === 'edit') {
-      this.batchValue = {
+    if (this.mode === 'edit') {
+      this.value = {
         id: 'LIV-001',
         livestockId: 'AYM-BROILER-01',
         initialPopulation: 500,
@@ -33,7 +38,7 @@ export class ViewProdPeternakan extends LitElement {
         note: 'Kematian awal 4%.',
       };
     } else {
-      this.batchValue = {};
+      this.value = {};
     }
   }
 
@@ -63,7 +68,7 @@ export class ViewProdPeternakan extends LitElement {
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
             class="px-3 py-1 border rounded bg-white"
-            .value=${this.formMode}
+            .value=${this.mode}
             @change=${this.toggleMode}
           >
             <option value="new">Tambah Baru</option>
@@ -72,9 +77,10 @@ export class ViewProdPeternakan extends LitElement {
         </div>
 
         <generic-batch-form
-          .mode=${this.formMode}
+          .mode=${this.mode}
           .fields=${livestockBatchFields}
-          .value=${this.batchValue}
+          .value=${this.value}
+          .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}

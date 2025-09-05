@@ -3,8 +3,13 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import './crud-buttons';
-import { FieldConfig } from '../../../schema/field-config';
+import { FieldConfig } from 'src/schema/field-config';
 
+function isObjectOption(
+  opt: string | { value: string; label: string }
+): opt is { value: string; label: string } {
+  return typeof opt !== 'string' && 'value' in opt && 'label' in opt;
+}
 @customElement('generic-entitas-form')
 export class GenericEntitasForm extends LitElement {
   createRenderRoot() {
@@ -20,7 +25,11 @@ export class GenericEntitasForm extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    console.log('[GENERIC FORM] mounted with kind:', this.kind);
+    console.log(
+      '[GENERIC FORM] mounted with kind, mode : ',
+      this.kind,
+      this.mode
+    );
   }
 
   updated(changed: Map<string, unknown>) {
@@ -146,9 +155,9 @@ export class GenericEntitasForm extends LitElement {
           >
             <option value="">-- Pilih --</option>
             ${f.options?.map((opt) =>
-              typeof opt === 'string'
-                ? html`<option value=${opt}>${opt}</option>`
-                : html`<option value=${opt.value}>${opt.label}</option>`
+              isObjectOption(opt)
+                ? html`<option value=${opt.value}>${opt.label}</option>`
+                : html`<option value=${opt}>${opt}</option>`
             )}
           </select>
         </div>

@@ -11,6 +11,11 @@ export class CrudButtons extends LitElement {
 
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
 
+  connectedCallback() {
+    super.connectedCallback();
+    console.log('[CRUD BUTTONS] mounted with kind:', this.mode);
+  }
+
   emit(event: string) {
     this.dispatchEvent(
       new CustomEvent(event, { bubbles: false, composed: true })

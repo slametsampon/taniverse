@@ -1,7 +1,7 @@
 // frontend/src/pages/konfigurasi/views/batch/form-batch-akuakultur.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import '../../components/generic-batch-form'; // ✅ Ganti form
 import { aquaticBatchFields } from '../../schema/aquatic-batch-fields';
 @customElement('form-batch-akuakultur')
@@ -10,16 +10,30 @@ export class ViewProdAkuakultur extends LitElement {
     return this;
   }
 
-  @state() private formMode: 'new' | 'edit' = 'new';
-  @state() private batchValue: Record<string, any> = {};
+  @property({ type: String }) mode: 'new' | 'edit' = 'new';
+  @property({ type: Object }) value: Record<string, any> = {};
+  @property({ type: String }) kind!:
+    | 'akuakultur'
+    | 'hidroponik'
+    | 'hortikultura'
+    | 'peternakan'; // ✅ TAMBAH
+
+  connectedCallback() {
+    super.connectedCallback();
+    console.log(
+      '[FORM AKUAKULTUR] mounted with kind, value :',
+      this.kind,
+      this.value
+    );
+  }
 
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
-    this.formMode = target.value as 'new' | 'edit';
+    this.mode = target.value as 'new' | 'edit';
 
     // contoh dummy data saat edit
-    if (this.formMode === 'edit') {
-      this.batchValue = {
+    if (this.mode === 'edit') {
+      this.value = {
         id: 'AQUA-001',
         speciesId: 'LELE001',
         code: 'AQ-2025-B1',
@@ -34,14 +48,18 @@ export class ViewProdAkuakultur extends LitElement {
         note: 'Pertumbuhan baik, penggantian air mingguan.',
       };
     } else {
-      this.batchValue = {};
+      this.value = {};
     }
   }
 
   private handleSubmit(e: CustomEvent) {
-    const data = e.detail;
-    console.log('✅ SUBMIT BATCH AKUAKULTUR:', data);
-    // TODO: Integrasi dengan backend atau MQTT publish
+    this.dispatchEvent(
+      new CustomEvent('submit', {
+        detail: e.detail,
+        bubbles: true,
+        composed: true,
+      })
+    );
   }
 
   private handleCancel() {
@@ -65,7 +83,7 @@ export class ViewProdAkuakultur extends LitElement {
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
             class="px-3 py-1 border rounded bg-white"
-            .value=${this.formMode}
+            .value=${this.mode}
             @change=${this.toggleMode}
           >
             <option value="new">Tambah Baru</option>
@@ -75,9 +93,10 @@ export class ViewProdAkuakultur extends LitElement {
 
         <!-- ✅ Gunakan generic form dengan field config -->
         <generic-batch-form
-          .mode=${this.formMode}
+          .mode=${this.mode}
           .fields=${aquaticBatchFields}
-          .value=${this.batchValue}
+          .value=${this.value}
+          .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}

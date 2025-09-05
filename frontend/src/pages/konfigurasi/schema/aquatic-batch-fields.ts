@@ -4,7 +4,7 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const aquaticBatchFields: FieldConfig[] = [
   {
-    key: 'ID',
+    key: 'id',
     label: 'Id Kolam',
     type: 'text',
     required: true,

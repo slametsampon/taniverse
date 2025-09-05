@@ -2,6 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+
 import type { Plant } from '@models/plant.model';
 import type { AquaticSpecies } from '@models/aquatic-species.model';
 import type { Livestock } from '@models/livestock.model';

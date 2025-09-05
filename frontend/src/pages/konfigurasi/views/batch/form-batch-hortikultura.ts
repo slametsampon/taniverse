@@ -1,7 +1,7 @@
 // frontend/src/pages/konfigurasi/views/batch/form-batch-hortikultura.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, state, property } from 'lit/decorators.js';
 import '../../components/generic-batch-form';
 import { hortiBatchFields } from '../../schema/horti-batch-fields';
 
@@ -11,15 +11,20 @@ export class ViewProdHortikultura extends LitElement {
     return this;
   }
 
-  @state() private formMode: 'new' | 'edit' = 'new';
-  @state() private batchValue: Record<string, any> = {};
+  @state() private mode: 'new' | 'edit' = 'new';
+  @state() private value: Record<string, any> = {};
+  @property({ type: String }) kind!:
+    | 'akuakultur'
+    | 'hidroponik'
+    | 'hortikultura'
+    | 'peternakan'; // ✅ TAMBAH
 
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
-    this.formMode = target.value as 'new' | 'edit';
+    this.mode = target.value as 'new' | 'edit';
 
-    if (this.formMode === 'edit') {
-      this.batchValue = {
+    if (this.mode === 'edit') {
+      this.value = {
         id: 'HORTI-001',
         plantId: 'CABAI001',
         initialCount: 100,
@@ -34,7 +39,7 @@ export class ViewProdHortikultura extends LitElement {
         note: 'Perlu monitoring intensif.',
       };
     } else {
-      this.batchValue = {};
+      this.value = {};
     }
   }
 
@@ -65,7 +70,7 @@ export class ViewProdHortikultura extends LitElement {
           <label class="block text-sm text-gray-700 mb-1">Mode Operasi</label>
           <select
             class="px-3 py-1 border rounded bg-white"
-            .value=${this.formMode}
+            .value=${this.mode}
             @change=${this.toggleMode}
           >
             <option value="new">Tambah Baru</option>
@@ -74,9 +79,10 @@ export class ViewProdHortikultura extends LitElement {
         </div>
 
         <generic-batch-form
-          .mode=${this.formMode}
+          .mode=${this.mode}
           .fields=${hortiBatchFields}
-          .value=${this.batchValue}
+          .value=${this.value}
+          .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}

@@ -19,8 +19,22 @@ export class GenericBatchForm extends LitElement {
   @property({ type: Array }) fields: FieldConfig[] = [];
   @property({ type: Object }) value: Record<string, any> = {};
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
+  @property({ type: String }) kind!:
+    | 'akuakultur'
+    | 'hidroponik'
+    | 'hortikultura'
+    | 'peternakan'; // ✅ TAMBAH
 
   @state() private draft: Record<string, any> = {};
+
+  connectedCallback() {
+    super.connectedCallback();
+    console.log(
+      '[GENERIC FORM] mounted with kind, mode : ',
+      this.kind,
+      this.mode
+    );
+  }
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('value')) {
@@ -83,15 +97,16 @@ export class GenericBatchForm extends LitElement {
   };
 
   private handleDelete = () => {
-    if (confirm('Yakin ingin menghapus data ini?')) {
-      this.dispatchEvent(
-        new CustomEvent('delete', {
-          detail: this.draft.id,
-          bubbles: true,
-          composed: true,
-        })
-      );
-    }
+    if (!confirm('Yakin ingin menghapus data ini?')) return;
+    const id = this.value?.id ?? this.value?.code; // 🔎 fallback kalau model pakai "code"
+    console.log('[GENERIC FORM] delete:', this.kind, id);
+    this.dispatchEvent(
+      new CustomEvent('delete', {
+        detail: { kind: this.kind, id }, // ✅ KIRIM OBJEK { kind, id }
+        bubbles: true,
+        composed: true,
+      })
+    );
   };
 
   private inputId(key: string) {

@@ -53,13 +53,13 @@ export class EntitasContainer extends LitElement {
     this.mode = 'new';
     this.view = 'form';
 
-    console.log('[ADD]', { kind: this.kind });
+    console.log('[ADD ENTITAS]', { kind: this.kind });
   };
 
   private handleSubmit = (
     e: CustomEvent<Partial<Plant | AquaticSpecies | Livestock>>
   ) => {
-    console.log('[SUBMIT]', { kind: this.kind, data: e.detail });
+    console.log('[SUBMIT ENTITAS]', { kind: this.kind, data: e.detail });
     this.view = 'list';
   };
 
@@ -69,11 +69,11 @@ export class EntitasContainer extends LitElement {
     const { id, kind } = e.detail ?? {};
 
     if (!id || !kind) {
-      console.warn('[DELETE] Event detail tidak valid:', e.detail);
+      console.warn('[DELETE ENTITAS] Event detail tidak valid:', e.detail);
       return;
     }
 
-    console.log('[DELETE]', { kind, id });
+    console.log('[DELETE ENTITAS]', { kind, id });
 
     switch (kind) {
       case 'tanaman':
@@ -99,7 +99,7 @@ export class EntitasContainer extends LitElement {
     this.mode = 'edit';
     this.view = 'form';
 
-    console.log('[EDIT]', { kind: this.kind, draft: this.draft });
+    console.log('[EDIT ENTITAS]', { kind: this.kind, draft: this.draft });
   };
 
   private handleCancel = () => {
