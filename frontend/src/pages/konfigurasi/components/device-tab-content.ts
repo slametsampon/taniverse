@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/device-tab-content.ts
+// frontend/src/pages/konfigurasi/components/device-tab-content.ts
 
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
@@ -25,14 +25,12 @@ export class DeviceTabContent extends LitElement {
       <div class="bg-white border border-slate-200 rounded-b-md p-2 md:p-4">
         ${this.activeTab === 'general'
           ? html`
-              <dev-config-general
+              <dev-config-general-fb
                 .model=${this.model}
                 .errors=${this.errors}
                 .mode=${this.mode}
-                .tags=${this.tags}
                 @dev-field-change=${this._relayFieldChange}
-                @dev-tag-picked=${this._relayTagPicked}
-              ></dev-config-general>
+              ></dev-config-general-fb>
             `
           : this.activeTab === 'hw-comm'
           ? html`

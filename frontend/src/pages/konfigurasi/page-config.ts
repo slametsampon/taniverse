@@ -14,10 +14,9 @@ import './components/device-mode-switch';
 import './components/device-tab-content';
 import './components/device-footer';
 import './components/device-tab-selector';
-import './components/production-tab-selector';
-import './components/entitas-tab-selector';
 
 import './views/devices/dev-config-general';
+import './views/devices/dev-config-general-fb';
 import './views/devices/dev-config-hw-comm';
 import './views/devices/dev-config-loc-meta';
 import './views/devices/dev-config-mqtt';

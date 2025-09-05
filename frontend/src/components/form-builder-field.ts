@@ -1,6 +1,6 @@
 // frontend/src/components/form-builder-field.ts
 
-import { html, LitElement } from 'lit';
+import { html, LitElement, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { FieldConfig } from 'src/schema/field-config';
 
@@ -15,6 +15,12 @@ export class FormBuilder extends LitElement {
   createRenderRoot() {
     return this; // Light DOM → Tailwind OK
   }
+
+  static styles = css`
+    :host {
+      display: contents;
+    }
+  `;
 
   @property({ type: Object }) field!: FieldConfig;
   @property({ type: String }) value: any = '';

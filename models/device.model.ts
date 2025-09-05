@@ -1,3 +1,5 @@
+// models/device.model.ts
+
 export type DeviceType = 'sensor' | 'actuator';
 export type BusType = 'adc' | 'i2c' | 'gpio';
 
