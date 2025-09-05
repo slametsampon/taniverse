@@ -200,10 +200,10 @@ export class PageDeviceConfig extends LitElement {
       <section class="max-w-6xl mx-auto px-4 py-6">
         <ui-tabs
           .tabs=${[
-            { id: 'produksi', label: 'Batch', icon: '🏭' },
+            { id: 'batch', label: 'Batch', icon: '🏭' },
+            { id: 'entitas', label: 'Entitas', icon: '🧬' },
             { id: 'devices', label: 'Devices', icon: '🧾' },
             { id: 'mqtt', label: 'MQTT', icon: '📡' },
-            { id: 'entitas', label: 'Entitas', icon: '🧬' },
           ]}
           .active=${this.activeTab}
           @dev-tab-change=${this.onTabChange}
@@ -260,7 +260,7 @@ export class PageDeviceConfig extends LitElement {
                 @dev-tag-picked=${this.onTagPicked}
               ></device-tab-content>
             `
-          : this.activeTab === 'produksi'
+          : this.activeTab === 'batch'
           ? html`
               <div class="mt-4">
                 <batch-container></batch-container>
