@@ -5,6 +5,11 @@ import { customElement, property, state } from 'lit/decorators.js';
 import './crud-buttons';
 import { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
 
+function isObjectOption(
+  opt: string | { value: string; label: string }
+): opt is { value: string; label: string } {
+  return typeof opt !== 'string' && 'value' in opt && 'label' in opt;
+}
 @customElement('generic-batch-form')
 export class GenericBatchForm extends LitElement {
   createRenderRoot() {
@@ -143,9 +148,9 @@ export class GenericBatchForm extends LitElement {
             >
               <option value="">-- Pilih --</option>
               ${f.options?.map((opt) =>
-                typeof opt === 'string'
-                  ? html`<option value=${opt}>${opt}</option>`
-                  : html`<option value=${opt.value}>${opt.label}</option>`
+                isObjectOption(opt)
+                  ? html`<option value=${opt.value}>${opt.label}</option>`
+                  : html`<option value=${opt}>${opt}</option>`
               )}
             </select>
           </div>

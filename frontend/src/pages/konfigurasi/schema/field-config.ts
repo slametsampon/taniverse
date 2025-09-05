@@ -1,12 +1,14 @@
 // frontend/src/pages/konfigurasi/schema/field-config.ts
 
+export type SelectOption = string | { value: string; label: string };
+
 export interface FieldConfig {
   key: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'textarea' | 'select' | 'separator';
+  type: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'separator';
   required?: boolean;
   disabled?: boolean;
+  colSpan?: number;
   widthClass?: string;
-  colSpan?: number; // grid span (1..n)
-  options?: string[]; // untuk select
+  options?: SelectOption[];
 }
