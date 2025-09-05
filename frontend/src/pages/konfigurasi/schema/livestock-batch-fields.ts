@@ -4,7 +4,7 @@ import { FieldConfig } from 'src/schema/field-config';
 
 export const livestockBatchFields: FieldConfig[] = [
   {
-    key: 'ID',
+    key: 'id',
     label: 'Id Kandang',
     type: 'text',
     required: true,

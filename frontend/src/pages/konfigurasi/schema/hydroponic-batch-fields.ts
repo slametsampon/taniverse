@@ -4,7 +4,7 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const hydroponicBatchFields: FieldConfig[] = [
   {
-    key: 'ID',
+    key: 'id',
     label: 'Id Hidroponik',
     type: 'text',
     required: true,

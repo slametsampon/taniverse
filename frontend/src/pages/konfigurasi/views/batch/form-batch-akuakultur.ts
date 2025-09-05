@@ -2,12 +2,15 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
-import '../../components/generic-batch-form'; // ✅ Ganti form
+import 'src/components/form-builder-field';
+import 'src/components/form-builder-buttons';
+import { FieldConfig } from 'src/schema/field-config';
 import { aquaticBatchFields } from '../../schema/aquatic-batch-fields';
+
 @customElement('form-batch-akuakultur')
 export class ViewProdAkuakultur extends LitElement {
   createRenderRoot() {
-    return this;
+    return this; // Light DOM → Tailwind
   }
 
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
@@ -16,7 +19,11 @@ export class ViewProdAkuakultur extends LitElement {
     | 'akuakultur'
     | 'hidroponik'
     | 'hortikultura'
-    | 'peternakan'; // ✅ TAMBAH
+    | 'peternakan';
+
+  @state() private draft: Record<string, any> = {};
+  @state() private errors: Record<string, string> = {};
+  private fields: FieldConfig[] = aquaticBatchFields;
 
   connectedCallback() {
     super.connectedCallback();
@@ -27,11 +34,16 @@ export class ViewProdAkuakultur extends LitElement {
     );
   }
 
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('value')) {
+      this.draft = { ...this.value };
+    }
+  }
+
   private toggleMode(e: Event) {
     const target = e.target as HTMLSelectElement;
     this.mode = target.value as 'new' | 'edit';
 
-    // contoh dummy data saat edit
     if (this.mode === 'edit') {
       this.value = {
         id: 'AQUA-001',
@@ -52,23 +64,97 @@ export class ViewProdAkuakultur extends LitElement {
     }
   }
 
-  private handleSubmit(e: CustomEvent) {
+  private inputId(key: string) {
+    return `fld-${key}`;
+  }
+
+  private handleInput(e: Event, key: string) {
+    const target = e.target as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement;
+    const field = this.fields.find((f) => f.key === key);
+    let v: any = target.value;
+
+    if (field?.type === 'number') {
+      const n = parseFloat(v);
+      v = Number.isNaN(n) ? 0 : n;
+    }
+
+    this.draft = { ...this.draft, [key]: v };
+
+    if (field?.required && (v === '' || v === null || v === undefined)) {
+      this.errors = {
+        ...this.errors,
+        [key]: `Field "${field.label}" wajib diisi.`,
+      };
+    } else {
+      const { [key]: _, ...rest } = this.errors;
+      this.errors = rest;
+    }
+  }
+
+  private validate(): { valid: boolean; message?: string } {
+    for (const f of this.fields) {
+      const val = this.draft[f.key];
+      if (f.required && (val === undefined || val === null || val === '')) {
+        return { valid: false, message: `Field "${f.label}" wajib diisi.` };
+      }
+    }
+    return { valid: true };
+  }
+
+  private handleSubmit = (e?: Event) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    const res = this.validate();
+    if (!res.valid) {
+      alert(res.message);
+      return;
+    }
+
     this.dispatchEvent(
       new CustomEvent('submit', {
-        detail: e.detail,
+        detail: this.draft,
         bubbles: true,
         composed: true,
       })
     );
-  }
+  };
 
-  private handleCancel() {
-    console.log('🚫 Batal input akuakultur');
-  }
+  private handleCancel = () => {
+    this.dispatchEvent(
+      new CustomEvent('cancel', { bubbles: true, composed: true })
+    );
+    this.draft = { ...this.value };
+  };
 
-  private handleDelete(e: CustomEvent) {
-    const id = e.detail;
-    console.log('🗑️ Hapus batch akuakultur dengan ID:', id);
+  private handleDelete = () => {
+    if (!confirm('Yakin ingin menghapus data ini?')) return;
+    const id = this.value?.id ?? this.value?.code;
+    console.log('[FORM AKUAKULTUR] delete:', this.kind, id);
+    this.dispatchEvent(
+      new CustomEvent('delete', {
+        detail: { kind: this.kind, id },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  };
+
+  private renderField(f: FieldConfig) {
+    const v = this.draft[f.key] ?? '';
+    const error = this.errors[f.key];
+    return html`
+      <form-builder-field
+        .field=${f}
+        .value=${v}
+        .inputId=${this.inputId(f.key)}
+        .error=${error}
+        .onInput=${this.handleInput.bind(this)}
+      ></form-builder-field>
+    `;
   }
 
   render() {
@@ -91,16 +177,22 @@ export class ViewProdAkuakultur extends LitElement {
           </select>
         </div>
 
-        <!-- ✅ Gunakan generic form dengan field config -->
-        <generic-batch-form
-          .mode=${this.mode}
-          .fields=${aquaticBatchFields}
-          .value=${this.value}
-          .kind=${this.kind}
+        <!-- Dynamic Form -->
+        <form
+          class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
           @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
-        ></generic-batch-form>
+        >
+          ${this.fields.map((f) => this.renderField(f))}
+
+          <div class="col-span-2">
+            <form-builder-buttons
+              .mode=${this.mode}
+              @submit=${this.handleSubmit}
+              @cancel=${this.handleCancel}
+              @delete=${this.handleDelete}
+            ></form-builder-buttons>
+          </div>
+        </form>
       </div>
     `;
   }

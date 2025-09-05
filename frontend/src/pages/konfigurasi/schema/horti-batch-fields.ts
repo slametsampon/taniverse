@@ -4,7 +4,7 @@ import type { FieldConfig } from 'src/schema/field-config';
 
 export const hortiBatchFields: FieldConfig[] = [
   {
-    key: 'ID',
+    key: 'id',
     label: 'Id Kebun',
     type: 'text',
     required: true,

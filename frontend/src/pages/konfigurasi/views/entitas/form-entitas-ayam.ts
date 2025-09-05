@@ -1,14 +1,16 @@
 // frontend/src/pages/konfigurasi/views/entitas/form-entitas-ayam.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 // Model & Field Definitions
 import { Livestock } from '@models/livestock.model';
 import { livestockFormFields } from '../../schema/livestock-fields';
 
 // Components
-import '../../components/generic-entitas-form';
+import 'src/components/form-builder-field';
+import 'src/components/form-builder-buttons';
+import { FieldConfig } from 'src/schema/field-config';
 
 @customElement('form-entitas-ayam')
 export class FormEntitasAyam extends LitElement {
@@ -20,36 +22,112 @@ export class FormEntitasAyam extends LitElement {
   @property({ type: Object }) value: Partial<Livestock> = {};
   @property({ type: String }) kind?: 'tanaman' | 'ikan' | 'ayam';
 
+  @state() private draft: Record<string, any> = {};
+  @state() private errors: Record<string, string> = {};
+
+  private fields: FieldConfig[] = livestockFormFields;
+
   connectedCallback() {
     super.connectedCallback();
     console.log('[FORM AYAM] mounted with kind:', this.kind);
   }
 
-  private handleSubmit(e: CustomEvent<Partial<Livestock>>) {
+  updated(changed: Map<string, unknown>) {
+    if (changed.has('value')) {
+      this.draft = { ...this.value };
+    }
+  }
+
+  private inputId(key: string) {
+    return `entitas-fld-${key}`;
+  }
+
+  private handleInput(e: Event, key: string) {
+    const target = e.target as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | HTMLSelectElement;
+    const field = this.fields.find((f) => f.key === key);
+    let v: any = target.value;
+
+    if (field?.type === 'number') {
+      const n = parseFloat(v);
+      v = Number.isNaN(n) ? 0 : n;
+    }
+
+    this.draft = { ...this.draft, [key]: v };
+
+    if (field?.required && (v === '' || v === null || v === undefined)) {
+      this.errors = {
+        ...this.errors,
+        [key]: `Field "${field.label}" wajib diisi.`,
+      };
+    } else {
+      const { [key]: _, ...rest } = this.errors;
+      this.errors = rest;
+    }
+  }
+
+  private validate(): { valid: boolean; message?: string } {
+    for (const f of this.fields) {
+      const val = this.draft[f.key];
+      if (f.required && (val === undefined || val === null || val === '')) {
+        return { valid: false, message: `Field "${f.label}" wajib diisi.` };
+      }
+    }
+    return { valid: true };
+  }
+
+  private handleSubmit = (e?: Event) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    const res = this.validate();
+    if (!res.valid) {
+      alert(res.message);
+      return;
+    }
+
     this.dispatchEvent(
-      new CustomEvent('submit', {
-        detail: e.detail,
+      new CustomEvent<Partial<Livestock>>('submit', {
+        detail: this.draft,
         bubbles: true,
         composed: true,
       })
     );
-  }
+  };
 
-  private handleCancel() {
+  private handleCancel = () => {
     this.dispatchEvent(new CustomEvent('cancel'));
-  }
+    this.draft = { ...this.value };
+  };
 
-  private handleDelete() {
+  private handleDelete = () => {
+    if (!confirm('Yakin ingin menghapus data ini?')) return;
     this.dispatchEvent(
       new CustomEvent('delete', {
         detail: {
           kind: this.kind,
-          id: this.value?.id,
+          id: this.value?.id ?? this.value?.name,
         },
         bubbles: true,
         composed: true,
       })
     );
+  };
+
+  private renderField(f: FieldConfig) {
+    const v = this.draft[f.key] ?? '';
+    const error = this.errors[f.key];
+    return html`
+      <form-builder-field
+        .field=${f}
+        .value=${v}
+        .inputId=${this.inputId(f.key)}
+        .error=${error}
+        .onInput=${this.handleInput.bind(this)}
+      ></form-builder-field>
+    `;
   }
 
   render() {
@@ -63,14 +141,21 @@ export class FormEntitasAyam extends LitElement {
           🐔 Jenis Ternak Ayam
         </h2>
 
-        <generic-entitas-form
-          .fields=${livestockFormFields}
-          .value=${this.value}
-          .mode=${this.mode}
-          .kind=${this.kind}
+        <form
+          class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
           @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-        ></generic-entitas-form>
+        >
+          ${this.fields.map((f) => this.renderField(f))}
+
+          <div class="col-span-2">
+            <form-builder-buttons
+              .mode=${this.mode}
+              @submit=${this.handleSubmit}
+              @cancel=${this.handleCancel}
+              @delete=${this.handleDelete}
+            ></form-builder-buttons>
+          </div>
+        </form>
       </section>
     `;
   }

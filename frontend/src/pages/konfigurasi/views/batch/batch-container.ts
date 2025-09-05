@@ -157,7 +157,6 @@ export class BatchContainer extends LitElement {
     const common = {
       mode: this.mode,
       value: this.draft,
-      // ✅ PENTING: teruskan kind ke form spesifik, lalu form teruskan ke generic-batch-form
       kind: this.kind,
       '@submit': this.handleSubmit as any,
       '@cancel': this.handleCancel as any,

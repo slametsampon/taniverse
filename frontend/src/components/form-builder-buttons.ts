@@ -1,10 +1,10 @@
-// frontend/src/pages/konfigurasi/components/crud-buttons.ts
+// frontend/src/components/form-builder-buttons.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-@customElement('crud-buttons')
-export class CrudButtons extends LitElement {
+@customElement('form-builder-buttons')
+export class FormBuilderButtons extends LitElement {
   createRenderRoot() {
     return this;
   }
