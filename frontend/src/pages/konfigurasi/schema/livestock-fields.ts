@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/schema/livestock-fields.ts
 
-import type { FieldConfig } from '../schema/field-config';
+import type { FieldConfig } from 'src/schema/field-config';
 
 export const livestockFormFields: FieldConfig[] = [
   {

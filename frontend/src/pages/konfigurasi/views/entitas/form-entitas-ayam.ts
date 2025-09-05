@@ -18,6 +18,12 @@ export class FormEntitasAyam extends LitElement {
 
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
   @property({ type: Object }) value: Partial<Livestock> = {};
+  @property({ type: String }) kind?: 'tanaman' | 'ikan' | 'ayam';
+
+  connectedCallback() {
+    super.connectedCallback();
+    console.log('[FORM AYAM] mounted with kind:', this.kind);
+  }
 
   private handleSubmit(e: CustomEvent<Partial<Livestock>>) {
     this.dispatchEvent(
@@ -33,10 +39,13 @@ export class FormEntitasAyam extends LitElement {
     this.dispatchEvent(new CustomEvent('cancel'));
   }
 
-  private handleDelete(e: CustomEvent<string>) {
+  private handleDelete() {
     this.dispatchEvent(
       new CustomEvent('delete', {
-        detail: e.detail,
+        detail: {
+          kind: this.kind,
+          id: this.value?.id,
+        },
         bubbles: true,
         composed: true,
       })
@@ -58,9 +67,9 @@ export class FormEntitasAyam extends LitElement {
           .fields=${livestockFormFields}
           .value=${this.value}
           .mode=${this.mode}
+          .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
         ></generic-entitas-form>
       </section>
     `;

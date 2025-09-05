@@ -1,4 +1,5 @@
-// frontend/src/components/crud-buttons.ts
+// frontend/src/pages/konfigurasi/components/crud-buttons.ts
+
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
@@ -12,7 +13,7 @@ export class CrudButtons extends LitElement {
 
   emit(event: string) {
     this.dispatchEvent(
-      new CustomEvent(event, { bubbles: true, composed: true })
+      new CustomEvent(event, { bubbles: false, composed: true })
     );
   }
 

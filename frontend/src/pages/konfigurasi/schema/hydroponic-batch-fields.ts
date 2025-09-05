@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/schema/hydroponic-batch-fields.ts
 
-import type { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
+import type { FieldConfig } from 'src/schema/field-config';
 
 export const hydroponicBatchFields: FieldConfig[] = [
   {

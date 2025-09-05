@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/schema/livestock-batch-fields.ts
 
-import { FieldConfig } from 'src/pages/konfigurasi/schema/field-config';
+import { FieldConfig } from 'src/schema/field-config';
 
 export const livestockBatchFields: FieldConfig[] = [
   {

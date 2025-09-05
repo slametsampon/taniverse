@@ -18,6 +18,12 @@ export class FormEntitasIkan extends LitElement {
 
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
   @property({ type: Object }) value: Partial<AquaticSpecies> = {};
+  @property({ type: String }) kind?: 'tanaman' | 'ikan' | 'ayam';
+
+  connectedCallback() {
+    super.connectedCallback();
+    console.log('[FORM IKAN] mounted with kind:', this.kind);
+  }
 
   private handleSubmit(e: CustomEvent<Partial<AquaticSpecies>>) {
     this.dispatchEvent(
@@ -33,10 +39,13 @@ export class FormEntitasIkan extends LitElement {
     this.dispatchEvent(new CustomEvent('cancel'));
   }
 
-  private handleDelete(e: CustomEvent<string>) {
+  private handleDelete() {
     this.dispatchEvent(
       new CustomEvent('delete', {
-        detail: e.detail,
+        detail: {
+          kind: this.kind,
+          id: this.value?.id,
+        },
         bubbles: true,
         composed: true,
       })
@@ -58,6 +67,7 @@ export class FormEntitasIkan extends LitElement {
           .fields=${aquaticFormFields}
           .value=${this.value}
           .mode=${this.mode}
+          .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
           @delete=${this.handleDelete}

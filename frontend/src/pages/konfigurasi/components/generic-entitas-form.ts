@@ -3,7 +3,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import './crud-buttons';
-import { FieldConfig } from '../schema/field-config';
+import { FieldConfig } from '../../../schema/field-config';
 
 @customElement('generic-entitas-form')
 export class GenericEntitasForm extends LitElement {
@@ -14,8 +14,14 @@ export class GenericEntitasForm extends LitElement {
   @property({ type: Array }) fields: FieldConfig[] = [];
   @property({ type: Object }) value: Record<string, any> = {};
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
+  @property({ type: String }) kind!: 'tanaman' | 'ikan' | 'ayam';
 
   @state() private draft: Record<string, any> = {};
+
+  connectedCallback() {
+    super.connectedCallback();
+    console.log('[GENERIC FORM] mounted with kind:', this.kind);
+  }
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('value')) {
@@ -70,9 +76,13 @@ export class GenericEntitasForm extends LitElement {
 
   private handleDelete = () => {
     if (confirm('Yakin ingin menghapus data ini?')) {
+      console.log('[GENERIC FORM] delete:', this.kind, this.value?.id);
       this.dispatchEvent(
         new CustomEvent('delete', {
-          detail: this.draft.id,
+          detail: {
+            kind: this.kind,
+            id: this.value?.id,
+          },
           bubbles: true,
           composed: true,
         })

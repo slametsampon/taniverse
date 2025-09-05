@@ -1,6 +1,6 @@
 // frontend/src/pages/konfigurasi/schema/plant-fields.ts
 
-import type { FieldConfig } from '../schema/field-config';
+import type { FieldConfig } from 'src/schema/field-config';
 
 export const plantFormFields: FieldConfig[] = [
   {
