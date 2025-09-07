@@ -1,13 +1,12 @@
 // frontend/src/components/form-builder-field.ts
-
-import { html, LitElement, css } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { FieldConfig } from 'src/schema/field-config';
 
 function isObjectOption(
-  opt: string | { value: string; label: string }
-): opt is { value: string; label: string } {
-  return typeof opt !== 'string' && 'value' in opt && 'label' in opt;
+  opt: string | { value: string | number | boolean; label: string }
+): opt is { value: string | number | boolean; label: string } {
+  return typeof opt === 'object' && 'value' in opt && 'label' in opt;
 }
 
 @customElement('form-builder-field')
@@ -16,17 +15,11 @@ export class FormBuilder extends LitElement {
     return this; // Light DOM → Tailwind OK
   }
 
-  static styles = css`
-    :host {
-      display: contents;
-    }
-  `;
-
   @property({ type: Object }) field!: FieldConfig;
-  @property({ type: String }) value: any = '';
   @property({ type: String }) inputId = '';
   @property({ attribute: false }) onInput!: (e: Event, key: string) => void;
   @property({ type: String }) error: string = '';
+  @property({ type: Object }) value: any = '';
 
   render() {
     const f = this.field;
@@ -61,13 +54,14 @@ export class FormBuilder extends LitElement {
             <textarea
               id=${this.inputId}
               class="${base} resize-none min-h-[90px]"
-              .value=${this.value}
+              .value=${this.value ?? ''}
               ?disabled=${f.disabled ?? false}
               @input=${(e: Event) => this.onInput(e, f.key)}
             ></textarea>
             ${errorHtml}
           </div>
         `;
+
       case 'select':
         return html`
           <div class="col-span-${span}">
@@ -77,20 +71,35 @@ export class FormBuilder extends LitElement {
             <select
               id=${this.inputId}
               class="${base}"
-              .value=${String(this.value)}
+              .value=${String(this.value ?? '')}
               ?disabled=${f.disabled ?? false}
               @change=${(e: Event) => this.onInput(e, f.key)}
             >
               <option value="">-- Pilih --</option>
               ${f.options?.map((opt) =>
                 isObjectOption(opt)
-                  ? html`<option value=${opt.value}>${opt.label}</option>`
-                  : html`<option value=${opt}>${opt}</option>`
+                  ? html`
+                      <option
+                        value=${String(opt.value)}
+                        ?selected=${String(this.value) === String(opt.value)}
+                      >
+                        ${opt.label}
+                      </option>
+                    `
+                  : html`
+                      <option
+                        value=${String(opt)}
+                        ?selected=${String(this.value) === String(opt)}
+                      >
+                        ${opt}
+                      </option>
+                    `
               )}
             </select>
             ${errorHtml}
           </div>
         `;
+
       default: // text, number, date
         return html`
           <div class="col-span-${span}">
@@ -101,7 +110,7 @@ export class FormBuilder extends LitElement {
               id=${this.inputId}
               type=${f.type}
               class="${base}"
-              .value=${String(this.value)}
+              .value=${this.value ?? ''}
               ?required=${f.required ?? false}
               ?disabled=${f.disabled ?? false}
               @input=${(e: Event) => this.onInput(e, f.key)}

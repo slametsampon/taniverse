@@ -3,44 +3,6 @@
 export type DeviceType = 'sensor' | 'actuator';
 export type BusType = 'adc' | 'i2c' | 'gpio';
 
-/** Nilai minimum & maksimum */
-export interface Ranges {
-  low: number | null;
-  high: number | null;
-}
-
-/** Alarm ambang batas */
-export interface Alarms {
-  low: number | null;
-  high: number | null;
-}
-
-/** Koneksi fisik ke ESP */
-export interface IO {
-  bus: BusType;
-  pin?: number | null;
-  address?: string | null;
-  channel?: number | null;
-}
-
-/** Sampling untuk sensor */
-export interface Sample {
-  periodMs: number;
-  deadband: number;
-}
-
-/** Format display nilai */
-export interface Display {
-  precision: number;
-}
-
-/** Status MQTT & sistem (diupdate saat runtime) */
-export interface DeviceStatus {
-  mqtt: 'connected' | 'disconnected';
-  valueStatus?: 'normal' | 'low-alarm' | 'high-alarm' | 'sensor-fail';
-  lastSeen?: string; // ISO timestamp
-}
-
 export interface UnitOption {
   label: string;
   value: string;
@@ -61,40 +23,52 @@ export const STANDARD_UNITS: UnitOption[] = [
   { label: 'NTU - Kekeruhan', value: 'NTU' },
 ];
 
-/** Konfigurasi utama perangkat */
-export interface DeviceBase {
+export interface DeviceStatus {
+  mqtt: 'connected' | 'disconnected';
+  valueStatus?: 'normal' | 'low-alarm' | 'high-alarm' | 'sensor-fail';
+  lastSeen?: string; // ISO timestamp
+}
+
+export interface DeviceFlatModel {
   tagNumber: string;
   type: DeviceType;
   description: string;
   unit: string | null;
+  writable: boolean;
+  location: string;
 
-  writable: boolean; // true → actuator
+  // ✅ Flattened ranges
+  ranges_low: number | null;
+  ranges_high: number | null;
 
-  ranges?: Ranges;
-  alarms?: Alarms;
+  // ✅ Flattened alarms
+  alarms_low: number | null;
+  alarms_high: number | null;
 
-  allowedStates?: string[]; // actuator
-  defaultState?: string; // actuator
+  // ✅ Flattened IO
+  io_bus: BusType;
+  io_pin?: number | null;
+  io_address?: string | null;
+  io_channel?: number | null;
 
-  io: IO;
+  // ✅ Flattened sampling
+  sample_periodMs: number;
+  sample_deadband: number;
 
-  sample?: Sample;
-  display?: Display;
+  // ✅ Flattened display
+  display_precision: number;
 
-  location: string; // disederhanakan
+  // Actuator control
+  allowedStates?: string[];
+  defaultState?: string;
 
-  // runtime-only fields
-  value?: number; // sensor
-  state?: string; // actuator
-
-  status?: DeviceStatus; // mqtt status, alarm status, dll
+  // Runtime
+  value?: number;
+  state?: string;
+  status?: DeviceStatus;
 }
 
-/** Extensible domain-friendly config */
-export type DeviceConfig<TExtra = {}> = DeviceBase & TExtra;
-
-// Tambahkan di device.model.ts
-export const defaultDeviceModel: DeviceConfig = {
+export const defaultDeviceModel: DeviceFlatModel = {
   tagNumber: '',
   type: 'sensor',
   description: '',
@@ -102,16 +76,24 @@ export const defaultDeviceModel: DeviceConfig = {
   writable: false,
   location: '',
 
-  ranges: { low: null, high: null },
-  alarms: { low: null, high: null },
+  ranges_low: null,
+  ranges_high: null,
+
+  alarms_low: null,
+  alarms_high: null,
+
+  io_bus: 'adc',
+  io_pin: null,
+  io_address: null,
+  io_channel: null,
+
+  sample_periodMs: 1000,
+  sample_deadband: 0,
+
+  display_precision: 1,
 
   allowedStates: [],
   defaultState: '',
-
-  io: { bus: 'adc', pin: null, address: null, channel: null },
-
-  sample: { periodMs: 1000, deadband: 0 },
-  display: { precision: 1 },
 
   value: undefined,
   state: undefined,

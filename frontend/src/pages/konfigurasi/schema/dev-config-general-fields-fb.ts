@@ -1,5 +1,4 @@
 // frontend/src/pages/konfigurasi/schema/dev-config-general-fields-fb.ts
-
 import type { FieldSection } from 'src/schema/field-section';
 import { STANDARD_UNITS } from '../../../../../models/device.model';
 
@@ -37,7 +36,7 @@ export const generalFieldSections: FieldSection[] = [
         key: 'unit',
         label: 'Satuan',
         type: 'select',
-        options: STANDARD_UNITS,
+        options: STANDARD_UNITS, // value: string (mis. "°C", "%", "ppm", dll)
         widthClass: 'w-full max-w-md',
       },
       {
@@ -45,8 +44,8 @@ export const generalFieldSections: FieldSection[] = [
         label: 'Writable',
         type: 'select',
         options: [
-          { value: 'true', label: 'Ya (Actuator)' },
-          { value: 'false', label: 'Tidak (Sensor)' },
+          { value: true, label: 'Ya (Actuator)' },
+          { value: false, label: 'Tidak (Sensor)' },
         ],
         widthClass: 'w-full max-w-md',
       },
@@ -60,29 +59,30 @@ export const generalFieldSections: FieldSection[] = [
     ],
   },
 
+  // ✅ Range & Alarm → flattened
   {
     title: 'Range & Alarm',
     fields: [
       {
-        key: 'ranges.low',
+        key: 'ranges_low',
         label: 'Min',
         type: 'number',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'ranges.high',
+        key: 'ranges_high',
         label: 'Max',
         type: 'number',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'alarms.low',
+        key: 'alarms_low',
         label: 'Alarm Rendah',
         type: 'number',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'alarms.high',
+        key: 'alarms_high',
         label: 'Alarm Tinggi',
         type: 'number',
         widthClass: 'w-full max-w-md',
@@ -90,11 +90,12 @@ export const generalFieldSections: FieldSection[] = [
     ],
   },
 
+  // ✅ IO → flattened
   {
     title: 'Koneksi Fisik (IO)',
     fields: [
       {
-        key: 'io.bus',
+        key: 'io_bus',
         label: 'Tipe Bus',
         type: 'select',
         options: [
@@ -106,21 +107,21 @@ export const generalFieldSections: FieldSection[] = [
         required: true,
       },
       {
-        key: 'io.pin',
+        key: 'io_pin',
         label: 'Pin (GPIO/ADC)',
         type: 'number',
         helpText: 'Pin fisik (jika GPIO atau ADC)',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'io.address',
+        key: 'io_address',
         label: 'I2C Address',
         type: 'text',
         helpText: 'Contoh: 0x40',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'io.channel',
+        key: 'io_channel',
         label: 'Channel',
         type: 'number',
         helpText: 'Channel opsional (ADC multiplexer, dsb)',
@@ -129,18 +130,19 @@ export const generalFieldSections: FieldSection[] = [
     ],
   },
 
+  // ✅ Sampling → flattened
   {
     title: 'Sampling (Sensor)',
     fields: [
       {
-        key: 'sample.periodMs',
+        key: 'sample_periodMs',
         label: 'Periode Sampling (ms)',
         type: 'number',
         helpText: 'Interval pengambilan data sensor',
         widthClass: 'w-full max-w-md',
       },
       {
-        key: 'sample.deadband',
+        key: 'sample_deadband',
         label: 'Deadband',
         type: 'number',
         helpText: 'Perubahan minimum agar nilai dikirim',
@@ -149,11 +151,12 @@ export const generalFieldSections: FieldSection[] = [
     ],
   },
 
+  // ✅ Display → flattened
   {
     title: 'Display',
     fields: [
       {
-        key: 'display.precision',
+        key: 'display_precision',
         label: 'Presisi Tampilan',
         type: 'number',
         helpText: 'Jumlah angka di belakang koma',
@@ -162,6 +165,7 @@ export const generalFieldSections: FieldSection[] = [
     ],
   },
 
+  // ✅ Actuator control (allowedStates: string[])
   {
     title: 'Kontrol Aktuator',
     fields: [
@@ -169,7 +173,8 @@ export const generalFieldSections: FieldSection[] = [
         key: 'allowedStates',
         label: 'Daftar State Diizinkan',
         type: 'text',
-        helpText: 'Pisahkan dengan koma, misal: ON,OFF,AUTO (khusus actuator)',
+        helpText:
+          'Pisahkan dengan koma, misal: ON,OFF,AUTO (akan di-parse menjadi array)',
         widthClass: 'w-full',
         colSpan: 2,
       },

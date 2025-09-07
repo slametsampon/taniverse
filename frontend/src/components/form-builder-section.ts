@@ -6,25 +6,19 @@ import type { FieldConfig } from 'src/schema/field-config';
 @customElement('form-builder-section')
 export class FormBuilderSection extends LitElement {
   createRenderRoot() {
-    return this; // Light DOM: biar Tailwind bekerja
+    return this; // Light DOM: agar Tailwind bekerja
   }
 
   @property({ type: String }) title = '';
   @property({ type: String }) desc = '';
   @property({ type: Array }) fields: FieldConfig[] = [];
-  @property({ type: Object }) model: any = {};
+  @property({ type: Object }) model: Record<string, any> = {};
   @property({ type: Object }) errors: Record<string, string> = {};
   @property({ attribute: false }) onFieldChange!: (
     e: Event,
     key: string
   ) => void;
   @property({ type: Number }) cols = 2;
-
-  private getValue(key: string): any {
-    return key
-      .split('.')
-      .reduce((acc, part) => (acc ? acc[part] : undefined), this.model);
-  }
 
   render() {
     return html`
@@ -38,12 +32,13 @@ export class FormBuilderSection extends LitElement {
           ? html`<p class="text-sm text-gray-600 mb-4">${this.desc}</p>`
           : null}
 
-        <!-- ✅ Ini grid asli, bukan lewat komponen -->
+        <!-- ✅ Flat key → langsung akses model[key] -->
         <div class="grid grid-cols-1 sm:grid-cols-${this.cols} gap-x-4 gap-y-4">
           ${this.fields.map((field) => {
-            const val = field.key ? this.getValue(field.key) : '';
-            const err = field.key ? this.errors[field.key] ?? '' : '';
+            const val = this.model[field.key];
+            const err = this.errors[field.key] ?? '';
             const span = field.colSpan ?? 1;
+
             return html`
               <div class="col-span-${span}">
                 <form-builder-field

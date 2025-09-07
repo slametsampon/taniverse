@@ -2,6 +2,10 @@
 
 export type SelectOption = string | { value: string; label: string };
 
+export interface FieldOption {
+  value: string | number | boolean;
+  label: string;
+}
 export interface FieldConfig {
   key: string;
   label: string;
@@ -14,7 +18,7 @@ export interface FieldConfig {
   helpText?: string;
   colSpan?: number;
   widthClass?: string;
-  options?: SelectOption[];
+  options?: Array<string | FieldOption>; // ✅ lebih fleksibel
 
   // Untuk pemakaian lintas konteks
   visibleInTable?: boolean;

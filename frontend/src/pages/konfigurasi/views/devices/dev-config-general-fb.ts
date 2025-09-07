@@ -58,6 +58,10 @@ export class DevConfigGeneralFb extends LitElement {
     const { mode, device } = e.detail;
 
     this.mode = mode;
+    console.log(
+      '[dev-config-general-fb] Received device-select event:',
+      e.detail
+    );
 
     if (mode === 'new') {
       this.model = {};
@@ -84,9 +88,6 @@ export class DevConfigGeneralFb extends LitElement {
 
   render() {
     return html`
-<pre class="bg-gray-100 text-xs p-2 border rounded">
-  ${JSON.stringify(this.model, null, 2)}
-</pre>
       <div class="mb-6">
         <div class="mb-4">
           <device-picker

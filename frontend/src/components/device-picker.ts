@@ -32,9 +32,17 @@ export class DevicePicker extends LitElement {
 
     this.value = selected;
 
+    const pickedDevice = this.devices.find((d) => d.tagNumber === selected);
+    console.log('[device-picker] Selected tagNumber:', selected);
+    console.log('[device-picker] Selected device:', pickedDevice);
+
     this.dispatchEvent(
       new CustomEvent('device-select', {
-        detail: { tagNumber: selected },
+        detail: {
+          mode: selected === '' ? 'new' : 'edit',
+          tagNumber: selected,
+          device: pickedDevice, // ✅ Kirim objek lengkap
+        },
         bubbles: true,
         composed: true,
       })
