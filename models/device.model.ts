@@ -92,3 +92,28 @@ export interface DeviceBase {
 
 /** Extensible domain-friendly config */
 export type DeviceConfig<TExtra = {}> = DeviceBase & TExtra;
+
+// Tambahkan di device.model.ts
+export const defaultDeviceModel: DeviceConfig = {
+  tagNumber: '',
+  type: 'sensor',
+  description: '',
+  unit: null,
+  writable: false,
+  location: '',
+
+  ranges: { low: null, high: null },
+  alarms: { low: null, high: null },
+
+  allowedStates: [],
+  defaultState: '',
+
+  io: { bus: 'adc', pin: null, address: null, channel: null },
+
+  sample: { periodMs: 1000, deadband: 0 },
+  display: { precision: 1 },
+
+  value: undefined,
+  state: undefined,
+  status: undefined,
+};

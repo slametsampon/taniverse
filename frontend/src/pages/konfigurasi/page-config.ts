@@ -196,21 +196,6 @@ export class PageDeviceConfig extends LitElement {
 
         ${this.activeTab === 'devices'
           ? html`
-              <div
-                class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 my-4"
-              >
-                <device-tab-selector
-                  .selected=${this.deviceView}
-                  @dev-device-view-change=${this.onDeviceViewChange}
-                ></device-tab-selector>
-
-                <device-mode-switch
-                  .mode=${this.mode}
-                  @dev-mode-change=${(e: CustomEvent) =>
-                    this.onChangeMode(e.detail.mode)}
-                ></device-mode-switch>
-              </div>
-
               <device-tab-content
                 .model=${this.device}
                 .errors=${this.errorsMap}

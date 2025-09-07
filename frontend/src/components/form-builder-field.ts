@@ -25,7 +25,7 @@ export class FormBuilder extends LitElement {
   @property({ type: Object }) field!: FieldConfig;
   @property({ type: String }) value: any = '';
   @property({ type: String }) inputId = '';
-  @property({ type: Function }) onInput!: (e: Event, key: string) => void;
+  @property({ attribute: false }) onInput!: (e: Event, key: string) => void;
   @property({ type: String }) error: string = '';
 
   render() {

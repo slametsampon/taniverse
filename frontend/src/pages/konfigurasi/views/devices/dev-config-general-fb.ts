@@ -1,10 +1,13 @@
 // frontend/src/pages/konfigurasi/views/devices/dev-config-general-fb.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 
 import 'src/components/form-builder-field';
-import { generalFields } from '../../schema/dev-config-general-fields-fb'; // 🆕 pastikan file ini ada
+import { generalFieldSections } from '../../schema/dev-config-general-fields-fb'; // 🆕 pastikan file ini ada
+import 'src/components/form-builder-section';
+
+import 'src/components/device-picker';
 
 function getNestedValue(obj: any, path: string): any {
   return path
@@ -24,7 +27,7 @@ function setNestedValue(obj: any, path: string, value: any): void {
 
 @customElement('dev-config-general-fb')
 export class DevConfigGeneralFb extends LitElement {
-  @property({ type: Object }) model!: any;
+  @state() model: any = {};
   @property({ type: Object }) errors: Record<string, string> = {};
   @property({ type: String }) mode: 'new' | 'edit' = 'edit';
 
@@ -51,29 +54,60 @@ export class DevConfigGeneralFb extends LitElement {
     );
   };
 
+  private handleDevicePick(e: CustomEvent) {
+    const { mode, device } = e.detail;
+
+    this.mode = mode;
+
+    if (mode === 'new') {
+      this.model = {};
+      console.log('[device-picker] Mode: new → Reset form model:', this.model);
+    } else if (device) {
+      this.model = structuredClone(device);
+      console.log('[device-picker] Mode: edit → Loaded device:', this.model);
+    }
+
+    // Tambahan log (opsional) untuk validasi apakah model berubah
+    requestAnimationFrame(() => {
+      console.log('[form-builder] Current model after update:', this.model);
+    });
+  }
+
+  @state()
+  private devices: any[] = [];
+
+  async connectedCallback() {
+    super.connectedCallback();
+    const res = await fetch('/assets/mock/devices.json');
+    this.devices = await res.json();
+  }
+
   render() {
     return html`
+<pre class="bg-gray-100 text-xs p-2 border rounded">
+  ${JSON.stringify(this.model, null, 2)}
+</pre>
       <div class="mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-2">Informasi Umum</h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
-          ${generalFields.map((field) => {
-            const val = getNestedValue(this.model, field.key);
-            const err = getNestedValue(this.errors, field.key) ?? '';
-            const span = field.colSpan ?? 1;
-
-            return html`
-              <div class="col-span-${span}">
-                <form-builder-field
-                  .field=${field}
-                  .value=${val}
-                  .inputId=${`fld-${field.key}`}
-                  .error=${err}
-                  .onInput=${this.handleFieldChange}
-                ></form-builder-field>
-              </div>
-            `;
-          })}
+        <div class="mb-4">
+          <device-picker
+            .value=${this.model.tagNumber}
+            @device-select=${this.handleDevicePick} >
+          </device-picker>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-800 mb-1">${this.title}</h2>
+          ${generalFieldSections.map(
+            (section) => html`
+              <form-builder-section
+                .title=${section.title}
+                .desc=${section.desc ?? ''}
+                .fields=${section.fields}
+                .model=${this.model}
+                .errors=${this.errors}
+                .cols=${2}
+                .onFieldChange=${this.handleFieldChange}
+              ></form-builder-section>
+            `
+          )}
         </div>
       </div>
     `;
