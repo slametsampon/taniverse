@@ -12,15 +12,15 @@ import 'src/components/ui/ui-tabs';
 import { DeviceUI } from 'src/components/device-ui';
 import 'src/components/event-table';
 
-import './views/devices/device-config';
+import './devices/device-config';
 
-import './views/batch/form-batch-hidroponik';
-import './views/batch/form-batch-hortikultura';
-import './views/batch/form-batch-akuakultur';
-import './views/batch/form-batch-peternakan';
+import './batch/form-batch-hidroponik';
+import './batch/form-batch-hortikultura';
+import './batch/form-batch-akuakultur';
+import './batch/form-batch-peternakan';
 
-import './views/entitas/entitas-container';
-import './views/batch/batch-container';
+import './entitas/entitas-container';
+import './batch/batch-container';
 
 @customElement('page-config')
 export class PageDeviceConfig extends LitElement {
@@ -29,16 +29,12 @@ export class PageDeviceConfig extends LitElement {
   }
 
   @state() private device!: DeviceStateModel;
-  @state() private pristine!: DeviceStateModel;
   @state() private errors: any[] = [];
   @state() private errorsMap: Record<string, string> = {};
   @state() private activeTab: TabId = 'devices';
-  @state() private deviceView: 'general' | 'hw-comm' | 'loc-meta' = 'general';
   @state() private mode: 'new' | 'edit' = 'edit';
   @state() private tags: string[] = [];
   @state() private dirty = false;
-  @state() private saving = false;
-  @state() private deleting = false;
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
@@ -70,7 +66,6 @@ export class PageDeviceConfig extends LitElement {
 
   private setDevice(device: DeviceStateModel, mode: 'new' | 'edit') {
     this.device = structuredClone(device);
-    this.pristine = structuredClone(device);
     this.mode = mode;
     this.revalidate();
     this.dirty = false;
@@ -90,29 +85,6 @@ export class PageDeviceConfig extends LitElement {
     sessionStorage.setItem(this.TAB_KEY, this.activeTab);
   }
 
-  private onDeviceViewChange = (
-    e: CustomEvent<{ view: 'general' | 'hw-comm' | 'loc-meta' }>
-  ) => {
-    this.deviceView = e.detail.view;
-  };
-
-  private onChangeMode(mode: 'edit' | 'new') {
-    if (this.mode === mode) return;
-
-    if (mode === 'edit') {
-      DeviceEvents.handleEditMode(
-        this.device?.tagNumber,
-        this.tags,
-        (loaded) => {
-          this.setDevice(loaded, 'edit');
-        }
-      );
-    } else {
-      const fresh = DeviceStateHandler.newTemplate();
-      this.setDevice(fresh, 'new');
-    }
-  }
-
   private onTagPicked = (e: CustomEvent<{ tag: string }>) => {
     DeviceEvents.handleTagPicked(e.detail.tag, this.tags, (dev, mode) => {
       this.setDevice(dev, mode);
@@ -129,7 +101,6 @@ export class PageDeviceConfig extends LitElement {
     this.revalidate();
     if (this.errors.length) return;
 
-    this.saving = true;
     const success = await DeviceEvents.handleSave(
       this.device,
       this.mode,
@@ -139,12 +110,10 @@ export class PageDeviceConfig extends LitElement {
         this.setDevice(saved, mode);
       }
     );
-    this.saving = false;
     if (success) DeviceUI.showToast('Saved ✅');
   };
 
   private onDelete = async () => {
-    this.deleting = true;
     const success = await DeviceEvents.handleDelete(
       this.device.tagNumber,
       this.tags,
@@ -159,7 +128,6 @@ export class PageDeviceConfig extends LitElement {
         }
       }
     );
-    this.deleting = false;
     if (success) DeviceUI.showToast('Deleted 🗑️');
   };
 

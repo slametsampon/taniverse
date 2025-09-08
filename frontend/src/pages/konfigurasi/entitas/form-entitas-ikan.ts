@@ -1,33 +1,35 @@
-// frontend/src/pages/konfigurasi/views/entitas/form-entitas-tanaman.ts
+// frontend/src/pages/konfigurasi/views/entitas/form-entitas-ikan.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
-import { Plant } from '@models/plant.model';
-import { plantFormFields } from '../../schema/plant-fields';
+// Model & Field Definitions
+import { AquaticSpecies } from '@models/aquatic-species.model';
+import { aquaticFormFields } from '../schema/aquatic-fields';
 
+// Components
 import 'src/components/form-builder-field';
 import 'src/components/form-builder-buttons';
 import { FieldConfig } from 'src/schema/field-config';
 
-@customElement('form-entitas-tanaman')
-export class FormEntitasTanaman extends LitElement {
+@customElement('form-entitas-ikan')
+export class FormEntitasIkan extends LitElement {
   createRenderRoot() {
     return this;
   }
 
   @property({ type: String }) mode: 'new' | 'edit' = 'new';
-  @property({ type: Object }) value: Partial<Plant> = {};
+  @property({ type: Object }) value: Partial<AquaticSpecies> = {};
   @property({ type: String }) kind?: 'tanaman' | 'ikan' | 'ayam';
 
   @state() private draft: Record<string, any> = {};
   @state() private errors: Record<string, string> = {};
 
-  private fields: FieldConfig[] = plantFormFields;
+  private fields: FieldConfig[] = aquaticFormFields;
 
   connectedCallback() {
     super.connectedCallback();
-    console.log('[FORM TANAMAN] mounted with kind:', this.kind);
+    console.log('[FORM IKAN] mounted with kind:', this.kind);
   }
 
   updated(changed: Map<string, unknown>) {
@@ -87,7 +89,7 @@ export class FormEntitasTanaman extends LitElement {
     }
 
     this.dispatchEvent(
-      new CustomEvent<Partial<Plant>>('submit', {
+      new CustomEvent<Partial<AquaticSpecies>>('submit', {
         detail: this.draft,
         bubbles: true,
         composed: true,
@@ -131,12 +133,12 @@ export class FormEntitasTanaman extends LitElement {
   render() {
     return html`
       <section
-        class="border border-green-300 rounded-xl p-4 bg-green-50 shadow-sm"
+        class="border border-blue-300 rounded-xl p-4 bg-blue-50 shadow-sm"
       >
         <h2
-          class="text-xl font-semibold text-green-800 mb-3 flex items-center gap-2"
+          class="text-xl font-semibold text-blue-800 mb-3 flex items-center gap-2"
         >
-          🌱 Jenis Tanaman
+          🐟 Jenis Ikan / Akuatik
         </h2>
 
         <form

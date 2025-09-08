@@ -1,11 +1,11 @@
-// frontend/src/pages/konfigurasi/views/batch/form-batch-hidroponik.ts
+// frontend/src/pages/konfigurasi/batch/form-batch-hidroponik.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import 'src/components/form-builder-field';
 import 'src/components/form-builder-buttons';
 import { FieldConfig } from 'src/schema/field-config';
-import { hydroponicBatchFields } from '../../schema/hydroponic-batch-fields';
+import { hydroponicBatchFields } from '../schema/hydroponic-batch-fields';
 
 @customElement('form-batch-hidroponik')
 export class ViewProdHidroponik extends LitElement {

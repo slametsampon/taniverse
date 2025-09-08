@@ -5,7 +5,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 
 // Model & Field Definitions
 import { Livestock } from '@models/livestock.model';
-import { livestockFormFields } from '../../schema/livestock-fields';
+import { livestockFormFields } from '../schema/livestock-fields';
 
 // Components
 import 'src/components/form-builder-field';

@@ -1,38 +1,29 @@
-// frontend/src/pages/konfigurasi/views/batch/form-batch-akuakultur.ts
+// frontend/src/pages/konfigurasi/batch/form-batch-peternakan.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import 'src/components/form-builder-field';
 import 'src/components/form-builder-buttons';
 import { FieldConfig } from 'src/schema/field-config';
-import { aquaticBatchFields } from '../../schema/aquatic-batch-fields';
+import { livestockBatchFields } from '../schema/livestock-batch-fields';
 
-@customElement('form-batch-akuakultur')
-export class ViewProdAkuakultur extends LitElement {
+@customElement('form-batch-peternakan')
+export class ViewProdPeternakan extends LitElement {
   createRenderRoot() {
-    return this; // Light DOM → Tailwind
+    return this;
   }
 
-  @property({ type: String }) mode: 'new' | 'edit' = 'new';
-  @property({ type: Object }) value: Record<string, any> = {};
+  @property() private mode: 'new' | 'edit' = 'new';
+  @property() private value: Record<string, any> = {};
+  @state() private draft: Record<string, any> = {};
+  @state() private errors: Record<string, string> = {};
   @property({ type: String }) kind!:
     | 'akuakultur'
     | 'hidroponik'
     | 'hortikultura'
     | 'peternakan';
 
-  @state() private draft: Record<string, any> = {};
-  @state() private errors: Record<string, string> = {};
-  private fields: FieldConfig[] = aquaticBatchFields;
-
-  connectedCallback() {
-    super.connectedCallback();
-    console.log(
-      '[FORM AKUAKULTUR] mounted with kind, value :',
-      this.kind,
-      this.value
-    );
-  }
+  private fields: FieldConfig[] = livestockBatchFields;
 
   updated(changed: Map<string, unknown>) {
     if (changed.has('value')) {
@@ -46,18 +37,18 @@ export class ViewProdAkuakultur extends LitElement {
 
     if (this.mode === 'edit') {
       this.value = {
-        id: 'AQUA-001',
-        speciesId: 'LELE001',
-        code: 'AQ-2025-B1',
-        pond: 'Kolam-B1',
-        initialPopulation: 1000,
-        currentPopulation: 950,
-        startDate: '2025-08-15',
-        expectedHarvestDate: '2025-11-01',
-        length: 400,
-        width: 200,
-        height: 120,
-        note: 'Pertumbuhan baik, penggantian air mingguan.',
+        id: 'LIV-001',
+        livestockId: 'AYM-BROILER-01',
+        initialPopulation: 500,
+        currentPopulation: 480,
+        startDate: '2025-09-01',
+        expectedHarvestDate: '2025-10-15',
+        location: 'Kandang A1',
+        description: 'Periode broiler 45 hari',
+        length: 600,
+        width: 400,
+        height: 250,
+        note: 'Kematian awal 4%.',
       };
     } else {
       this.value = {};
@@ -114,9 +105,12 @@ export class ViewProdAkuakultur extends LitElement {
       return;
     }
 
+    const data = this.draft;
+    console.log('✅ SUBMIT BATCH TERNAK:', data);
+
     this.dispatchEvent(
       new CustomEvent('submit', {
-        detail: this.draft,
+        detail: data,
         bubbles: true,
         composed: true,
       })
@@ -124,8 +118,12 @@ export class ViewProdAkuakultur extends LitElement {
   };
 
   private handleCancel = () => {
+    console.log('❌ Batal input ternak');
     this.dispatchEvent(
-      new CustomEvent('cancel', { bubbles: true, composed: true })
+      new CustomEvent('cancel', {
+        bubbles: true,
+        composed: true,
+      })
     );
     this.draft = { ...this.value };
   };
@@ -133,7 +131,7 @@ export class ViewProdAkuakultur extends LitElement {
   private handleDelete = () => {
     if (!confirm('Yakin ingin menghapus data ini?')) return;
     const id = this.value?.id ?? this.value?.code;
-    console.log('[FORM AKUAKULTUR] delete:', this.kind, id);
+    console.log('🗑️ Hapus batch ternak dengan ID:', id);
     this.dispatchEvent(
       new CustomEvent('delete', {
         detail: { kind: this.kind, id },
@@ -160,8 +158,8 @@ export class ViewProdAkuakultur extends LitElement {
   render() {
     return html`
       <div class="p-4 space-y-6">
-        <h2 class="text-xl font-semibold text-blue-700">
-          Manajemen Batch Akuakultur
+        <h2 class="text-xl font-semibold text-green-700">
+          Manajemen Batch Peternakan (Ayam)
         </h2>
 
         <!-- Mode Switcher -->
@@ -177,7 +175,7 @@ export class ViewProdAkuakultur extends LitElement {
           </select>
         </div>
 
-        <!-- Dynamic Form -->
+        <!-- Form -->
         <form
           class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4"
           @submit=${this.handleSubmit}

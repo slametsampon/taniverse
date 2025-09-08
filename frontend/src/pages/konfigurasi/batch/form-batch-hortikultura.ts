@@ -1,11 +1,11 @@
-// frontend/src/pages/konfigurasi/views/batch/form-batch-hortikultura.ts
+// frontend/src/pages/konfigurasi/batch/form-batch-hortikultura.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import 'src/components/form-builder-field';
 import 'src/components/form-builder-buttons';
 import { FieldConfig } from 'src/schema/field-config';
-import { hortiBatchFields } from '../../schema/horti-batch-fields';
+import { hortiBatchFields } from '../schema/horti-batch-fields';
 
 @customElement('form-batch-hortikultura')
 export class ViewProdHortikultura extends LitElement {

@@ -4,7 +4,7 @@ import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import 'src/components/form-builder-field';
-import { deviceConfigFields } from '../../schema/device-config-fields'; // 🆕 pastikan file ini ada
+import { deviceConfigFields } from '../schema/device-config-fields'; // 🆕 pastikan file ini ada
 import 'src/components/form-builder-section';
 
 import 'src/components/device-picker';
