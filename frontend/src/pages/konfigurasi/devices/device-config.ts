@@ -67,15 +67,6 @@ export class DeviceConfig extends LitElement {
     });
   }
 
-  @state()
-  private devices: any[] = [];
-
-  async connectedCallback() {
-    super.connectedCallback();
-    const res = await fetch('/assets/mock/devices.json');
-    this.devices = await res.json();
-  }
-
   render() {
     return html`
       <div class="mb-6">

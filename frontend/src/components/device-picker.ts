@@ -2,6 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
+import { devicesStore } from 'src/services/devices-service';
 
 @customElement('device-picker')
 export class DevicePicker extends LitElement {
@@ -15,15 +16,25 @@ export class DevicePicker extends LitElement {
   @property({ type: String })
   value: string | null = null;
 
-  async connectedCallback() {
+  connectedCallback() {
     super.connectedCallback();
-    try {
-      const res = await fetch('/assets/mock/devices.json');
-      const json = await res.json();
-      this.devices = json;
-    } catch (err) {
-      console.error('Gagal memuat devices:', err);
-    }
+    devicesStore.init().then(() => {
+      this.updateDevices();
+    });
+
+    this.unlisten = devicesStore.onChange(() => this.updateDevices());
+  }
+  private unlisten?: () => void;
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.unlisten?.();
+  }
+
+  updateDevices() {
+    const tags = devicesStore.getAllTags();
+    this.devices = tags.map((tag) => devicesStore.get(tag));
+    this.requestUpdate();
   }
 
   private handleChange(e: Event) {

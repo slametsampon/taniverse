@@ -1,8 +1,8 @@
 // frontend/src/repositories/interfaces/DeviceRepository.ts
 
-import { DeviceFlatModel } from '@models/device.model';
+import { DeviceModel } from '@models/device.model';
 
 export interface DeviceRepository {
-  getAll(): Promise<DeviceFlatModel[]>;
-  getByTag(tag: string): Promise<DeviceFlatModel | null>;
+  getAll(): Promise<DeviceModel[]>;
+  getByTag(tag: string): Promise<DeviceModel | null>;
 }

@@ -1,6 +1,6 @@
 // frontend/src/services/event.service.ts
 
-import { getEventRepository } from '../repositories/factory';
+import { getEventRepository } from '../repositories/repository-factory';
 
 const repo = getEventRepository();
 

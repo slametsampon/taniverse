@@ -29,7 +29,7 @@ export interface DeviceStatus {
   lastSeen?: string; // ISO timestamp
 }
 
-export interface DeviceFlatModel {
+export interface DeviceModel {
   tagNumber: string;
   type: DeviceType;
   description: string;
@@ -68,7 +68,7 @@ export interface DeviceFlatModel {
   status?: DeviceStatus;
 }
 
-export const defaultDeviceModel: DeviceFlatModel = {
+export const defaultDeviceModel: DeviceModel = {
   tagNumber: '',
   type: 'sensor',
   description: '',

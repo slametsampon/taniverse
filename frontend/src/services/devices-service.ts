@@ -2,6 +2,8 @@
 
 import { mqttService, TOPIC_PREFIX } from './mqtt-service';
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
+import { getDeviceRepository } from '../repositories/repository-factory';
+import type { DeviceRepository } from '../repositories/interfaces/DeviceRepository';
 import type { DeviceConfig } from '@models/device.model';
 
 type Device = DeviceConfig & {
@@ -17,26 +19,79 @@ type DeviceStatus =
 
 type Listener = () => void;
 
-// (opsional) deklarasi global utk TS (hanya dipakai saat isMockMode()=false)
-declare global {
-  interface Window {
-    mqtt?: {
-      connect: (url: string, opts?: any) => any;
-    };
-  }
-}
-
 /* ============== Store Perangkat ============== */
 class DevicesStore {
   private devices = new Map<string, Device>();
   private listeners = new Set<Listener>();
   private ready = false;
-
-  // MQTT (opsional)
   private mqttClient: any | null = null;
-
   private simulationInterval?: number;
+  private repo: DeviceRepository = getDeviceRepository();
 
+  // ===== INIT =====
+  async init(force = false) {
+    if (this.ready && !force) return;
+
+    this.devices.clear();
+    this.stopSimulation();
+
+    const mode = getMode();
+
+    await this.loadFromRepository();
+
+    if (mode === 'mqtt') {
+      await this.connectMqtt();
+    } else if (mode === 'sim') {
+      this.startSimulation();
+    }
+
+    this.ready = true;
+    this.emit();
+  }
+
+  // ===== Load Data dari Repository (Mock/API/MQTT) =====
+  private async loadFromRepository() {
+    try {
+      const list = await this.repo.getAll();
+      list.forEach((d) => {
+        this.updateStatus(d);
+        this.devices.set(d.tagNumber, d);
+      });
+    } catch (err) {
+      console.error('[devicesStore] ❌ Gagal load data:', err);
+    }
+  }
+
+  // ===== MQTT =====
+  private async connectMqtt() {
+    if (isMockMode()) return;
+
+    await mqttService.connect();
+
+    mqttService.onMessage((topic, rawPayload) => {
+      try {
+        const msg = rawPayload.trim();
+        const parts = topic.split('/');
+        const tag = parts[2];
+        const leaf = parts[3];
+        const dev = this.devices.get(tag);
+        if (!dev) return;
+
+        if (dev.type === 'sensor' && leaf === 'value') {
+          dev.value = parseValue(msg);
+        } else if (dev.type === 'actuator' && leaf === 'state') {
+          dev.state = parseState(msg);
+        }
+
+        this.updateStatus(dev);
+        this.emit();
+      } catch (err) {
+        console.error('[devicesStore] ❌ Error parsing MQTT message:', err);
+      }
+    });
+  }
+
+  // ===== Simulasi (Sensor Random Value) =====
   private startSimulation() {
     this.simulationInterval && clearInterval(this.simulationInterval);
 
@@ -45,11 +100,9 @@ class DevicesStore {
         if (dev.type === 'sensor') {
           const low = dev.ranges?.low ?? 20;
           const high = dev.ranges?.high ?? 100;
-
           const mid = (low + high) / 2;
-          const deviation = 0.05 * mid; // 5% dari mid
-
-          const r = Math.random() * 2 - 1; // r ∈ [-1, 1]
+          const deviation = 0.05 * mid;
+          const r = Math.random() * 2 - 1;
           const simulated = mid + r * deviation;
 
           dev.value = Number(simulated.toFixed(2));
@@ -60,6 +113,14 @@ class DevicesStore {
     }, 2000);
   }
 
+  private stopSimulation() {
+    if (this.simulationInterval) {
+      clearInterval(this.simulationInterval);
+      this.simulationInterval = undefined;
+    }
+  }
+
+  // ===== Status Logic =====
   private updateStatus(dev: Device) {
     if (dev.type === 'sensor') {
       if (dev.value === null || dev.value === undefined) {
@@ -85,80 +146,12 @@ class DevicesStore {
     }
   }
 
-  private stopSimulation() {
-    if (this.simulationInterval) {
-      clearInterval(this.simulationInterval);
-      this.simulationInterval = undefined;
-    }
-  }
-
-  /** Inisialisasi: selalu muat katalog dari mock, lalu opsional sambung MQTT */
-  async init(force = false) {
-    if (this.ready && !force) return;
-
-    this.devices.clear(); // Pastikan tidak ada sisa sebelumnya
-
-    this.stopSimulation(); // 🔴 Hentikan simulation jika masih jalan
-
-    const mode = getMode();
-
-    await this.loadMock();
-
-    if (mode === 'mqtt') {
-      await this.connectMqtt();
-    } else if (mode === 'sim') {
-      this.startSimulation();
-    }
-
-    this.ready = true;
-    this.emit();
-  }
-
-  private async loadMock() {
-    try {
-      const list = await readMockDevices();
-      list.forEach((d) => {
-        this.updateStatus(d);
-        this.devices.set(d.tagNumber, d);
-      });
-    } catch (err) {
-      console.error('[devices] loadMock gagal:', err);
-    }
-  }
-
-  private async connectMqtt() {
-    if (isMockMode()) return;
-
-    await mqttService.connect();
-
-    mqttService.onMessage((topic, rawPayload) => {
-      try {
-        const msg = rawPayload.trim();
-        const parts = topic.split('/'); // taniverse/devices/<TAG>/value|state
-        const tag = parts[2];
-        const leaf = parts[3];
-        const dev = this.devices.get(tag);
-        if (!dev) return;
-
-        if (dev.type === 'sensor' && leaf === 'value') {
-          dev.value = parseValue(msg);
-          this.updateStatus(dev);
-        } else if (dev.type === 'actuator' && leaf === 'state') {
-          dev.state = parseState(msg);
-          this.updateStatus(dev);
-        }
-        this.emit();
-      } catch (err) {
-        console.error('[devicesStore] ❌ Error parsing MQTT message:', err);
-      }
-    });
-  }
-
-  // ===== API untuk UI =====
+  // ===== Public API =====
   onChange(cb: Listener) {
     this.listeners.add(cb);
     return () => this.listeners.delete(cb);
   }
+
   private emit() {
     this.listeners.forEach((cb) => cb());
   }
@@ -188,6 +181,7 @@ class DevicesStore {
     const d = this.devices.get(tag);
     if (d && d.type === 'sensor') {
       d.value = value;
+      this.updateStatus(d);
       this.emit();
     }
   }
@@ -197,66 +191,7 @@ class DevicesStore {
   }
 }
 
-/* ============== Helpers ENV & loader mock ============== */
-function detectBasePath(): string {
-  // 1) coba baca env (kalau ada esbuild/define)
-  const ENV =
-    (typeof process !== 'undefined' && (process as any)?.env?.NODE_ENV) ||
-    'development';
-
-  // 2) deteksi subpath dari URL (mis. /taniverse/)
-  const path = typeof window !== 'undefined' ? window.location.pathname : '/';
-  const m = path.match(/^\/([^/]+)\//); // segmen pertama
-  const sub = m ? `/${m[1]}/` : '/';
-
-  if (ENV === 'pre-release') return sub; // mis. /taniverse/
-  if (ENV === 'production') return ''; // relative
-  return '/'; // dev default
-}
-
-async function readMockDevices(): Promise<Device[]> {
-  const BASE = detectBasePath();
-
-  const candidates = [
-    `${BASE}assets/mock/devices.json`, // hasil build (vite/esbuild)
-    `${BASE}src/assets/mock/devices.json`, // serve source (live-server)
-    `${BASE}mock/devices.json`, // folder publik
-    `${BASE}devices.json`, // root fallback
-  ];
-
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, { cache: 'no-cache' });
-      if (!res.ok) {
-        console.warn(
-          `[devicesStore] ⚠️ Tidak bisa fetch dari ${url} (status: ${res.status})`
-        );
-        continue;
-      }
-
-      const data = await res.json();
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.devices)
-        ? (data as any).devices
-        : null;
-
-      if (Array.isArray(list)) {
-        return list as Device[];
-      } else {
-        console.warn(`[devicesStore] ❌ Format tidak dikenali di: ${url}`);
-      }
-    } catch (err) {
-      console.error(`[devicesStore] ❌ Gagal load dari ${url}:`, err);
-    }
-  }
-
-  throw new Error(
-    '❌ Tidak menemukan mock devices.json di lokasi kandidat mana pun.'
-  );
-}
-
-/* ============== Utils parsing payload ============== */
+/* ============== Payload Parsers ============== */
 function parseValue(s: string): number | null {
   if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
   try {

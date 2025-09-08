@@ -1,20 +1,20 @@
 // frontend/src/repositories/mock/MockDeviceRepository.ts
 
 import { DeviceRepository } from '../interfaces/DeviceRepository';
-import { DeviceFlatModel } from '@models/device.model';
-import { fetchMockData } from '@services/mock-data.service';
+import { DeviceModel } from '@models/device.model';
+import { fetchMockData } from '../../services/mock-data.service';
 
 export class MockDeviceRepository implements DeviceRepository {
-  private cache: DeviceFlatModel[] | null = null;
+  private cache: DeviceModel[] | null = null;
 
-  async getAll(): Promise<DeviceFlatModel[]> {
+  async getAll(): Promise<DeviceModel[]> {
     if (!this.cache) {
-      this.cache = await fetchMockData<DeviceFlatModel[]>('devices.json');
+      this.cache = await fetchMockData<DeviceModel[]>('devices.json');
     }
     return this.cache!;
   }
 
-  async getByTag(tag: string): Promise<DeviceFlatModel | null> {
+  async getByTag(tag: string): Promise<DeviceModel | null> {
     const all = await this.getAll();
     return all.find((device) => device.tagNumber === tag) ?? null;
   }
