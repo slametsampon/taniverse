@@ -9,14 +9,10 @@ import { DeviceEvents } from './events/device-events';
 
 import 'src/components/ui/ui-tabs';
 
-import { DeviceUI } from './components/device-ui';
-import './components/device-mode-switch';
-import './components/device-tab-content';
-import './components/device-footer';
-import './components/device-tab-selector';
+import { DeviceUI } from 'src/components/device-ui';
+import 'src/components/event-table';
 
-import './views/devices/dev-config-general';
-import './views/devices/dev-config-general-fb';
+import './views/devices/device-config';
 import './views/devices/dev-config-hw-comm';
 import './views/devices/dev-config-loc-meta';
 import './views/devices/dev-config-mqtt';
@@ -170,11 +166,7 @@ export class PageDeviceConfig extends LitElement {
     if (success) DeviceUI.showToast('Deleted 🗑️');
   };
 
-  private onReset = () => {
-    this.setDevice(this.pristine, this.mode);
-  };
-
-  private onBack = () => {
+  private onCancel = () => {
     if (this.dirty && !confirm('Perubahan belum disimpan. Tetap keluar?'))
       return;
     window.history.back();
@@ -196,39 +188,20 @@ export class PageDeviceConfig extends LitElement {
 
         ${this.activeTab === 'devices'
           ? html`
-              <device-tab-content
+              <device-config
                 .model=${this.device}
                 .errors=${this.errorsMap}
-                .tags=${this.tags}
                 .mode=${this.mode}
-                .activeTab=${this.deviceView}
                 @dev-field-change=${this.onFieldChange}
-                @dev-tag-picked=${this.onTagPicked}
-              ></device-tab-content>
+                @device-select=${this.onTagPicked}
+              ></device-config>
 
-              <device-footer
-                .saving=${this.saving}
-                .deleting=${this.deleting}
-                .dirty=${this.dirty}
-                .errors=${this.errors.length}
+              <form-builder-buttons
                 .mode=${this.mode}
-                @dev-save=${this.onSave}
-                @dev-reset=${this.onReset}
-                @dev-delete=${this.onDelete}
-                @dev-back=${this.onBack}
-              ></device-footer>
-            `
-          : this.activeTab === 'mqtt'
-          ? html`
-              <device-tab-content
-                .model=${this.device}
-                .errors=${this.errorsMap}
-                .tags=${this.tags}
-                .mode=${this.mode}
-                .activeTab=${'mqtt'}
-                @dev-field-change=${this.onFieldChange}
-                @dev-tag-picked=${this.onTagPicked}
-              ></device-tab-content>
+                @submit=${this.onSave}
+                @cancel=${this.onCancel}
+                @delete=${this.onDelete}
+              ></form-builder-buttons>
             `
           : this.activeTab === 'batch'
           ? html`

@@ -1,8 +1,9 @@
-// frontend/src/pages/konfigurasi/schema/dev-config-general-fields-fb.ts
+// frontend/src/pages/konfigurasi/schema/device-config-fields.ts
+
 import type { FieldSection } from 'src/schema/field-section';
 import { STANDARD_UNITS } from '../../../../../models/device.model';
 
-export const generalFieldSections: FieldSection[] = [
+export const deviceConfigFields: FieldSection[] = [
   {
     title: 'Informasi Umum',
     fields: [

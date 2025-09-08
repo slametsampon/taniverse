@@ -1,10 +1,10 @@
-// frontend/src/pages/konfigurasi/views/devices/dev-config-general-fb.ts
+// frontend/src/pages/konfigurasi/views/devices/device-config.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import 'src/components/form-builder-field';
-import { generalFieldSections } from '../../schema/dev-config-general-fields-fb'; // 🆕 pastikan file ini ada
+import { deviceConfigFields } from '../../schema/device-config-fields'; // 🆕 pastikan file ini ada
 import 'src/components/form-builder-section';
 
 import 'src/components/device-picker';
@@ -25,7 +25,7 @@ function setNestedValue(obj: any, path: string, value: any): void {
   current[keys[keys.length - 1]] = value;
 }
 
-@customElement('dev-config-general-fb')
+@customElement('device-config')
 export class DevConfigGeneralFb extends LitElement {
   @state() model: any = {};
   @property({ type: Object }) errors: Record<string, string> = {};
@@ -58,10 +58,7 @@ export class DevConfigGeneralFb extends LitElement {
     const { mode, device } = e.detail;
 
     this.mode = mode;
-    console.log(
-      '[dev-config-general-fb] Received device-select event:',
-      e.detail
-    );
+    console.log('[device-config] Received device-select event:', e.detail);
 
     if (mode === 'new') {
       this.model = {};
@@ -96,7 +93,7 @@ export class DevConfigGeneralFb extends LitElement {
           </device-picker>
         </div>
         <h2 class="text-lg font-semibold text-gray-800 mb-1">${this.title}</h2>
-          ${generalFieldSections.map(
+          ${deviceConfigFields.map(
             (section) => html`
               <form-builder-section
                 .title=${section.title}
