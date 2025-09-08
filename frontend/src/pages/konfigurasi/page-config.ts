@@ -13,9 +13,6 @@ import { DeviceUI } from 'src/components/device-ui';
 import 'src/components/event-table';
 
 import './views/devices/device-config';
-import './views/devices/dev-config-hw-comm';
-import './views/devices/dev-config-loc-meta';
-import './views/devices/dev-config-mqtt';
 
 import './views/batch/form-batch-hidroponik';
 import './views/batch/form-batch-hortikultura';
