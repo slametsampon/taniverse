@@ -68,7 +68,7 @@ export class AppMain extends LitElement {
         action: async (ctx, commands) => {
           const g = requireRoleAtLeast('engineer')(ctx, commands);
           if (g) return g;
-          await import('../../pages/konfigurasi/page-config');
+          await import('../../pages/config');
         },
         component: 'page-config',
       },

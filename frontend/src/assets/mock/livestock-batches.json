@@ -1,7 +1,7 @@
 [
   {
-    "id": "batch-chk-001",
-    "livestockId": "broiler-ayam-01",
+    "id": "KANDANG-001",
+    "livestockId": "AYAMBRO001",
     "location": "Kandang-A1",
     "startDate": "2025-08-01",
     "expectedHarvestDate": "2025-09-10",
@@ -12,8 +12,8 @@
     "description": "Batch broiler ayam 01 di Kandang-A1, 5 mati saat transportasi."
   },
   {
-    "id": "batch-chk-002",
-    "livestockId": "layer-ayam-02",
+    "id": "KANDANG-002",
+    "livestockId": "AYAMLAY001",
     "location": "Kandang-B2",
     "startDate": "2025-07-15",
     "expectedHarvestDate": "2025-08-25",
@@ -24,8 +24,8 @@
     "description": "Layer ayam 02 berhasil dipanen dengan 3 ayam afkir."
   },
   {
-    "id": "batch-chk-003",
-    "livestockId": "broiler-ayam-03",
+    "id": "KANDANG-003",
+    "livestockId": "AYAMBRO001",
     "location": "Kandang-C1",
     "startDate": "2025-08-10",
     "expectedHarvestDate": "2025-09-18",
@@ -36,8 +36,8 @@
     "description": "Broiler ayam 03, 30 ayam menunjukkan gejala sakit pada minggu ke-2."
   },
   {
-    "id": "batch-chk-004",
-    "livestockId": "layer-ayam-04",
+    "id": "KANDANG-004",
+    "livestockId": "AYAMLAY001",
     "location": "Kandang-D4",
     "startDate": "2025-06-20",
     "expectedHarvestDate": "2025-08-01",

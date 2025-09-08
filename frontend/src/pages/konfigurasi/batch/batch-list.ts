@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/views/batch/batch-list.ts
+// frontend/src/pages/konfigurasi/batch/batch-list.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
@@ -83,17 +83,20 @@ export class BatchList extends LitElement {
                       class="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
                       @click=${() => this.emitEdit(item, kind)}
                     >
-                      <div class="font-medium">
-                        ${item?.name ?? item?.description ?? 'Tanpa nama'}
-                      </div>
+                      <div class="font-medium">${item?.id ?? 'Tanpa Id'}</div>
                       <div class="text-sm text-gray-500 flex gap-2">
-                        <span>${item?.id ?? item?.code ?? '-'}</span>
-                        ${item?.startedAt
+                        <span
+                          >${item?.speciesId ??
+                          item?.plantId ??
+                          item?.livestockId ??
+                          'Tanpa nama'}</span
+                        >
+                        ${item?.startDate
                           ? html`
                               <span
                                 >• Mulai:
                                 ${new Date(
-                                  item.startedAt
+                                  item.startDate
                                 ).toLocaleDateString()}</span
                               >
                             `

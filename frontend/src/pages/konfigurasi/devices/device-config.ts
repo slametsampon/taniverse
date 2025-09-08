@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/views/devices/device-config.ts
+// frontend/src/pages/konfigurasi/devices/device-config.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -6,14 +6,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import 'src/components/form-builder-field';
 import { deviceConfigFields } from '../schema/device-config-fields'; // 🆕 pastikan file ini ada
 import 'src/components/form-builder-section';
-
 import 'src/components/device-picker';
-
-function getNestedValue(obj: any, path: string): any {
-  return path
-    .split('.')
-    .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
-}
 
 function setNestedValue(obj: any, path: string, value: any): void {
   const keys = path.split('.');
@@ -26,7 +19,7 @@ function setNestedValue(obj: any, path: string, value: any): void {
 }
 
 @customElement('device-config')
-export class DevConfigGeneralFb extends LitElement {
+export class DeviceConfig extends LitElement {
   @state() model: any = {};
   @property({ type: Object }) errors: Record<string, string> = {};
   @property({ type: String }) mode: 'new' | 'edit' = 'edit';

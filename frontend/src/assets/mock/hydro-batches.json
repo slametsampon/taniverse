@@ -1,6 +1,6 @@
 [
   {
-    "id": "H001",
+    "id": "HYDRO-01",
     "plantId": "PC01",
     "system": "NFT",
     "location": "Rak-A1",
@@ -13,7 +13,7 @@
     "description": "Pakcoy ditanam dengan sistem NFT, tray penuh saat mulai tanam."
   },
   {
-    "id": "H002",
+    "id": "HYDRO-02",
     "plantId": "KT01",
     "system": "DWC",
     "location": "Rak-B2",
@@ -26,7 +26,7 @@
     "description": "Kangkung dalam sistem DWC, perlu pengecekan pH rutin."
   },
   {
-    "id": "H003",
+    "id": "HYDRO-03",
     "plantId": "SC01",
     "system": "NFT",
     "location": "Rak-C3",
@@ -39,7 +39,7 @@
     "description": "Selada Crisp di sistem NFT menunjukkan pertumbuhan lambat awal."
   },
   {
-    "id": "H004",
+    "id": "HYDRO-04",
     "plantId": "CB01",
     "system": "Drip",
     "location": "Rak-D1",
@@ -52,7 +52,7 @@
     "description": "Cabai merah ditanam di sistem Drip, dengan pemangkasan rutin."
   },
   {
-    "id": "H005",
+    "id": "HYDRO-05",
     "plantId": "TR01",
     "system": "DWC",
     "location": "Rak-E2",

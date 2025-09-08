@@ -1,7 +1,6 @@
 [
   {
-    "id": "nila-merah",
-    "code": "NILA01",
+    "id": "NILA01",
     "name": "Ikan Nila Merah",
     "image": "/images/ikan-nila.jpg",
     "growthDaysMin": 90,
@@ -20,8 +19,7 @@
     "systemType": "KolamTanah"
   },
   {
-    "id": "lele-jumbo",
-    "code": "LELE01",
+    "id": "LELE01",
     "name": "Lele Sangkuriang",
     "image": "/images/lele.jpg",
     "growthDaysMin": 60,
@@ -40,8 +38,7 @@
     "systemType": "Biofloc"
   },
   {
-    "id": "gurame-lokal",
-    "code": "GURAME01",
+    "id": "GURAME01",
     "name": "Gurame Lokal",
     "image": "/images/gurame.jpg",
     "growthDaysMin": 180,
@@ -60,8 +57,7 @@
     "systemType": "KolamTerpal"
   },
   {
-    "id": "patin-super",
-    "code": "PATIN01",
+    "id": "PATIN01",
     "name": "Patin Super",
     "image": "/images/patin.jpg",
     "growthDaysMin": 150,
@@ -80,8 +76,7 @@
     "systemType": "KolamBeton"
   },
   {
-    "id": "udang-vaname",
-    "code": "UDANG01",
+    "id": "UDANG01",
     "name": "Udang Vaname",
     "image": "/images/udang-vaname.jpg",
     "growthDaysMin": 90,
@@ -100,8 +95,7 @@
     "systemType": "Tambak"
   },
   {
-    "id": "bandeng",
-    "code": "BANDENG01",
+    "id": "BANDENG01",
     "name": "Ikan Bandeng",
     "image": "/images/bandeng.jpg",
     "growthDaysMin": 150,

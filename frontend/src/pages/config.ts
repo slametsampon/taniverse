@@ -1,26 +1,28 @@
-// frontend/src/pages/konfigurasi/page-config.ts
+// frontend/src/pages/config.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { TabId } from 'src/types/tab-id';
-import type { DeviceStateModel } from './state/device-state';
-import { DeviceStateHandler } from './state/device-state';
-import { DeviceEvents } from './events/device-events';
+import type { DeviceStateModel } from './konfigurasi/state/device-state';
+import { DeviceStateHandler } from './konfigurasi/state/device-state';
+import { DeviceEvents } from './konfigurasi/events/device-events';
+import { getByTag } from 'src/services/devices-config.service';
 
 import 'src/components/ui/ui-tabs';
 
 import { DeviceUI } from 'src/components/device-ui';
 import 'src/components/event-table';
 
-import './devices/device-config';
+import './konfigurasi/devices/device-config';
+import './konfigurasi/devices/dev-config-mqtt';
 
-import './batch/form-batch-hidroponik';
-import './batch/form-batch-hortikultura';
-import './batch/form-batch-akuakultur';
-import './batch/form-batch-peternakan';
+import './konfigurasi/batch/form-batch-hidroponik';
+import './konfigurasi/batch/form-batch-hortikultura';
+import './konfigurasi/batch/form-batch-akuakultur';
+import './konfigurasi/batch/form-batch-peternakan';
 
-import './entitas/entitas-container';
-import './batch/batch-container';
+import './konfigurasi/entitas/entitas-container';
+import './konfigurasi/batch/batch-container';
 
 @customElement('page-config')
 export class PageDeviceConfig extends LitElement {
@@ -182,6 +184,15 @@ export class PageDeviceConfig extends LitElement {
               <div class="mt-4">
                 <entitas-container></entitas-container>
               </div>
+            `
+          : this.activeTab === 'mqtt'
+          ? html`
+              <dev-config-mqtt
+                .model=${{ tags: this.tags }}
+                .deviceList=${this.tags
+                  .map((tag) => getByTag(tag))
+                  .filter(Boolean)}
+              ></dev-config-mqtt>
             `
           : null}
       </section>
