@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/views/entitas/entitas-container.ts
+// frontend/src/pages/konfigurasi/entitas/entitas-container.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
@@ -6,6 +6,10 @@ import { customElement, property, state } from 'lit/decorators.js';
 import type { Plant } from '@models/plant.model';
 import type { AquaticSpecies } from '@models/aquatic-species.model';
 import type { Livestock } from '@models/livestock.model';
+
+import { fetchAllPlants } from 'src/services/plant.service';
+import { fetchAllAquaticSpecies } from 'src/services/aquatic-species.service';
+import { fetchAllLivestock } from 'src/services/livestock.service';
 
 import './entitas-list';
 import './form-entitas-tanaman';
@@ -29,15 +33,15 @@ export class EntitasContainer extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.loadAll(); // sekali saja saat mount
+    this.loadAll().catch((err) =>
+      console.error('❌ Gagal memuat data spesies:', err)
+    );
   }
 
   private async loadAll() {
-    this.plants = await this.load<Plant[]>('/assets/mock/plants.json');
-    this.fishes = await this.load<AquaticSpecies[]>(
-      '/assets/mock/species.json'
-    );
-    this.poultry = await this.load<Livestock[]>('/assets/mock/livestock.json');
+    this.plants = await fetchAllPlants();
+    this.fishes = await fetchAllAquaticSpecies();
+    this.poultry = await fetchAllLivestock();
   }
 
   private async load<T>(url: string): Promise<T> {
