@@ -2,8 +2,8 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore } from '../services/devices-service';
-import type { Device } from '../services/devices-service';
+import { fetchAllDevices } from 'src/services/device.service';
+import type { Device } from '@models/device.model';
 import { DeviceHelper } from '../services/device-helper';
 
 import './cards/device-card';
@@ -20,26 +20,12 @@ export class DeviceList extends LitElement {
     return this;
   }
 
-  connectedCallback(): void {
+  connectedCallback() {
     super.connectedCallback();
-
-    devicesStore.init().then(() => {
-      this.updateDevices();
+    fetchAllDevices().then((list: Device[]) => {
+      this.devices = list;
+      this.requestUpdate();
     });
-
-    devicesStore.onChange(() => {
-      this.updateDevices();
-    });
-  }
-
-  private updateDevices() {
-    const tags = devicesStore.getAllTags();
-    this.devices = tags
-      .map((tag) => {
-        const d = devicesStore.get(tag);
-        return d ? { ...d } : undefined;
-      })
-      .filter((d): d is Device => d !== undefined);
   }
 
   /**

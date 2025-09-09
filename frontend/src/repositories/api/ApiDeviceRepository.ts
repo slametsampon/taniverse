@@ -1,6 +1,6 @@
 // frontend/src/repositories/api/ApiDeviceRepository.ts
 
-import type { Device } from '../../services/devices-service';
+import type { Device } from '../../services/devices-store';
 import type { DeviceRepository } from '../interfaces/DeviceRepository';
 
 export class ApiDeviceRepository implements DeviceRepository {

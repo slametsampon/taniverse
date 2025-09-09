@@ -1,6 +1,6 @@
 // c:\Users\sam294\Documents\Projects\Agro\taniverse\frontend\src\services\device-helper.ts
 // DeviceHelper.ts
-import { devicesStore } from './devices-service';
+import { devicesStore } from './devices-store';
 
 export type DeviceState = 'ON' | 'OFF';
 

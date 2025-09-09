@@ -10,7 +10,7 @@ import {
   isMqttMode,
   isSimMode,
 } from '../services/mode';
-import { devicesStore } from '../services/devices-service';
+import { devicesStore } from '../services/devices-store';
 
 export interface MqttContextValue {
   mode: DeviceMode;

@@ -1,6 +1,6 @@
 // frontend/src/utils/format-display.ts
 
-import type { Device } from '../services/devices-service';
+import type { Device } from '../services/devices-store';
 import { DeviceHelper } from '../services/device-helper';
 
 /**

@@ -2,7 +2,8 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
-import { devicesStore } from 'src/services/devices-service';
+import { fetchAllDevices } from 'src/services/device.service';
+import type { Device } from '@models/device.model';
 
 @customElement('device-picker')
 export class DevicePicker extends LitElement {
@@ -18,23 +19,10 @@ export class DevicePicker extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    devicesStore.init().then(() => {
-      this.updateDevices();
+    fetchAllDevices().then((list: Device[]) => {
+      this.devices = list;
+      this.requestUpdate();
     });
-
-    this.unlisten = devicesStore.onChange(() => this.updateDevices());
-  }
-  private unlisten?: () => void;
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.unlisten?.();
-  }
-
-  updateDevices() {
-    const tags = devicesStore.getAllTags();
-    this.devices = tags.map((tag) => devicesStore.get(tag));
-    this.requestUpdate();
   }
 
   private handleChange(e: Event) {

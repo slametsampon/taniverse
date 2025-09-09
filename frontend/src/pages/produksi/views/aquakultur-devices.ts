@@ -1,7 +1,7 @@
 // frontend/src/views/aquakultur-devices.ts
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore } from '../../../services/devices-service';
+import { devicesStore } from '../../../services/devices-store';
 import { DeviceHelper } from 'src/services/device-helper';
 
 import '../../../components/cards/dashboard-device-card';

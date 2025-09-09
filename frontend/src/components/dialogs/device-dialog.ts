@@ -2,7 +2,7 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore, Device } from '../../services/devices-service';
+import { devicesStore, Device } from '../../services/devices-store';
 
 @customElement('device-dialog')
 export class DeviceDialog extends LitElement {

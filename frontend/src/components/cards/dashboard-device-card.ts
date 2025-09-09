@@ -1,7 +1,7 @@
 // frontend/src/components/cards/dashboard-device-card.ts
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Device } from '../../services/devices-service';
+import type { Device } from '../../services/devices-store';
 
 @customElement('dashboard-device-card')
 export class DashboardDeviceCard extends LitElement {
