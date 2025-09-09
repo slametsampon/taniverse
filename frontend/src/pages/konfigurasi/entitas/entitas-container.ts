@@ -12,9 +12,7 @@ import { fetchAllAquaticSpecies } from 'src/services/aquatic-species.service';
 import { fetchAllLivestock } from 'src/services/livestock.service';
 
 import './entitas-list';
-import './form-entitas-tanaman';
-import './form-entitas-ikan';
-import './form-entitas-ayam';
+import './form-entitas';
 
 @customElement('entitas-container')
 export class EntitasContainer extends LitElement {
@@ -121,40 +119,17 @@ export class EntitasContainer extends LitElement {
               .poultry=${this.poultry}
               @add-item=${this.handleAdd}
               @edit-item=${this.handleEdit}
-            >
-            </entitas-list>
-          `
-        : this.kind === 'tanaman'
-        ? html`
-            <form-entitas-tanaman
-              .kind=${this.kind}
-              .mode=${this.mode}
-              .value=${this.draft as Partial<Plant>}
-              @submit=${this.handleSubmit}
-              @cancel=${this.handleCancel}
-              @delete=${this.handleDelete}
-            ></form-entitas-tanaman>
-          `
-        : this.kind === 'ikan'
-        ? html`
-            <form-entitas-ikan
-              .kind=${this.kind}
-              .mode=${this.mode}
-              .value=${this.draft as Partial<AquaticSpecies>}
-              @submit=${this.handleSubmit}
-              @cancel=${this.handleCancel}
-              @delete=${this.handleDelete}
-            ></form-entitas-ikan>
+            ></entitas-list>
           `
         : html`
-            <form-entitas-ayam
+            <form-entitas
               .kind=${this.kind}
               .mode=${this.mode}
-              .value=${this.draft as Partial<Livestock>}
+              .value=${this.draft}
               @submit=${this.handleSubmit}
               @cancel=${this.handleCancel}
               @delete=${this.handleDelete}
-            ></form-entitas-ayam>
+            ></form-entitas>
           `}
     `;
   }
