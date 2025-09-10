@@ -20,7 +20,12 @@ export const aquaticFormFields: FieldSection[] = [
         widthClass: 'w-full',
         colSpan: 2,
       },
+    ],
+  },
 
+  {
+    title: '📊 Karakteristik',
+    fields: [
       {
         key: 'growthDaysMin',
         label: 'Hari Tumbuh Min',
@@ -54,8 +59,9 @@ export const aquaticFormFields: FieldSection[] = [
       },
     ],
   },
+
   {
-    title: '📊 Parameter Lingkungan',
+    title: '📈 Parameter Lingkungan',
     fields: [
       {
         key: 'minTempC',

@@ -20,6 +20,12 @@ export const livestockFormFields: FieldSection[] = [
         widthClass: 'w-full',
         colSpan: 2,
       },
+    ],
+  },
+
+  {
+    title: '📊 Karakteristik',
+    fields: [
       {
         key: 'breed',
         label: 'Ras / Jenis',
@@ -61,7 +67,7 @@ export const livestockFormFields: FieldSection[] = [
   },
 
   {
-    title: 'Aspek Lingkungan',
+    title: '📈 Aspek Lingkungan',
     fields: [
       {
         key: 'tempMinC',

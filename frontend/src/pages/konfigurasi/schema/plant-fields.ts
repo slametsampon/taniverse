@@ -22,7 +22,12 @@ export const plantFormFields: FieldSection[] = [
         widthClass: 'w-full',
         colSpan: 2,
       },
+    ],
+  },
 
+  {
+    title: '📊 Karakteristik',
+    fields: [
       {
         key: 'growthDaysMin',
         label: 'Hari Tumbuh Min',

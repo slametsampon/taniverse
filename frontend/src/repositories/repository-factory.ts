@@ -1,6 +1,7 @@
 // frontend/src/repositories/repository-factory.ts
 
 import { isMockMode } from '../services/mode';
+
 import { DeviceRepository } from './interfaces/DeviceRepository';
 import { MockDeviceRepository } from './mock/MockDeviceRepository';
 import { ApiDeviceRepository } from './api/ApiDeviceRepository';
@@ -20,6 +21,18 @@ import { ApiAquaticSpeciesRepository } from './api/ApiAquaticSpeciesRepository';
 import type { LivestockRepository } from './interfaces/LivestockRepository';
 import { MockLivestockRepository } from './mock/MockLivestockRepository';
 import { ApiLivestockRepository } from './api/ApiLivestockRepository';
+
+import { AquaticBatchRepository } from './interfaces/AquaticBatchRepository';
+import { MockAquaticBatchRepository } from './mock/MockAquaticBatchRepository';
+import { ApiAquaticBatchRepository } from './api/ApiAquaticBatchRepository';
+
+import { LivestockBatchRepository } from './interfaces/LivestockBatchRepository';
+import { MockLivestockBatchRepository } from './mock/MockLivestockBatchRepository';
+import { ApiLivestockBatchRepository } from './api/ApiLivestockBatchRepository';
+
+import { PlantingBatchRepository } from './interfaces/PlantingBatchRepository';
+import { MockPlantingBatchRepository } from './mock/MockPlantingBatchRepository';
+import { ApiPlantingBatchRepository } from './api/ApiPlantingBatchRepository';
 
 export function getDeviceRepository(): DeviceRepository {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
@@ -44,4 +57,22 @@ export function getLivestockRepository(): LivestockRepository {
   return isMockMode()
     ? new MockLivestockRepository()
     : new ApiLivestockRepository();
+}
+
+export function getAquaticBatchRepository(): AquaticBatchRepository {
+  return isMockMode()
+    ? new MockAquaticBatchRepository()
+    : new ApiAquaticBatchRepository();
+}
+
+export function getLivestockBatchRepository(): LivestockBatchRepository {
+  return isMockMode()
+    ? new MockLivestockBatchRepository()
+    : new ApiLivestockBatchRepository();
+}
+
+export function getPlantingBatchRepository(): PlantingBatchRepository {
+  return isMockMode()
+    ? new MockPlantingBatchRepository()
+    : new ApiPlantingBatchRepository();
 }
