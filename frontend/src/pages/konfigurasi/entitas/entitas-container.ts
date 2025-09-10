@@ -37,14 +37,33 @@ export class EntitasContainer extends LitElement {
   }
 
   private async loadAll() {
-    this.plants = await fetchAllPlants();
-    this.fishes = await fetchAllAquaticSpecies();
-    this.poultry = await fetchAllLivestock();
-  }
+    console.log('[LOAD ENTITAS] Memulai fetch semua data entitas...');
 
-  private async load<T>(url: string): Promise<T> {
-    const res = await fetch(url);
-    return res.json();
+    try {
+      console.log('[LOAD ENTITAS] → Memuat data tanaman...');
+      this.plants = await fetchAllPlants();
+      console.log('[LOAD ENTITAS] ✓ Data tanaman terload:', this.plants);
+    } catch (err) {
+      console.error('❌ Gagal memuat tanaman:', err);
+    }
+
+    try {
+      console.log('[LOAD ENTITAS] → Memuat data ikan...');
+      this.fishes = await fetchAllAquaticSpecies();
+      console.log('[LOAD ENTITAS] ✓ Data ikan terload:', this.fishes);
+    } catch (err) {
+      console.error('❌ Gagal memuat ikan:', err);
+    }
+
+    try {
+      console.log('[LOAD ENTITAS] → Memuat data ayam...');
+      this.poultry = await fetchAllLivestock();
+      console.log('[LOAD ENTITAS] ✓ Data ayam terload:', this.poultry);
+    } catch (err) {
+      console.error('❌ Gagal memuat ayam:', err);
+    }
+
+    console.log('[LOAD ENTITAS] Proses fetch selesai.');
   }
 
   private handleAdd = (

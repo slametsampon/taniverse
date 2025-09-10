@@ -59,11 +59,11 @@ export class FormEntitas extends LitElement {
   protected get formSections(): FormSection[] {
     switch (this.kind) {
       case 'ayam':
-        return [{ title: 'Data Ternak Ayam', fields: livestockFormFields }];
+        return livestockFormFields;
       case 'ikan':
-        return [{ title: 'Data Ikan / Akuatik', fields: aquaticFormFields }];
+        return aquaticFormFields;
       case 'tanaman':
-        return [{ title: 'Data Tanaman', fields: plantFormFields }];
+        return plantFormFields; // ✅ FIXED
       default:
         return [];
     }
