@@ -1,11 +1,18 @@
 // frontend/src/pages/konfigurasi/devices/dev-config-mqtt.ts
 
 import { LitElement, html } from 'lit';
+import { consume } from '@lit/context';
 import { customElement, state } from 'lit/decorators.js';
 import mqtt from 'mqtt';
 
-import type { DeviceStateModel } from '../state/device-state';
+import { mqttContext } from 'src/context/mqtt-context';
+import type { MqttContextValue } from 'src/context/mqtt-context';
+import { createMqttContext } from 'src/context/mqtt-context';
+
 import { loadDevices, getByTag } from 'src/services/devices-config.service';
+
+import type { DeviceMode } from 'src/services/mode';
+import { getMode, setMode } from 'src/services/mode';
 
 @customElement('dev-config-mqtt')
 export class DevConfigMqtt extends LitElement {
@@ -19,14 +26,18 @@ export class DevConfigMqtt extends LitElement {
   @state() private client: mqtt.MqttClient | null = null;
   @state() private simulating = false;
   @state() private logs: string[] = [];
-  @state() private device!: DeviceStateModel;
-  @state() private mode: 'new' | 'edit' = 'edit';
-  @state() private dirty = false;
+  @state() private currentMode: DeviceMode = 'mock';
+
+  @consume({ context: mqttContext, subscribe: true })
+  @state()
+  private ctx?: MqttContextValue;
 
   private intervalHandle: any;
 
   async connectedCallback() {
     super.connectedCallback();
+
+    this.currentMode = getMode(); // ✅ Sinkronisasi awal dengan localStorage
 
     const list = await loadDevices();
     this.deviceList = list;
@@ -38,7 +49,7 @@ export class DevConfigMqtt extends LitElement {
 
   private connectMQTT() {
     if (this.client) return;
-    this.client = mqtt.connect('ws://localhost:9001'); // Ganti sesuai broker kamu
+    this.client = mqtt.connect('ws://localhost:9001');
     this.client.on('connect', () => this.log('✅ MQTT connected'));
     this.client.on('error', (err) => this.log('❌ MQTT error: ' + err.message));
     this.client.on('message', (topic, payload) =>
@@ -111,9 +122,40 @@ export class DevConfigMqtt extends LitElement {
     this.log(`⏹️ Simulation stopped`);
   }
 
+  private handleModeChange(e: Event) {
+    const target = e.target as HTMLSelectElement;
+    const newMode = target.value as DeviceMode;
+
+    setMode(newMode); // ✅ Gunakan fungsi resmi
+    this.currentMode = newMode;
+
+    this.log(`🔄 Mode changed to "${newMode}"`);
+
+    // ✅ Refresh context
+    window.dispatchEvent(
+      new CustomEvent('mqtt:context-updated', {
+        detail: createMqttContext(),
+      })
+    );
+  }
+
   render() {
     return html`
       <div class="space-y-4">
+        <div class="space-y-2 mt-3">
+          <label class="text-sm font-semibold">Device Mode</label>
+          <select .value=${this.currentMode} @change=${this.handleModeChange}>
+            <option value="mock">MOCK</option>
+            <option value="sim">SIM</option>
+            <option value="mqtt">MQTT</option>
+          </select>
+          <span
+            class="inline-block text-xs rounded px-2 py-1 bg-slate-200 text-slate-800 font-mono"
+          >
+            Mode Aktif: ${this.currentMode.toUpperCase()}
+          </span>
+        </div>
+
         <div>
           <label class="text-sm font-semibold">Device Tags</label>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">

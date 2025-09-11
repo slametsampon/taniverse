@@ -66,17 +66,13 @@ export class FormBatch extends LitElement {
   protected get formSections(): FormSection[] {
     switch (this.kind) {
       case 'akuakultur':
-        return [{ title: 'Data Batch Akuakultur', fields: aquaticBatchFields }];
+        return aquaticBatchFields;
       case 'hidroponik':
-        return [
-          { title: 'Data Batch Hidroponik', fields: hydroponicBatchFields },
-        ];
+        return hydroponicBatchFields;
       case 'hortikultura':
-        return [{ title: 'Data Batch Hortikultura', fields: hortiBatchFields }];
+        return hortiBatchFields;
       case 'peternakan':
-        return [
-          { title: 'Data Batch Peternakan', fields: livestockBatchFields },
-        ];
+        return livestockBatchFields;
       default:
         return [];
     }
