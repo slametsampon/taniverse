@@ -1,8 +1,11 @@
-// frontend/src/views/dev-config-mqtt.ts
+// frontend/src/pages/konfigurasi/devices/dev-config-mqtt.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import mqtt from 'mqtt';
+
+import type { DeviceStateModel } from '../state/device-state';
+import { loadDevices, getByTag } from 'src/services/devices-config.service';
 
 @customElement('dev-config-mqtt')
 export class DevConfigMqtt extends LitElement {
@@ -10,22 +13,32 @@ export class DevConfigMqtt extends LitElement {
     return this;
   }
 
-  @property({ type: Object }) model: any = {};
+  @state() private allTags: string[] = [];
   @state() private selectedTags: Set<string> = new Set();
+  @state() private deviceList: any[] = [];
   @state() private client: mqtt.MqttClient | null = null;
   @state() private simulating = false;
   @state() private logs: string[] = [];
-  @property({ type: Array }) deviceList: any[] = [];
+  @state() private device!: DeviceStateModel;
+  @state() private mode: 'new' | 'edit' = 'edit';
+  @state() private dirty = false;
 
   private intervalHandle: any;
 
-  private get allTags(): string[] {
-    return Array.isArray(this.model?.tags) ? this.model.tags : [];
+  async connectedCallback() {
+    super.connectedCallback();
+
+    const list = await loadDevices();
+    this.deviceList = list;
+    this.allTags = list
+      .map((d) => d.tagNumber)
+      .filter(Boolean)
+      .sort();
   }
 
   private connectMQTT() {
     if (this.client) return;
-    this.client = mqtt.connect('ws://localhost:9001'); // gunakan MQTT over WebSocket
+    this.client = mqtt.connect('ws://localhost:9001'); // Ganti sesuai broker kamu
     this.client.on('connect', () => this.log('✅ MQTT connected'));
     this.client.on('error', (err) => this.log('❌ MQTT error: ' + err.message));
     this.client.on('message', (topic, payload) =>
@@ -56,7 +69,7 @@ export class DevConfigMqtt extends LitElement {
 
   private generateTopic(tag: string, type: 'sensor' | 'actuator'): string {
     const nodeId = 'esp-node-1';
-    const device = this.deviceList.find((d) => d.tagNumber === tag);
+    const device = getByTag(tag);
     const location = (device?.location?.area ?? '')
       .toLowerCase()
       .replace(/[\/\\ ]/g, '-');

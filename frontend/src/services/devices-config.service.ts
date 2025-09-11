@@ -1,4 +1,5 @@
 // frontend/src/services/devices-config.service.ts
+
 // CRUD + validasi untuk konfigurasi device (bukan runtime MQTT)
 // DEFAULT: pakai HTTP → Fastify + SQLite (lihat VITE_API_BASE)
 // Fallback dev: LocalStorage + mock JSON jika USE_HTTP=false

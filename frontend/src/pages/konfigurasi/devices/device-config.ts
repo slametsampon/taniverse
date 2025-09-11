@@ -4,9 +4,14 @@ import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
 import 'src/components/form-builder-field';
-import { deviceConfigFields } from '../schema/device-config-fields'; // 🆕 pastikan file ini ada
+import 'src/components/form-builder-buttons';
 import 'src/components/form-builder-section';
 import 'src/components/device-picker';
+
+import { DeviceUI } from 'src/components/device-ui';
+import { deviceConfigFields } from '../schema/device-config-fields';
+import { DeviceStateHandler } from 'src/components/device-state-handler';
+import { DeviceEvents } from 'src/components/device-events';
 
 function setNestedValue(obj: any, path: string, value: any): void {
   const keys = path.split('.');
@@ -20,12 +25,73 @@ function setNestedValue(obj: any, path: string, value: any): void {
 
 @customElement('device-config')
 export class DeviceConfig extends LitElement {
-  @state() model: any = {};
-  @property({ type: Object }) errors: Record<string, string> = {};
-  @property({ type: String }) mode: 'new' | 'edit' = 'edit';
-
   createRenderRoot() {
-    return this; // ✅ Light DOM supaya Tailwind berfungsi
+    return this; // ✅ Light DOM
+  }
+
+  @state() private model: any = {};
+  @state() private errors: Record<string, string> = {};
+  @state() private tags: string[] = [];
+  @state() private dirty = false;
+  @state() private mode: 'new' | 'edit' = 'edit';
+
+  async connectedCallback() {
+    super.connectedCallback();
+    await this.loadDevicesAndInit();
+
+    const list = await DeviceEvents.loadAllDevices();
+    this.tags = list
+      .map((d) => d.tagNumber)
+      .filter(Boolean)
+      .sort();
+
+    const tagParam = new URL(location.href).searchParams.get('tag');
+    const picked =
+      tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? '';
+    const found = picked ? list.find((d) => d.tagNumber === picked) : undefined;
+
+    if (found) {
+      this.setDevice(found, 'edit');
+    } else {
+      const fresh = DeviceStateHandler.newTemplate();
+      this.setDevice(fresh, 'new');
+    }
+  }
+
+  private async loadDevicesAndInit() {
+    const list = await DeviceEvents.loadAllDevices();
+    this.tags = list
+      .map((d) => d.tagNumber)
+      .filter(Boolean)
+      .sort();
+
+    const urlParams = new URL(location.href).searchParams;
+    const tagParam = urlParams.get('tag');
+    const picked =
+      tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? '';
+    const found = picked ? list.find((d) => d.tagNumber === picked) : undefined;
+
+    if (found) {
+      this.setDevice(structuredClone(found), 'edit');
+    } else {
+      const fresh = DeviceStateHandler.newTemplate();
+      this.setDevice(fresh, 'new');
+    }
+  }
+
+  private setDevice(device: any, mode: 'new' | 'edit') {
+    this.model = structuredClone(device);
+    this.mode = mode;
+    this.revalidate();
+    this.dirty = false;
+  }
+
+  private revalidate() {
+    const { errors, errorsMap } = DeviceStateHandler.revalidate(
+      this.model,
+      this.mode === 'new'
+    );
+    this.errors = errorsMap;
   }
 
   private handleFieldChange = (e: Event, key: string) => {
@@ -37,35 +103,60 @@ export class DeviceConfig extends LitElement {
     const value = target.type === 'number' && raw !== '' ? Number(raw) : raw;
 
     setNestedValue(this.model, key, value);
-
-    this.dispatchEvent(
-      new CustomEvent('dev-field-change', {
-        detail: { path: key, value },
-        bubbles: true,
-        composed: true,
-      })
-    );
+    this.dirty = true;
+    this.revalidate();
   };
 
   private handleDevicePick(e: CustomEvent) {
     const { mode, device } = e.detail;
 
-    this.mode = mode;
-    console.log('[device-config] Received device-select event:', e.detail);
-
     if (mode === 'new') {
-      this.model = {};
-      console.log('[device-picker] Mode: new → Reset form model:', this.model);
+      const fresh = DeviceStateHandler.newTemplate();
+      this.setDevice(fresh, 'new');
     } else if (device) {
-      this.model = structuredClone(device);
-      console.log('[device-picker] Mode: edit → Loaded device:', this.model);
+      this.setDevice(structuredClone(device), 'edit');
     }
-
-    // Tambahan log (opsional) untuk validasi apakah model berubah
-    requestAnimationFrame(() => {
-      console.log('[form-builder] Current model after update:', this.model);
-    });
   }
+
+  private handleSave = async () => {
+    this.revalidate();
+    if (Object.keys(this.errors).length) return;
+
+    const success = await DeviceEvents.handleSave(
+      this.model,
+      this.mode,
+      this.tags,
+      (saved, updatedTags, mode) => {
+        this.tags = updatedTags;
+        this.setDevice(saved, mode);
+      }
+    );
+    if (success) DeviceUI.showToast('Saved ✅');
+  };
+
+  private handleDelete = async () => {
+    const success = await DeviceEvents.handleDelete(
+      this.model.tagNumber,
+      this.tags,
+      (next, mode) => {
+        if (next) {
+          this.setDevice(next, mode || 'edit');
+          this.tags = this.tags.filter((t) => t !== this.model.tagNumber);
+        } else {
+          const fresh = DeviceStateHandler.newTemplate();
+          this.setDevice(fresh, 'new');
+          this.tags = [];
+        }
+      }
+    );
+    if (success) DeviceUI.showToast('Deleted 🗑️');
+  };
+
+  private handleCancel = () => {
+    if (this.dirty && !confirm('Perubahan belum disimpan. Tetap keluar?'))
+      return;
+    window.history.back();
+  };
 
   render() {
     return html`
@@ -73,24 +164,36 @@ export class DeviceConfig extends LitElement {
         <div class="mb-4">
           <device-picker
             .value=${this.model.tagNumber}
-            @device-select=${this.handleDevicePick} >
+            @device-select=${this.handleDevicePick}
+          >
           </device-picker>
         </div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-1">${this.title}</h2>
-          ${deviceConfigFields.map(
-            (section) => html`
-              <form-builder-section
-                .title=${section.title}
-                .desc=${section.desc ?? ''}
-                .fields=${section.fields}
-                .model=${this.model}
-                .errors=${this.errors}
-                .cols=${2}
-                .onFieldChange=${this.handleFieldChange}
-              ></form-builder-section>
-            `
-          )}
-        </div>
+
+        <h2 class="text-lg font-semibold text-gray-800 mb-1">
+          Konfigurasi Perangkat
+        </h2>
+
+        ${deviceConfigFields.map(
+          (section) => html`
+            <form-builder-section
+              .title=${section.title}
+              .desc=${section.desc ?? ''}
+              .fields=${section.fields}
+              .model=${this.model}
+              .errors=${this.errors}
+              .cols=${2}
+              .onFieldChange=${this.handleFieldChange}
+            ></form-builder-section>
+          `
+        )}
+
+        <form-builder-buttons
+          class="mt-4"
+          .mode=${this.mode}
+          @submit=${this.handleSave}
+          @cancel=${this.handleCancel}
+          @delete=${this.handleDelete}
+        ></form-builder-buttons>
       </div>
     `;
   }

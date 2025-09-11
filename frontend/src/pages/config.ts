@@ -4,13 +4,10 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { TabId } from 'src/types/tab-id';
 import type { DeviceStateModel } from './konfigurasi/state/device-state';
-import { DeviceStateHandler } from './konfigurasi/state/device-state';
 import { DeviceEvents } from './konfigurasi/events/device-events';
-import { getByTag } from 'src/services/devices-config.service';
 
 import 'src/components/ui/ui-tabs';
 
-import { DeviceUI } from 'src/components/device-ui';
 import 'src/components/event-table';
 
 import './konfigurasi/devices/device-config';
@@ -31,12 +28,9 @@ export class PageDeviceConfig extends LitElement {
   }
 
   @state() private device!: DeviceStateModel;
-  @state() private errors: any[] = [];
-  @state() private errorsMap: Record<string, string> = {};
   @state() private activeTab: TabId = 'devices';
   @state() private mode: 'new' | 'edit' = 'edit';
   @state() private tags: string[] = [];
-  @state() private dirty = false;
 
   private readonly TAB_KEY = 'deviceConfig.activeTab';
 
@@ -52,92 +46,12 @@ export class PageDeviceConfig extends LitElement {
     const tabParam = new URL(location.href).searchParams.get('tab') as TabId;
     this.activeTab =
       tabParam || (sessionStorage.getItem(this.TAB_KEY) as TabId) || 'devices';
-
-    const tagParam = new URL(location.href).searchParams.get('tag');
-    const picked =
-      tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? '';
-    const found = picked ? list.find((d) => d.tagNumber === picked) : undefined;
-
-    if (found) {
-      this.setDevice(structuredClone(found), 'edit');
-    } else {
-      const fresh = DeviceStateHandler.newTemplate();
-      this.setDevice(fresh, 'new');
-    }
-  }
-
-  private setDevice(device: DeviceStateModel, mode: 'new' | 'edit') {
-    this.device = structuredClone(device);
-    this.mode = mode;
-    this.revalidate();
-    this.dirty = false;
-  }
-
-  private revalidate() {
-    const { errors, errorsMap } = DeviceStateHandler.revalidate(
-      this.device,
-      this.mode === 'new'
-    );
-    this.errors = errors;
-    this.errorsMap = errorsMap;
   }
 
   private onTabChange(e: CustomEvent<{ id: TabId }>) {
     this.activeTab = e.detail.id;
     sessionStorage.setItem(this.TAB_KEY, this.activeTab);
   }
-
-  private onTagPicked = (e: CustomEvent<{ tag: string }>) => {
-    DeviceEvents.handleTagPicked(e.detail.tag, this.tags, (dev, mode) => {
-      this.setDevice(dev, mode);
-    });
-  };
-
-  private onFieldChange = (e: CustomEvent<{ path: string; value: any }>) => {
-    DeviceStateHandler.patch(this.device, e.detail.path, e.detail.value);
-    this.dirty = true;
-    this.revalidate();
-  };
-
-  private onSave = async () => {
-    this.revalidate();
-    if (this.errors.length) return;
-
-    const success = await DeviceEvents.handleSave(
-      this.device,
-      this.mode,
-      this.tags,
-      (saved, updatedTags, mode) => {
-        this.tags = updatedTags;
-        this.setDevice(saved, mode);
-      }
-    );
-    if (success) DeviceUI.showToast('Saved ✅');
-  };
-
-  private onDelete = async () => {
-    const success = await DeviceEvents.handleDelete(
-      this.device.tagNumber,
-      this.tags,
-      (next, mode) => {
-        if (next) {
-          this.setDevice(next, mode || 'edit');
-          this.tags = this.tags.filter((t) => t !== this.device.tagNumber);
-        } else {
-          const fresh = DeviceStateHandler.newTemplate();
-          this.setDevice(fresh, 'new');
-          this.tags = [];
-        }
-      }
-    );
-    if (success) DeviceUI.showToast('Deleted 🗑️');
-  };
-
-  private onCancel = () => {
-    if (this.dirty && !confirm('Perubahan belum disimpan. Tetap keluar?'))
-      return;
-    window.history.back();
-  };
 
   render() {
     return html`
@@ -154,22 +68,7 @@ export class PageDeviceConfig extends LitElement {
         ></ui-tabs>
 
         ${this.activeTab === 'devices'
-          ? html`
-              <device-config
-                .model=${this.device}
-                .errors=${this.errorsMap}
-                .mode=${this.mode}
-                @dev-field-change=${this.onFieldChange}
-                @device-select=${this.onTagPicked}
-              ></device-config>
-
-              <form-builder-buttons
-                .mode=${this.mode}
-                @submit=${this.onSave}
-                @cancel=${this.onCancel}
-                @delete=${this.onDelete}
-              ></form-builder-buttons>
-            `
+          ? html` <device-config></device-config> `
           : this.activeTab === 'batch'
           ? html`
               <div class="mt-4">
@@ -186,14 +85,7 @@ export class PageDeviceConfig extends LitElement {
               </div>
             `
           : this.activeTab === 'mqtt'
-          ? html`
-              <dev-config-mqtt
-                .model=${{ tags: this.tags }}
-                .deviceList=${this.tags
-                  .map((tag) => getByTag(tag))
-                  .filter(Boolean)}
-              ></dev-config-mqtt>
-            `
+          ? html`<dev-config-mqtt></dev-config-mqtt>`
           : null}
       </section>
     `;

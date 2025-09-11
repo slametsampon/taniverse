@@ -1,4 +1,4 @@
-// frontend/src/pages/konfigurasi/device-ui.ts
+// frontend/src/components/device-ui.ts
 
 /**
  * Fungsi utilitas UI untuk halaman konfigurasi device.
@@ -22,13 +22,13 @@ export class DeviceUI {
   /**
    * Tampilkan toast sementara (berbasis DOM langsung)
    */
-  static showToast(msg: string, error = false): void {
+  static showToast(msg: string, error = false, duration = 1600): void {
     const el = document.createElement('div');
     el.textContent = msg;
     el.className =
       `fixed z-50 bottom-4 right-4 px-3 py-2 rounded shadow ` +
       `${error ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}`;
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1600);
+    setTimeout(() => el.remove(), duration);
   }
 }
