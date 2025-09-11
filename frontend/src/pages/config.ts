@@ -10,10 +10,6 @@ import 'src/components/ui/ui-tabs';
 import 'src/components/event-table';
 import './konfigurasi/devices/device-config';
 import './konfigurasi/devices/dev-config-mqtt';
-import './konfigurasi/batch/form-batch-hidroponik';
-import './konfigurasi/batch/form-batch-hortikultura';
-import './konfigurasi/batch/form-batch-akuakultur';
-import './konfigurasi/batch/form-batch-peternakan';
 import './konfigurasi/entitas/entitas-container';
 import './konfigurasi/batch/batch-container';
 

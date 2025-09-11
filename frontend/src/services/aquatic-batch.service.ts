@@ -1,28 +1,24 @@
 // frontend/src/services/aquatic-batch.service.ts
 
-import { AquaticBatchRepository } from '../repositories/interfaces/AquaticBatchRepository';
-import { AquaticBatch } from '@models/aquatic-batch.model';
+import type { AquaticBatch } from '@models/aquatic-batch.model';
+import { getAquaticBatchRepository } from '../repositories/repository-factory';
 
-export class AquaticBatchService {
-  constructor(private repository: AquaticBatchRepository) {}
+const repo = getAquaticBatchRepository();
 
-  async getAllBatches(): Promise<AquaticBatch[]> {
-    return this.repository.getAll();
-  }
+export const fetchAllAquaticBatches = (): Promise<AquaticBatch[]> =>
+  repo.getAll();
 
-  async getBatchById(id: string): Promise<AquaticBatch | undefined> {
-    return this.repository.getById(id);
-  }
+export const fetchAquaticBatchById = (
+  id: string
+): Promise<AquaticBatch | undefined> => repo.getById(id);
 
-  async createBatch(batch: AquaticBatch): Promise<void> {
-    return this.repository.create(batch);
-  }
+export const createAquaticBatch = (batch: AquaticBatch): Promise<void> =>
+  repo.create(batch);
 
-  async updateBatch(id: string, data: Partial<AquaticBatch>): Promise<void> {
-    return this.repository.update(id, data);
-  }
+export const updateAquaticBatch = (
+  id: string,
+  data: Partial<AquaticBatch>
+): Promise<void> => repo.update(id, data);
 
-  async deleteBatch(id: string): Promise<void> {
-    return this.repository.delete(id);
-  }
-}
+export const deleteAquaticBatch = (id: string): Promise<void> =>
+  repo.delete(id);

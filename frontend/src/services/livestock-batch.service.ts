@@ -1,28 +1,24 @@
 // frontend/src/services/livestock-batch.service.ts
 
-import { LivestockBatchRepository } from '../repositories/interfaces/LivestockBatchRepository';
-import { LivestockBatch } from '@models/livestock-batch.model';
+import type { LivestockBatch } from '@models/livestock-batch.model';
+import { getLivestockBatchRepository } from '../repositories/repository-factory';
 
-export class LivestockBatchService {
-  constructor(private repository: LivestockBatchRepository) {}
+const repo = getLivestockBatchRepository();
 
-  async getAllBatches(): Promise<LivestockBatch[]> {
-    return this.repository.getAll();
-  }
+export const fetchAllLivestockBatches = (): Promise<LivestockBatch[]> =>
+  repo.getAll();
 
-  async getBatchById(id: string): Promise<LivestockBatch | undefined> {
-    return this.repository.getById(id);
-  }
+export const fetchLivestockBatchById = (
+  id: string
+): Promise<LivestockBatch | undefined> => repo.getById(id);
 
-  async createBatch(batch: LivestockBatch): Promise<void> {
-    return this.repository.create(batch);
-  }
+export const createLivestockBatch = (batch: LivestockBatch): Promise<void> =>
+  repo.create(batch);
 
-  async updateBatch(id: string, data: Partial<LivestockBatch>): Promise<void> {
-    return this.repository.update(id, data);
-  }
+export const updateLivestockBatch = (
+  id: string,
+  data: Partial<LivestockBatch>
+): Promise<void> => repo.update(id, data);
 
-  async deleteBatch(id: string): Promise<void> {
-    return this.repository.delete(id);
-  }
-}
+export const deleteLivestockBatch = (id: string): Promise<void> =>
+  repo.delete(id);

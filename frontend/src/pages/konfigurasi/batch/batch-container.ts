@@ -8,16 +8,20 @@ import type { HydroponicBatch } from '@models/hidroponic-batch.model';
 import type { HortiBatch } from '@models/horti-batch.model';
 import type { LivestockBatch } from '@models/livestock-batch.model';
 
-import { AquaticBatchService } from 'src/services/aquatic-batch.service';
-import { HydroponicBatchService } from 'src/services/hydroponic-batch.service';
-import { HortiBatchService } from 'src/services/horti-batch.service';
-import { LivestockBatchService } from 'src/services/livestock-batch.service';
+import {
+  fetchAllAquaticBatches,
+  fetchAllHydroponicBatches,
+  fetchAllHortiBatches,
+  fetchAllLivestockBatches,
+} from 'src/services/all-batch-services';
 
+import './form-batch';
 import './batch-list';
-import './form-batch-akuakultur';
-import './form-batch-hidroponik';
-import './form-batch-hortikultura';
-import './form-batch-peternakan';
+
+type BatchKind = 'akuakultur' | 'hidroponik' | 'hortikultura' | 'peternakan';
+type BatchModel = Partial<
+  AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch
+>;
 
 @customElement('batch-container')
 export class BatchContainer extends LitElement {
@@ -25,42 +29,56 @@ export class BatchContainer extends LitElement {
     return this;
   }
 
-  @property({ type: String })
-  kind: 'akuakultur' | 'hidroponik' | 'hortikultura' | 'peternakan' =
-    'akuakultur';
+  @property({ type: String }) kind: BatchKind = 'akuakultur';
 
   @state() private view: 'list' | 'form' = 'list';
-  @state() private draft: Partial<
-    AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch
-  > = {};
+  @state() private draft: BatchModel = {};
   @state() private mode: 'new' | 'edit' = 'new';
 
-  // ✅ sumber data tunggal
-  @state() private akuakultur: AquaticBatch[] = [];
-  @state() private hidroponik: HydroponicBatch[] = [];
-  @state() private hortikultura: HortiBatch[] = [];
-  @state() private peternakan: LivestockBatch[] = [];
+  @state() private aquatic: AquaticBatch[] = [];
+  @state() private hydroponic: HydroponicBatch[] = [];
+  @state() private horti: HortiBatch[] = [];
+  @state() private livestock: LivestockBatch[] = [];
 
   connectedCallback() {
     super.connectedCallback();
-    this.loadAll();
+    this.loadAll().catch(console.error);
   }
 
   private async loadAll() {
-    this.akuakultur = await AquaticBatchService.getAllBatches();
-    this.hidroponik = await HydroponicBatchService.getAllBatches();
-    this.hortikultura = await HortiBatchService.getAllBatches();
-    this.peternakan = await LivestockBatchService.getAllBatches();
+    console.log('[LOAD BATCH] Fetch semua data...');
+
+    try {
+      this.aquatic = await fetchAllAquaticBatches();
+      console.log('✓ Akuakultur loaded:', this.aquatic);
+    } catch (e) {
+      console.error('❌ Gagal memuat akuakultur:', e);
+    }
+
+    try {
+      this.hydroponic = await fetchAllHydroponicBatches();
+      console.log('✓ Hidroponik loaded:', this.hydroponic);
+    } catch (e) {
+      console.error('❌ Gagal memuat hidroponik:', e);
+    }
+
+    try {
+      this.horti = await fetchAllHortiBatches();
+      console.log('✓ Hortikultura loaded:', this.horti);
+    } catch (e) {
+      console.error('❌ Gagal memuat hortikultura:', e);
+    }
+
+    try {
+      this.livestock = await fetchAllLivestockBatches();
+      console.log('✓ Peternakan loaded:', this.livestock);
+    } catch (e) {
+      console.error('❌ Gagal memuat peternakan:', e);
+    }
   }
 
-  // ===== Handlers =====
-  private handleAdd = (e?: CustomEvent<{ kind?: string }>) => {
-    if (e?.detail?.kind)
-      this.kind = e.detail.kind as
-        | 'akuakultur'
-        | 'hidroponik'
-        | 'hortikultura'
-        | 'peternakan';
+  private handleAdd = (e: CustomEvent<{ kind: BatchKind }>) => {
+    this.kind = e.detail.kind;
     this.draft = {};
     this.mode = 'new';
     this.view = 'form';
@@ -69,128 +87,54 @@ export class BatchContainer extends LitElement {
   };
 
   private handleEdit = (
-    e: CustomEvent<{
-      item: AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch;
-      kind: string;
-    }>
+    e: CustomEvent<{ item: BatchModel; kind: BatchKind }>
   ) => {
-    const { item, kind } = e.detail;
-    this.kind = kind as
-      | 'akuakultur'
-      | 'hidroponik'
-      | 'hortikultura'
-      | 'peternakan';
-    this.draft = { ...item };
+    this.kind = e.detail.kind;
+    this.draft = { ...e.detail.item };
     this.mode = 'edit';
     this.view = 'form';
 
     console.log('[EDIT BATCH]', { kind: this.kind, draft: this.draft });
   };
 
-  private handleCancel = () => {
-    this.view = 'list';
-  };
-
-  private handleSubmit = (
-    e: CustomEvent<
-      Partial<AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch>
-    >
-  ) => {
-    console.log('[SUBMIT BATCH]', this.kind, e.detail);
-    // TODO: simpan via service
+  private handleSubmit = (e: CustomEvent<BatchModel>) => {
+    console.log('[SUBMIT BATCH]', { kind: this.kind, data: e.detail });
     this.view = 'list';
   };
 
   private handleDelete = (
-    e: CustomEvent<{
-      id?: string;
-      kind?: 'akuakultur' | 'hidroponik' | 'hortikultura' | 'peternakan';
-    }>
+    e: CustomEvent<{ id?: string; kind?: BatchKind }>
   ) => {
     const { id, kind } = e.detail ?? {};
+
     if (!id || !kind) {
       console.warn('[DELETE BATCH] Event detail tidak valid:', e.detail);
       return;
     }
-    console.log('[DELETE BATCH]', kind, id);
+
+    console.log('[DELETE BATCH]', { kind, id });
 
     switch (kind) {
       case 'akuakultur':
-        this.akuakultur = this.akuakultur.filter(
-          (b) => (b.id ?? b.code) !== id
-        );
+        this.aquatic = this.aquatic.filter((item) => item.id !== id);
         break;
       case 'hidroponik':
-        this.hidroponik = this.hidroponik.filter(
-          (b) => (b.id ?? b.code) !== id
-        );
+        this.hydroponic = this.hydroponic.filter((item) => item.id !== id);
         break;
       case 'hortikultura':
-        this.hortikultura = this.hortikultura.filter(
-          (b) => (b.id ?? b.code) !== id
-        );
+        this.horti = this.horti.filter((item) => item.id !== id);
         break;
       case 'peternakan':
-        this.peternakan = this.peternakan.filter(
-          (b) => (b.id ?? b.code) !== id
-        );
+        this.livestock = this.livestock.filter((item) => item.id !== id);
         break;
     }
+
     this.view = 'list';
   };
 
-  // ===== Render helpers =====
-  private renderForm() {
-    const common = {
-      mode: this.mode,
-      value: this.draft,
-      kind: this.kind,
-      '@submit': this.handleSubmit as any,
-      '@cancel': this.handleCancel as any,
-      '@delete': this.handleDelete as any,
-    } as any;
-
-    console.log('[CONTAINER BATCH] common', common);
-    switch (this.kind) {
-      case 'akuakultur':
-        return html`<form-batch-akuakultur
-          .mode=${common.mode}
-          .value=${common.value as Partial<AquaticBatch>}
-          .kind=${this.kind}
-          @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
-        ></form-batch-akuakultur>`;
-      case 'hidroponik':
-        return html`<form-batch-hidroponik
-          .mode=${common.mode}
-          .value=${common.value as Partial<HydroponicBatch>}
-          .kind=${this.kind}
-          @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
-        ></form-batch-hidroponik>`;
-      case 'hortikultura':
-        return html`<form-batch-hortikultura
-          .mode=${common.mode}
-          .value=${common.value as Partial<HortiBatch>}
-          .kind=${this.kind}
-          @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
-        ></form-batch-hortikultura>`;
-      case 'peternakan':
-      default:
-        return html`<form-batch-peternakan
-          .mode=${common.mode}
-          .value=${common.value as Partial<LivestockBatch>}
-          .kind=${this.kind}
-          @submit=${this.handleSubmit}
-          @cancel=${this.handleCancel}
-          @delete=${this.handleDelete}
-        ></form-batch-peternakan>`;
-    }
-  }
+  private handleCancel = () => {
+    this.view = 'list';
+  };
 
   render() {
     return html`
@@ -198,15 +142,24 @@ export class BatchContainer extends LitElement {
         ? html`
             <batch-list
               .kind=${this.kind}
-              .akuakultur=${this.akuakultur}
-              .hidroponik=${this.hidroponik}
-              .hortikultura=${this.hortikultura}
-              .peternakan=${this.peternakan}
+              .akuakultur=${this.aquatic}
+              .hidroponik=${this.hydroponic}
+              .hortikultura=${this.horti}
+              .peternakan=${this.livestock}
               @add-item=${this.handleAdd}
               @edit-item=${this.handleEdit}
             ></batch-list>
           `
-        : this.renderForm()}
+        : html`
+            <form-batch
+              .kind=${this.kind}
+              .mode=${this.mode}
+              .value=${this.draft}
+              @submit=${this.handleSubmit}
+              @cancel=${this.handleCancel}
+              @delete=${this.handleDelete}
+            ></form-batch>
+          `}
     `;
   }
 }

@@ -1,28 +1,24 @@
 // frontend/src/services/hydroponic-batch.service.ts
 
-import { HydroponicBatchRepository } from '../repositories/interfaces/HydroponicBatchRepository';
-import { HydroponicBatch } from '@models/hydroponic-batch.model';
+import type { HydroponicBatch } from '@models/hidroponic-batch.model';
+import { getHydroponicBatchRepository } from '../repositories/repository-factory';
 
-export class HydroponicBatchService {
-  constructor(private repository: HydroponicBatchRepository) {}
+const repo = getHydroponicBatchRepository();
 
-  async getAllBatches(): Promise<HydroponicBatch[]> {
-    return this.repository.getAll();
-  }
+export const fetchAllHydroponicBatches = (): Promise<HydroponicBatch[]> =>
+  repo.getAll();
 
-  async getBatchById(id: string): Promise<HydroponicBatch | undefined> {
-    return this.repository.getById(id);
-  }
+export const fetchHydroponicBatchById = (
+  id: string
+): Promise<HydroponicBatch | undefined> => repo.getById(id);
 
-  async createBatch(batch: HydroponicBatch): Promise<void> {
-    return this.repository.create(batch);
-  }
+export const createHydroponicBatch = (batch: HydroponicBatch): Promise<void> =>
+  repo.create(batch);
 
-  async updateBatch(id: string, data: Partial<HydroponicBatch>): Promise<void> {
-    return this.repository.update(id, data);
-  }
+export const updateHydroponicBatch = (
+  id: string,
+  data: Partial<HydroponicBatch>
+): Promise<void> => repo.update(id, data);
 
-  async deleteBatch(id: string): Promise<void> {
-    return this.repository.delete(id);
-  }
-}
+export const deleteHydroponicBatch = (id: string): Promise<void> =>
+  repo.delete(id);

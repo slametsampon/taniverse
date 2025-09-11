@@ -1,28 +1,22 @@
 // frontend/src/services/horti-batch.service.ts
 
-import { HortiBatchRepository } from '../repositories/interfaces/HortiBatchRepository';
-import { HortiBatch } from '@models/horti-batch.model';
+import type { HortiBatch } from '@models/horti-batch.model';
+import { getHortiBatchRepository } from '../repositories/repository-factory';
 
-export class HortiBatchService {
-  constructor(private repository: HortiBatchRepository) {}
+const repo = getHortiBatchRepository();
 
-  async getAllBatches(): Promise<HortiBatch[]> {
-    return this.repository.getAll();
-  }
+export const fetchAllHortiBatches = (): Promise<HortiBatch[]> => repo.getAll();
 
-  async getBatchById(id: string): Promise<HortiBatch | undefined> {
-    return this.repository.getById(id);
-  }
+export const fetchHortiBatchById = (
+  id: string
+): Promise<HortiBatch | undefined> => repo.getById(id);
 
-  async createBatch(batch: HortiBatch): Promise<void> {
-    return this.repository.create(batch);
-  }
+export const createHortiBatch = (batch: HortiBatch): Promise<void> =>
+  repo.create(batch);
 
-  async updateBatch(id: string, data: Partial<HortiBatch>): Promise<void> {
-    return this.repository.update(id, data);
-  }
+export const updateHortiBatch = (
+  id: string,
+  data: Partial<HortiBatch>
+): Promise<void> => repo.update(id, data);
 
-  async deleteBatch(id: string): Promise<void> {
-    return this.repository.delete(id);
-  }
-}
+export const deleteHortiBatch = (id: string): Promise<void> => repo.delete(id);
