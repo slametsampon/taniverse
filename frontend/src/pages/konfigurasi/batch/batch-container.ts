@@ -1,12 +1,17 @@
-// frontend/src/pages/konfigurasi/views/batch/batch-container.ts
+// frontend/src/pages/konfigurasi/batch/batch-container.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 
-import type { AkuakulturBatch } from '@models/akuakultur-batch.model';
-import type { HidroponikBatch } from '@models/hidroponik-batch.model';
-import type { HortikulturaBatch } from '@models/hortikultura-batch.model';
-import type { PeternakanBatch } from '@models/peternakan-batch.model';
+import type { AquaticBatch } from '@models/aquatic-batch.model';
+import type { HydroponicBatch } from '@models/hidroponic-batch.model';
+import type { HortiBatch } from '@models/horti-batch.model';
+import type { LivestockBatch } from '@models/livestock-batch.model';
+
+import { AquaticBatchService } from 'src/services/aquatic-batch.service';
+import { HydroponicBatchService } from 'src/services/hydroponic-batch.service';
+import { HortiBatchService } from 'src/services/horti-batch.service';
+import { LivestockBatchService } from 'src/services/livestock-batch.service';
 
 import './batch-list';
 import './form-batch-akuakultur';
@@ -26,15 +31,15 @@ export class BatchContainer extends LitElement {
 
   @state() private view: 'list' | 'form' = 'list';
   @state() private draft: Partial<
-    AkuakulturBatch | HidroponikBatch | HortikulturaBatch | PeternakanBatch
+    AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch
   > = {};
   @state() private mode: 'new' | 'edit' = 'new';
 
   // ✅ sumber data tunggal
-  @state() private akuakultur: AkuakulturBatch[] = [];
-  @state() private hidroponik: HidroponikBatch[] = [];
-  @state() private hortikultura: HortikulturaBatch[] = [];
-  @state() private peternakan: PeternakanBatch[] = [];
+  @state() private akuakultur: AquaticBatch[] = [];
+  @state() private hidroponik: HydroponicBatch[] = [];
+  @state() private hortikultura: HortiBatch[] = [];
+  @state() private peternakan: LivestockBatch[] = [];
 
   connectedCallback() {
     super.connectedCallback();
@@ -42,22 +47,10 @@ export class BatchContainer extends LitElement {
   }
 
   private async loadAll() {
-    this.akuakultur = await this.load<AkuakulturBatch[]>(
-      '/assets/mock/aquatic-batches.json'
-    );
-    this.hidroponik = await this.load<HidroponikBatch[]>(
-      '/assets/mock/hydro-batches.json'
-    );
-    this.hortikultura = await this.load<HortikulturaBatch[]>(
-      '/assets/mock/horti-batches.json'
-    );
-    this.peternakan = await this.load<PeternakanBatch[]>(
-      '/assets/mock/livestock-batches.json'
-    );
-  }
-  private async load<T>(url: string): Promise<T> {
-    const res = await fetch(url);
-    return res.json();
+    this.akuakultur = await AquaticBatchService.getAllBatches();
+    this.hidroponik = await HydroponicBatchService.getAllBatches();
+    this.hortikultura = await HortiBatchService.getAllBatches();
+    this.peternakan = await LivestockBatchService.getAllBatches();
   }
 
   // ===== Handlers =====
@@ -77,11 +70,7 @@ export class BatchContainer extends LitElement {
 
   private handleEdit = (
     e: CustomEvent<{
-      item:
-        | AkuakulturBatch
-        | HidroponikBatch
-        | HortikulturaBatch
-        | PeternakanBatch;
+      item: AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch;
       kind: string;
     }>
   ) => {
@@ -104,9 +93,7 @@ export class BatchContainer extends LitElement {
 
   private handleSubmit = (
     e: CustomEvent<
-      Partial<
-        AkuakulturBatch | HidroponikBatch | HortikulturaBatch | PeternakanBatch
-      >
+      Partial<AquaticBatch | HydroponicBatch | HortiBatch | LivestockBatch>
     >
   ) => {
     console.log('[SUBMIT BATCH]', this.kind, e.detail);
@@ -168,7 +155,7 @@ export class BatchContainer extends LitElement {
       case 'akuakultur':
         return html`<form-batch-akuakultur
           .mode=${common.mode}
-          .value=${common.value as Partial<AkuakulturBatch>}
+          .value=${common.value as Partial<AquaticBatch>}
           .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
@@ -177,7 +164,7 @@ export class BatchContainer extends LitElement {
       case 'hidroponik':
         return html`<form-batch-hidroponik
           .mode=${common.mode}
-          .value=${common.value as Partial<HidroponikBatch>}
+          .value=${common.value as Partial<HydroponicBatch>}
           .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
@@ -186,7 +173,7 @@ export class BatchContainer extends LitElement {
       case 'hortikultura':
         return html`<form-batch-hortikultura
           .mode=${common.mode}
-          .value=${common.value as Partial<HortikulturaBatch>}
+          .value=${common.value as Partial<HortiBatch>}
           .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}
@@ -196,7 +183,7 @@ export class BatchContainer extends LitElement {
       default:
         return html`<form-batch-peternakan
           .mode=${common.mode}
-          .value=${common.value as Partial<PeternakanBatch>}
+          .value=${common.value as Partial<LivestockBatch>}
           .kind=${this.kind}
           @submit=${this.handleSubmit}
           @cancel=${this.handleCancel}

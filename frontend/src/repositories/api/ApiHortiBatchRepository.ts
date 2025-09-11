@@ -1,9 +1,9 @@
-// frontend/src/repositories/api/ApiPlantingBatchRepository.ts
+// frontend/src/repositories/api/ApiHortiBatchRepository.ts
 
-import { PlantingBatchRepository } from '../interfaces/PlantingBatchRepository';
+import { HortiBatchRepository } from '../interfaces/HortiBatchRepository';
 import { PlantingBatch } from '@models/horti-batch.model';
 
-export class ApiPlantingBatchRepository implements PlantingBatchRepository {
+export class ApiHortiBatchRepository implements HortiBatchRepository {
   private baseUrl = '/api/planting-batches';
 
   async getAll(): Promise<PlantingBatch[]> {

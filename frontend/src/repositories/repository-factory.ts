@@ -30,9 +30,13 @@ import { LivestockBatchRepository } from './interfaces/LivestockBatchRepository'
 import { MockLivestockBatchRepository } from './mock/MockLivestockBatchRepository';
 import { ApiLivestockBatchRepository } from './api/ApiLivestockBatchRepository';
 
-import { PlantingBatchRepository } from './interfaces/PlantingBatchRepository';
-import { MockPlantingBatchRepository } from './mock/MockPlantingBatchRepository';
-import { ApiPlantingBatchRepository } from './api/ApiPlantingBatchRepository';
+import { HortiBatchRepository } from './interfaces/HortiBatchRepository';
+import { MockHortiBatchRepository } from './mock/MockHortiBatchRepository';
+import { ApiHortiBatchRepository } from './api/ApiHortiBatchRepository';
+
+import { HydroponicBatchRepository } from './interfaces/HydroponicBatchRepository';
+import { MockHydroponicBatchRepository } from './mock/MockHydroponicBatchRepository';
+import { ApiHydroponicBatchRepository } from './api/ApiHydroponicBatchRepository';
 
 export function getDeviceRepository(): DeviceRepository {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
@@ -71,8 +75,14 @@ export function getLivestockBatchRepository(): LivestockBatchRepository {
     : new ApiLivestockBatchRepository();
 }
 
-export function getPlantingBatchRepository(): PlantingBatchRepository {
+export function getHortiBatchRepository(): HortiBatchRepository {
   return isMockMode()
-    ? new MockPlantingBatchRepository()
-    : new ApiPlantingBatchRepository();
+    ? new MockHortiBatchRepository()
+    : new ApiHortiBatchRepository();
+}
+
+export function getHydroponicBatchRepository(): HydroponicBatchRepository {
+  return isMockMode()
+    ? new MockHydroponicBatchRepository()
+    : new ApiHydroponicBatchRepository();
 }

@@ -2,7 +2,7 @@
 
 import { BaseBatch } from './base-batch.model';
 
-export interface PlantingBatch extends BaseBatch {
+export interface HortiBatch extends BaseBatch {
   plantId: string;
   initialCount: number;
   totalPlants: number;

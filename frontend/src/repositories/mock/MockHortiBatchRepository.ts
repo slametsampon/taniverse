@@ -1,17 +1,15 @@
-// frontend/src/repositories/mock/MockPlantingBatchRepository.ts
+// frontend/src/repositories/mock/MockHortiBatchRepository.ts
 
-import { PlantingBatchRepository } from '../interfaces/PlantingBatchRepository';
+import { HortiBatchRepository } from '../interfaces/HortiBatchRepository';
 import { PlantingBatch } from '@models/horti-batch.model';
 import { fetchMockData } from '../../services/mock-data.service';
 
-export class MockPlantingBatchRepository implements PlantingBatchRepository {
+export class MockHortiBatchRepository implements HortiBatchRepository {
   private cache: PlantingBatch[] | null = null;
 
   async getAll(): Promise<PlantingBatch[]> {
     if (!this.cache) {
-      this.cache = await fetchMockData<PlantingBatch[]>(
-        'planting-batches.json'
-      );
+      this.cache = await fetchMockData<PlantingBatch[]>('horti-batches.json');
     }
     return this.cache!;
   }
