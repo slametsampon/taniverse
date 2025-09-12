@@ -1764,6 +1764,10 @@ var init_ui_tabs = __esm({
 });
 
 // src/services/mode.ts
+function hasCapability(capability) {
+  const mode = getMode();
+  return modeCapabilities[mode]?.includes(capability) ?? false;
+}
 function getMode() {
   const raw = localStorage.getItem(KEY);
   return VALID_MODES.includes(raw) ? raw : "mock";
@@ -1776,20 +1780,25 @@ function setMode(mode) {
   }
 }
 function isMockMode() {
-  return getMode() === "mock";
+  return hasCapability("mock");
 }
-var KEY, VALID_MODES;
+var KEY, VALID_MODES, modeCapabilities;
 var init_mode = __esm({
   "src/services/mode.ts"() {
     "use strict";
     KEY = "device.mode";
     VALID_MODES = ["mock", "mqtt", "sim"];
+    modeCapabilities = {
+      mock: ["mock"],
+      mqtt: ["mqtt"],
+      sim: ["mock", "simulator"]
+    };
   }
 });
 
 // src/services/mock-data.service.ts
 async function fetchMockData(filename) {
-  const path = `/assets/mock/${filename}`;
+  const path = `./assets/mock/${filename}`;
   console.log(`\u{1F4E5} [fetchMockData] Fetching mock data: ${path}`);
   try {
     const res = await fetch(path);
