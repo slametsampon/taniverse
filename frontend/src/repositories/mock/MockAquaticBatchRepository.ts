@@ -2,7 +2,7 @@
 
 import { AquaticBatchRepository } from '../interfaces/AquaticBatchRepository';
 import { AquaticBatch } from '@models/aquatic-batch.model';
-import { fetchMockData } from '../../services/mock-data.service';
+import { fetchMockData } from 'src/services/mock-data.service';
 
 export class MockAquaticBatchRepository implements AquaticBatchRepository {
   private cache: AquaticBatch[] | null = null;

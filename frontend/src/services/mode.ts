@@ -4,6 +4,18 @@ export type DeviceMode = 'mock' | 'mqtt' | 'sim';
 
 const KEY = 'device.mode';
 const VALID_MODES: DeviceMode[] = ['mock', 'mqtt', 'sim'];
+// src/services/mode.ts
+
+const modeCapabilities: Record<string, string[]> = {
+  mock: ['mock'],
+  mqtt: ['mqtt'],
+  sim: ['mock', 'simulator'],
+};
+
+export function hasCapability(capability: string): boolean {
+  const mode = getMode(); // Ambil dari localStorage, context, atau apapun yang Anda pakai
+  return modeCapabilities[mode]?.includes(capability) ?? false;
+}
 
 /**
  * Mengambil mode saat ini dari localStorage.
@@ -30,14 +42,14 @@ export function setMode(mode: DeviceMode): void {
  * Cek apakah mode saat ini adalah 'mock'
  */
 export function isMockMode(): boolean {
-  return getMode() === 'mock';
+  return hasCapability('mock');
 }
 
 /**
  * Cek apakah mode saat ini adalah 'mqtt'
  */
 export function isMqttMode(): boolean {
-  return getMode() === 'mqtt';
+  return hasCapability('mqtt');
 }
 
 /**
