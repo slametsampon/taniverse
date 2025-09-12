@@ -14,6 +14,8 @@ import 'src/components/dialogs/device-dialog';
 import 'src/components/livestock-batch';
 import 'src/components/batch-result';
 import 'src/pages/produksi/views/peternakan-devices';
+import { fetchAllLivestock } from 'src/services/livestock.service';
+import { fetchAllLivestockBatches } from 'src/services/livestock-batch.service';
 
 @customElement('peternakan-page')
 export class PeternakanPage extends LitElement {
@@ -28,16 +30,12 @@ export class PeternakanPage extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    const animals = (await (
-      await fetch('/assets/mock/livestock.json')
-    ).json()) as Livestock[];
-    const raw = (await (
-      await fetch('/assets/mock/livestock-batches.json')
-    ).json()) as LivestockBatch[];
+    const animals = (await fetchAllLivestock()) as Livestock[];
+    const raw = (await fetchAllLivestockBatches()) as LivestockBatch[];
     this.animals = animals;
     this.batches = raw.map(fromLivestockBatch);
     this.harvests = await (
-      await fetch('/assets/mock/livestock-harvests.json')
+      await fetch('./assets/mock/livestock-harvests.json')
     ).json();
 
     // (opsional) verifikasi

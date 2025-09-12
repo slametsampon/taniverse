@@ -13,6 +13,8 @@ import 'src/components/dialogs/entity-detail-dialog';
 import 'src/components/dialogs/device-dialog';
 import 'src/components/batch-result';
 import 'src/pages/produksi/views/hidroponik-devices';
+import { fetchAllPlants } from 'src/services/plant.service';
+import { fetchAllHydroponicBatches } from 'src/services/hydroponic-batch.service';
 
 @customElement('hidroponik-page')
 export class PageProduksiHidroponik extends LitElement {
@@ -26,15 +28,11 @@ export class PageProduksiHidroponik extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    const plants = (await (
-      await fetch('/assets/mock/plants.json')
-    ).json()) as Plant[];
-    const raw = (await (
-      await fetch('/assets/mock/hydro-batches.json')
-    ).json()) as HydroponicBatch[];
+    const plants = (await fetchAllPlants()) as Plant[];
+    const raw = (await fetchAllHydroponicBatches()) as HydroponicBatch[];
     this.plants = plants;
     this.batches = raw.map(fromHydroponicBatch);
-    this.harvests = await (await fetch('/assets/mock/harvests.json')).json();
+    this.harvests = await (await fetch('./assets/mock/harvests.json')).json();
 
     console.groupCollapsed('[Hidroponik] mapped GenericBatch');
     console.table(

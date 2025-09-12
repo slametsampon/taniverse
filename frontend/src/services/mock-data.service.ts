@@ -1,7 +1,7 @@
 // frontend/src/services/mock-data.service.ts
 
 /**
- * Generic function to fetch mock JSON data from /assets/mock/
+ * Generic function to fetch mock JSON data from ./assets/mock/
  * @param filename - Name of the mock file, e.g. "event.json"
  * @returns Parsed JSON as type T
  */

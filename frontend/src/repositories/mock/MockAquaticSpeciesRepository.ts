@@ -6,7 +6,7 @@ let cache: AquaticSpecies[] | null = null;
 
 export class MockAquaticSpeciesRepository implements AquaticSpeciesRepository {
   async getAll(): Promise<AquaticSpecies[]> {
-    const res = await fetch('/assets/mock/species.json');
+    const res = await fetch('./assets/mock/species.json');
     if (!res.ok) throw new Error('Gagal load species mock');
     return await res.json();
   }

@@ -7,6 +7,8 @@ import type { GenericBatch } from '@models/generic-batch.model';
 import type { AquaticSpecies } from '@models/aquatic-species.model';
 import { fromAquaticBatch } from 'src/mappers/fromAquaticBatch';
 import type { HarvestResult } from '@models/harvest-result.model';
+import { fetchAllAquaticBatches } from 'src/services/aquatic-batch.service';
+import { fetchAllAquaticSpecies } from 'src/services/aquatic-species.service';
 
 import 'src/components/aquaculture-batch';
 import 'src/components/dialogs/entity-detail-dialog';
@@ -24,28 +26,14 @@ export class PageProduksiAkuakultur extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    const species = (await (
-      await fetch('/assets/mock/species.json')
-    ).json()) as AquaticSpecies[];
-    const raw = (await (
-      await fetch('/assets/mock/aquatic-batches.json')
-    ).json()) as AquaticBatch[];
+    const raw = (await fetchAllAquaticBatches()) as AquaticBatch[];
+    const species = (await fetchAllAquaticSpecies()) as AquaticSpecies[];
     this.harvests = await (
-      await fetch('/assets/mock/aqua-harvests.json')
+      await fetch('./assets/mock/aqua-harvests.json')
     ).json();
 
     this.species = species;
     this.batches = raw.map(fromAquaticBatch);
-
-    console.groupCollapsed('[Akuakultur] mapped GenericBatch');
-    console.table(
-      this.batches.map((b) => ({
-        id: b.id,
-        itemId: b.itemId,
-        location: b.location,
-      }))
-    );
-    console.groupEnd();
   }
 
   private onSpeciesClick = (
