@@ -1,7 +1,7 @@
 {
   "name": "taniverse",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Platform for building and running agro apps",
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run tailwind:watch\" \"npm run esbuild:watch:serve\"",

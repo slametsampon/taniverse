@@ -8,6 +8,9 @@ const mime = require('mime');
 const isDev = process.env.NODE_ENV === 'development';
 const isPreRelease = process.env.NODE_ENV === 'pre-release';
 const isProd = process.env.NODE_ENV === 'production';
+const pkg = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8')
+);
 
 let publicPath = '/';
 if (isPreRelease) publicPath = '/taniverse';
@@ -29,6 +32,7 @@ const buildOptions = {
     'process.env.NODE_ENV': JSON.stringify(
       process.env.NODE_ENV || 'development'
     ),
+    __APP_VERSION__: JSON.stringify(pkg.version), // 👈 Inject versi dari package.json
   },
   loader: {
     '.ts': 'ts',
