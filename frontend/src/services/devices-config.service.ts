@@ -9,7 +9,7 @@ import type { DeviceConfig } from '@models/device.model';
 export type ValidationError = { field: string; message: string };
 
 /* ================== Konfigurasi sumber data ================== */
-const USE_HTTP = true; // ← set ke false jika ingin kembali ke LocalStorage/mock saat dev
+const USE_HTTP = false; // ← set ke false jika ingin kembali ke LocalStorage/mock saat dev
 export const API_BASE =
   (import.meta as any)?.env?.VITE_API_BASE || 'http://localhost:8080/api';
 

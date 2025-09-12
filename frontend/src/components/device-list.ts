@@ -4,7 +4,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { fetchAllDevices } from 'src/services/device.service';
 import type { Device } from '@models/device.model';
-import { DeviceHelper } from '../services/device-helper';
+import { devicesStore } from 'src/services/devices-store';
 
 import './cards/device-card';
 
@@ -32,23 +32,24 @@ export class DeviceList extends LitElement {
    * Dapatkan nilai terkini berdasarkan tipe device
    */
   private getCurrentValue(device: Device): string | null {
+    const live = devicesStore.get(device.tagNumber);
+    if (!live) return '--';
+
     const value =
       device.type === 'sensor'
-        ? DeviceHelper.getSensorValue(device.tagNumber)
+        ? live.value
         : device.type === 'actuator'
-        ? DeviceHelper.getActuatorState(device.tagNumber)
+        ? live.state
         : null;
 
     if (value == null) return '--';
 
     if (typeof value === 'number') {
-      // Format default angka
-      return value.toFixed(1);
+      return value.toFixed(device.display_precision ?? 1);
     }
 
     return String(value);
   }
-
   render() {
     if (this.devices.length === 0) {
       return html`<div class="text-gray-500 text-sm">

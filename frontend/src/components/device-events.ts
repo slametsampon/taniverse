@@ -1,65 +1,114 @@
 // frontend/src/components/device-events.ts
 
-// frontend/src/components/DeviceEvents.ts
+import type { DeviceConfig } from '@models/device.model';
+import {
+  getByTag,
+  loadDevices,
+  upsertDevice,
+  deleteDevice,
+} from '../services/devices-config.service';
 
-import { DeviceUI } from './device-ui';
-import { DeviceStateHandler } from './device-state-handler';
-import { getByTag } from 'src/services/devices-config.service';
+type Device = DeviceConfig<any>;
 
 export class DeviceEvents {
-  static async loadAllDevices(): Promise<any[]> {
-    const res = await fetch('/api/devices'); // or MQTT if real-time
-    const json = await res.json();
-    return json;
+  static async handleTagPicked(
+    tag: string,
+    tags: string[],
+    setDevice: (d: Device, mode: 'new' | 'edit') => void
+  ) {
+    let found = getByTag<Device>(tag);
+
+    if (!found) {
+      const list = await loadDevices<Device>();
+      const f = list.find((d) => d.tagNumber === tag);
+      if (f) {
+        setDevice(structuredClone(f), 'edit');
+      }
+      return;
+    }
+
+    setDevice(structuredClone(found), 'edit');
   }
 
-  static async handleSave(
-    model: any,
-    mode: 'new' | 'edit',
-    tags: string[],
-    onSuccess: (saved: any, updatedTags: string[], mode: 'new' | 'edit') => void
-  ): Promise<boolean> {
-    try {
-      const res = await fetch('/api/devices', {
-        method: mode === 'new' ? 'POST' : 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(model),
-      });
-      const saved = await res.json();
-      const updatedTags = [...new Set([...tags, saved.tagNumber])];
-      onSuccess(saved, updatedTags, 'edit');
-      return true;
-    } catch (err) {
-      DeviceUI.showToast('Gagal menyimpan', true);
-      return false;
-    }
+  static async loadAllDevices(): Promise<DeviceConfig<any>[]> {
+    return await loadDevices<DeviceConfig<any>>();
   }
 
   static async handleDelete(
     tag: string,
     tags: string[],
-    onSuccess: (next?: any, mode?: 'edit' | 'new') => void
+    onAfterDelete: (nextDevice?: Device, mode?: 'new' | 'edit') => void
   ): Promise<boolean> {
+    if (!tag) return false;
+
+    const confirm1 = confirm(
+      'Perubahan belum disimpan akan hilang.\nHapus device ini?'
+    );
+    const confirm2 = confirm(`Hapus device "${tag}"?`);
+
+    if (!confirm1 || !confirm2) return false;
+
     try {
-      await fetch(`/api/devices/${tag}`, { method: 'DELETE' });
+      await deleteDevice(tag);
       const updatedTags = tags.filter((t) => t !== tag);
-      const list = await this.loadAllDevices();
-      const next = list[0];
-      onSuccess(next, next ? 'edit' : 'new');
+      const list = await loadDevices<Device>();
+      const nextDev = list.find((d) => d.tagNumber === updatedTags[0]);
+
+      if (nextDev) {
+        onAfterDelete(structuredClone(nextDev), 'edit');
+      } else {
+        onAfterDelete();
+      }
+
       return true;
-    } catch (err) {
-      DeviceUI.showToast('Gagal menghapus', true);
+    } catch (err: any) {
+      alert(`Gagal hapus: ${err?.message || err}`);
       return false;
     }
   }
 
-  static handleTagPicked(
-    tag: string,
+  static async handleSave(
+    device: Device,
+    mode: 'new' | 'edit',
     tags: string[],
-    cb: (device: any, mode: 'edit' | 'new') => void
+    onAfterSave: (d: Device, tags: string[], mode: 'edit') => void
+  ): Promise<boolean> {
+    const now = new Date().toISOString();
+    device.meta = {
+      createdAt: device.meta?.createdAt ?? now,
+      updatedAt: now,
+    } as any;
+
+    try {
+      const saved = await upsertDevice(device);
+      const newTags = tags.includes(saved.tagNumber)
+        ? tags
+        : [...tags, saved.tagNumber].sort();
+
+      onAfterSave(structuredClone(saved), newTags, 'edit');
+      return true;
+    } catch (err: any) {
+      alert(`Gagal simpan: ${err?.message || err}`);
+      return false;
+    }
+  }
+
+  static async handleEditMode(
+    currentTag: string,
+    tags: string[],
+    onLoaded: (device: Device) => void
   ) {
-    const found = tags.includes(tag) ? getByTag(tag) : undefined;
-    if (found) cb(found, 'edit');
-    else cb(DeviceStateHandler.newTemplate(), 'new');
+    const sel =
+      currentTag && tags.includes(currentTag) ? currentTag : tags[0] ?? '';
+    if (!sel) return;
+
+    const found = getByTag<Device>(sel);
+    if (found) {
+      onLoaded(structuredClone(found));
+    } else {
+      const list = await loadDevices<Device>();
+      const f = list.find((d) => d.tagNumber === sel);
+      if (f) onLoaded(structuredClone(f));
+    }
   }
 }

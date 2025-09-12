@@ -1,9 +1,8 @@
-// frontend/src/views/peternakan-devices.ts
+// frontend/src/pages/produksi/views/peternakan-devices.ts
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { devicesStore } from '../../../services/devices-store';
-import { DeviceHelper } from 'src/services/device-helper';
 import { formatDeviceValue } from 'src/utils/format-display';
 
 import '../../../components/cards/dashboard-device-card';
@@ -36,7 +35,7 @@ export class PeternakanDevices extends LitElement {
   private pull() {
     const statusMap: Record<string, string> = {};
     this.deviceTags.forEach((tag) => {
-      statusMap[tag] = DeviceHelper.getDeviceStatus(tag);
+      statusMap[tag] = devicesStore.getStatus(tag);
     });
     this.statusMap = statusMap;
   }

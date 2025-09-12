@@ -11,7 +11,7 @@ import 'src/components/device-picker';
 import { DeviceUI } from 'src/components/device-ui';
 import { deviceConfigFields } from '../schema/device-config-fields';
 import { DeviceStateHandler } from 'src/components/device-state-handler';
-import { DeviceEvents } from 'src/components/device-events';
+import { DeviceEvents } from '../../../components/device-events';
 
 function setNestedValue(obj: any, path: string, value: any): void {
   const keys = path.split('.');

@@ -1,7 +1,7 @@
 // frontend/src/utils/format-display.ts
 
-import type { Device } from '../services/devices-store';
-import { DeviceHelper } from '../services/device-helper';
+import type { Device } from 'src/services/devices-store';
+import { devicesStore } from 'src/services/devices-store';
 
 /**
  * Format tanggal ke format lokal Indonesia (dd-MM-yyyy)
@@ -22,23 +22,26 @@ export function formatDate(value: string | Date): string {
 export function formatDeviceValue(device: Device | undefined): string {
   if (!device) return '--';
 
+  const live = devicesStore.get(device.tagNumber);
+  if (!live) return '--';
+
   if (device.type === 'sensor') {
-    const raw = DeviceHelper.getSensorValue(device.tagNumber);
+    const raw = live.value;
     return raw == null
       ? '--'
       : typeof raw === 'number'
-      ? `${raw.toFixed(1)} ${device.unit ?? ''}`.trim()
+      ? `${raw.toFixed(device.display_precision ?? 1)} ${
+          device.unit ?? ''
+        }`.trim()
       : `${raw} ${device.unit ?? ''}`.trim();
   }
 
   if (device.type === 'actuator') {
-    const state = DeviceHelper.getActuatorState(device.tagNumber);
-    return state ?? '--';
+    return live.state ?? '--';
   }
 
   return '--';
 }
-
 /**
  * Format key dari field tanaman jadi judul yang human-readable
  */

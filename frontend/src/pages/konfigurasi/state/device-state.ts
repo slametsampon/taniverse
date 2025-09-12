@@ -1,11 +1,11 @@
 // frontend/src/pages/konfigurasi/state/device-state.ts
 
-import type { DeviceConfig } from '@models/device.model';
+import type { DeviceModel } from '@models/device.model';
 import type { ValidationError } from 'src/services/devices-config.service';
 import { validateDevice } from 'src/services/devices-config.service';
 import type { TabId } from 'src/types/tab-id';
 
-export type DeviceStateModel = DeviceConfig<any>;
+export type DeviceStateModel = DeviceModel;
 
 export class DeviceStateHandler {
   static newTemplate(): DeviceStateModel {
@@ -15,18 +15,24 @@ export class DeviceStateHandler {
       type: 'sensor',
       description: '',
       unit: '',
-      ranges: { low: 0, high: 100 },
-      alarms: { low: null, high: null },
-      kind: null,
-      allowedStates: null,
-      defaultState: null,
+      ranges_low: 0,
+      ranges_high: 100,
+      alarms_low: null,
+      alarms_high: null,
       writable: false,
-      io: { bus: 'adc', pin: null, address: null, channel: 0 },
-      mqtt: { topic: '', readCmd: null, writeCmd: null },
-      sample: { periodMs: 1000, deadband: 0 },
-      display: { precision: 0 },
-      location: { area: '', position: '' },
-      meta: { createdAt: now, updatedAt: now },
+      allowedStates: [],
+      defaultState: '',
+      io_bus: 'adc',
+      io_pin: null,
+      io_address: null,
+      io_channel: 0,
+      sample_periodMs: 1000,
+      sample_deadband: 0,
+      display_precision: 0,
+      location: '',
+      value: undefined,
+      state: undefined,
+      status: undefined,
     };
   }
 
@@ -50,9 +56,9 @@ export class DeviceStateHandler {
   }
 
   static fieldTab(path: string): TabId {
-    if (path.startsWith('io.')) return 'hw-comm';
-    if (path.startsWith('mqtt.')) return 'mqtt';
-    if (path.startsWith('location.') || path.startsWith('meta.'))
+    if (path.startsWith('io_')) return 'hw-comm';
+    if (path.startsWith('mqtt.')) return 'mqtt'; // jika tetap ada field nested mqtt
+    if (path.startsWith('location') || path.startsWith('meta'))
       return 'loc-meta';
     return 'general';
   }

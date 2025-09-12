@@ -1,21 +1,15 @@
-// frontend/src/services/devices-service.ts
+// frontend/src/services/devices-store.ts
 
 import { mqttService, TOPIC_PREFIX } from './mqtt-service';
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
 import { getDeviceRepository } from '../repositories/repository-factory';
 import type { DeviceRepository } from '../repositories/interfaces/DeviceRepository';
-import type { DeviceConfig } from '@models/device.model';
+import type { DeviceConfig, DeviceStatus } from '@models/device.model';
+// Tambahkan ini di awal file:
 
 type Device = DeviceConfig & {
   status?: DeviceStatus;
 };
-
-type DeviceStatus =
-  | 'ok'
-  | 'alarm-low'
-  | 'alarm-high'
-  | 'disconnected'
-  | 'unknown';
 
 type Listener = () => void;
 
@@ -122,27 +116,39 @@ class DevicesStore {
 
   // ===== Status Logic =====
   private updateStatus(dev: Device) {
-    if (dev.type === 'sensor') {
-      if (dev.value === null || dev.value === undefined) {
-        dev.status = 'disconnected';
-        return;
-      }
+    const now = new Date().toISOString();
 
+    if (dev.type === 'sensor') {
       const val = dev.value;
       const lo = dev.alarms?.low ?? null;
       const hi = dev.alarms?.high ?? null;
 
-      if (lo !== null && val < lo) {
-        dev.status = 'alarm-low';
-      } else if (hi !== null && val > hi) {
-        dev.status = 'alarm-high';
-      } else {
-        dev.status = 'ok';
-      }
+      const valueStatus: DeviceStatus['valueStatus'] =
+        val === null || val === undefined
+          ? 'sensor-fail'
+          : lo !== null && val < lo
+          ? 'low-alarm'
+          : hi !== null && val > hi
+          ? 'high-alarm'
+          : 'normal';
+
+      dev.status = {
+        mqtt: this.mqttClient ? 'connected' : 'disconnected',
+        valueStatus,
+        lastSeen: now,
+      };
     } else if (dev.type === 'actuator') {
-      dev.status = dev.state ? 'ok' : 'disconnected';
+      dev.status = {
+        mqtt: this.mqttClient ? 'connected' : 'disconnected',
+        valueStatus: dev.state ? 'normal' : 'sensor-fail',
+        lastSeen: now,
+      };
     } else {
-      dev.status = 'unknown';
+      dev.status = {
+        mqtt: 'disconnected',
+        valueStatus: 'sensor-fail',
+        lastSeen: now,
+      };
     }
   }
 
@@ -186,8 +192,35 @@ class DevicesStore {
     }
   }
 
+  getStatus(
+    tag: string
+  ):
+    | DeviceStatus
+    | { mqtt: 'disconnected'; valueStatus: 'sensor-fail'; lastSeen?: string } {
+    return (
+      this.devices.get(tag)?.status ?? {
+        mqtt: 'disconnected',
+        valueStatus: 'sensor-fail',
+        lastSeen: undefined,
+      }
+    );
+  }
+
   getMode() {
     return isMockMode() ? 'mock' : 'mqtt';
+  }
+
+  getSensorValue(tag: string): number | null {
+    const dev = this.devices.get(tag);
+    return dev?.type === 'sensor' ? dev.value ?? null : null;
+  }
+
+  getActuatorState(tag: string): 'ON' | 'OFF' {
+    const dev = this.devices.get(tag);
+    return dev?.type === 'actuator' &&
+      (dev.state === 'ON' || dev.state === 'OFF')
+      ? dev.state
+      : 'OFF';
   }
 }
 

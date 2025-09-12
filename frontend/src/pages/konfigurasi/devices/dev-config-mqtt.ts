@@ -4,15 +4,14 @@ import { LitElement, html } from 'lit';
 import { consume } from '@lit/context';
 import { customElement, state } from 'lit/decorators.js';
 import mqtt from 'mqtt';
-
 import { mqttContext } from 'src/context/mqtt-context';
 import type { MqttContextValue } from 'src/context/mqtt-context';
-import { createMqttContext } from 'src/context/mqtt-context';
-
 import { loadDevices, getByTag } from 'src/services/devices-config.service';
 
-import type { DeviceMode } from 'src/services/mode';
-import { getMode, setMode } from 'src/services/mode';
+import 'src/components/mode-selector';
+import 'src/components/mqtt-control-panel';
+
+import type { DeviceModel } from '@models/device.model';
 
 @customElement('dev-config-mqtt')
 export class DevConfigMqtt extends LitElement {
@@ -22,11 +21,10 @@ export class DevConfigMqtt extends LitElement {
 
   @state() private allTags: string[] = [];
   @state() private selectedTags: Set<string> = new Set();
-  @state() private deviceList: any[] = [];
+  @state() private deviceList: DeviceModel[] = [];
   @state() private client: mqtt.MqttClient | null = null;
   @state() private simulating = false;
   @state() private logs: string[] = [];
-  @state() private currentMode: DeviceMode = 'mock';
 
   @consume({ context: mqttContext, subscribe: true })
   @state()
@@ -36,15 +34,16 @@ export class DevConfigMqtt extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-
-    this.currentMode = getMode(); // ✅ Sinkronisasi awal dengan localStorage
-
     const list = await loadDevices();
     this.deviceList = list;
     this.allTags = list
       .map((d) => d.tagNumber)
       .filter(Boolean)
       .sort();
+  }
+
+  private getDevice(tag: string): DeviceModel | undefined {
+    return this.deviceList.find((d) => d.tagNumber === tag);
   }
 
   private connectMQTT() {
@@ -80,8 +79,8 @@ export class DevConfigMqtt extends LitElement {
 
   private generateTopic(tag: string, type: 'sensor' | 'actuator'): string {
     const nodeId = 'esp-node-1';
-    const device = getByTag(tag);
-    const location = (device?.location?.area ?? '')
+    const device = this.getDevice(tag);
+    const location = (device?.location ?? '')
       .toLowerCase()
       .replace(/[\/\\ ]/g, '-');
     const suffix = type === 'sensor' ? 'value' : 'state';
@@ -91,7 +90,9 @@ export class DevConfigMqtt extends LitElement {
   private publishOnce() {
     this.connectMQTT();
     this.selectedTags.forEach((tag) => {
-      const topic = this.generateTopic(tag, 'sensor');
+      const dev = this.getDevice(tag);
+      if (!dev) return;
+      const topic = this.generateTopic(tag, dev.type);
       const payload = this.buildPayload(tag);
       this.client?.publish(topic, payload);
       this.log(`📤 Published to ${topic}: ${payload}`);
@@ -101,7 +102,9 @@ export class DevConfigMqtt extends LitElement {
   private subscribeTopics() {
     this.connectMQTT();
     this.selectedTags.forEach((tag) => {
-      const topic = this.generateTopic(tag, 'actuator');
+      const dev = this.getDevice(tag);
+      if (!dev) return;
+      const topic = this.generateTopic(tag, dev.type);
       this.client?.subscribe(topic);
       this.log(`📡 Subscribed to ${topic}`);
     });
@@ -122,40 +125,24 @@ export class DevConfigMqtt extends LitElement {
     this.log(`⏹️ Simulation stopped`);
   }
 
-  private handleModeChange(e: Event) {
-    const target = e.target as HTMLSelectElement;
-    const newMode = target.value as DeviceMode;
+  private async handleSaveDb() {
+    this.log('💾 Request to save database received (via <mode-selector>)');
 
-    setMode(newMode); // ✅ Gunakan fungsi resmi
-    this.currentMode = newMode;
-
-    this.log(`🔄 Mode changed to "${newMode}"`);
-
-    // ✅ Refresh context
-    window.dispatchEvent(
-      new CustomEvent('mqtt:context-updated', {
-        detail: createMqttContext(),
-      })
-    );
+    try {
+      const res = await fetch('/api/db/backup', { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      alert('✅ Database berhasil disimpan/backup.');
+    } catch (err) {
+      alert('❌ Gagal menyimpan database.');
+      console.error('[dev-config-mqtt] DB backup error:', err);
+    }
   }
 
   render() {
     return html`
-      <div class="space-y-4">
-        <div class="space-y-2 mt-3">
-          <label class="text-sm font-semibold">Device Mode</label>
-          <select .value=${this.currentMode} @change=${this.handleModeChange}>
-            <option value="mock">MOCK</option>
-            <option value="sim">SIM</option>
-            <option value="mqtt">MQTT</option>
-          </select>
-          <span
-            class="inline-block text-xs rounded px-2 py-1 bg-slate-200 text-slate-800 font-mono"
-          >
-            Mode Aktif: ${this.currentMode.toUpperCase()}
-          </span>
-        </div>
+      <mode-selector @save-db=${this.handleSaveDb}></mode-selector>
 
+      <div class="space-y-4">
         <div>
           <label class="text-sm font-semibold">Device Tags</label>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
@@ -174,39 +161,13 @@ export class DevConfigMqtt extends LitElement {
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2">
-          <button
-            class="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-            @click=${this.publishOnce}
-          >
-            📤 Publish Now
-          </button>
-
-          <button
-            class="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-            @click=${this.subscribeTopics}
-          >
-            📡 Subscribe
-          </button>
-
-          ${!this.simulating
-            ? html`
-                <button
-                  class="px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600"
-                  @click=${this.startSimulation}
-                >
-                  ▶️ Start Simulation
-                </button>
-              `
-            : html`
-                <button
-                  class="px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700"
-                  @click=${this.stopSimulation}
-                >
-                  ⏹️ Stop Simulation
-                </button>
-              `}
-        </div>
+        <mqtt-control-panel
+          .simulating=${this.simulating}
+          @publish=${this.publishOnce}
+          @subscribe=${this.subscribeTopics}
+          @start-sim=${this.startSimulation}
+          @stop-sim=${this.stopSimulation}
+        ></mqtt-control-panel>
 
         <div>
           <label class="text-sm font-semibold">Log</label>

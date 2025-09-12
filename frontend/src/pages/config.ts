@@ -4,7 +4,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { TabId } from 'src/types/tab-id';
 import type { DeviceStateModel } from './konfigurasi/state/device-state';
-import { DeviceEvents } from './konfigurasi/events/device-events';
+import { DeviceEvents } from '../components/device-events';
 
 import 'src/components/ui/ui-tabs';
 import 'src/components/event-table';
