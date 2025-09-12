@@ -2,27 +2,25 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Device } from '../../services/devices-store';
+import type { DeviceStatus } from '@models/device.model';
+import type { DeviceView } from 'src/models/device-view.model';
 
 @customElement('device-card')
 export class DeviceCard extends LitElement {
-  @property({ type: Object }) device!: Device;
-
-  /** Optional value to display — dynamic sensor/actuator value */
-  @property({ type: String }) value: string | null = null;
+  @property({ type: Object }) device!: DeviceView;
 
   createRenderRoot() {
     return this;
   }
 
-  private getStatusClass(status: string) {
+  private getStatusClass(status: DeviceStatus['valueStatus']) {
     switch (status) {
-      case 'ok':
+      case 'normal':
         return 'bg-green-100 text-green-700';
-      case 'alarm-low':
-      case 'alarm-high':
+      case 'low-alarm':
+      case 'high-alarm':
         return 'bg-red-100 text-red-700';
-      case 'disconnected':
+      case 'sensor-fail':
         return 'bg-gray-100 text-gray-500';
       default:
         return 'bg-yellow-100 text-yellow-800';
@@ -31,36 +29,46 @@ export class DeviceCard extends LitElement {
 
   private openDetail = () => {
     const dlg = document.querySelector('device-dialog') as any;
-    if (!dlg?.open) {
-      console.error('[device-card] device-dialog not found or invalid.');
-      return;
-    }
-    dlg.open(this.device.tagNumber);
+    dlg?.open?.(this.device.tagNumber);
   };
 
   render() {
-    const { tagNumber, description, type, status = 'unknown' } = this.device;
-    const valueHtml = this.value
-      ? html`<div class="text-xl font-bold">${this.value}</div>`
-      : null;
+    const {
+      tagNumber,
+      description,
+      type,
+      unit,
+      display_precision,
+      value,
+      state,
+      status,
+    } = this.device;
+
+    const valueDisplay =
+      type === 'sensor'
+        ? value !== undefined
+          ? `${value.toFixed(display_precision)} ${unit ?? ''}`
+          : '--'
+        : state ?? '--';
+
+    const statusLabel = status.valueStatus ?? 'unknown';
+    const statusClass = this.getStatusClass(status.valueStatus);
 
     return html`
       <div
-        class="p-4 rounded-xl shadow bg-white space-y-2 cursor-pointer hover:bg-gray-50 transition"
+        class="p-4 rounded-xl shadow bg-gray-50 space-y-2 cursor-pointer hover:bg-gray-100 transition"
         @click=${this.openDetail}
       >
         <div class="text-lg font-semibold text-green-600">${tagNumber}</div>
         <div class="text-xs font-mono text-gray-800">${description}</div>
         <div class="text-sm text-gray-500 capitalize">${type}</div>
 
-        ${valueHtml}
+        <div class="text-xl font-bold">${valueDisplay}</div>
 
         <div
-          class="text-xs px-2 py-1 rounded inline-block font-medium ${this.getStatusClass(
-            status
-          )}"
+          class="text-xs px-2 py-1 rounded inline-block font-medium ${statusClass}"
         >
-          Status: ${status}
+          Status: ${statusLabel}
         </div>
       </div>
     `;

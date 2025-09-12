@@ -7,10 +7,7 @@ import mqtt from 'mqtt';
 import { mqttContext } from 'src/context/mqtt-context';
 import type { MqttContextValue } from 'src/context/mqtt-context';
 import { loadDevices, getByTag } from 'src/services/devices-config.service';
-
-import 'src/components/mode-selector';
 import 'src/components/mqtt-control-panel';
-
 import type { DeviceModel } from '@models/device.model';
 
 @customElement('dev-config-mqtt')
@@ -125,23 +122,8 @@ export class DevConfigMqtt extends LitElement {
     this.log(`⏹️ Simulation stopped`);
   }
 
-  private async handleSaveDb() {
-    this.log('💾 Request to save database received (via <mode-selector>)');
-
-    try {
-      const res = await fetch('/api/db/backup', { method: 'POST' });
-      if (!res.ok) throw new Error(await res.text());
-      alert('✅ Database berhasil disimpan/backup.');
-    } catch (err) {
-      alert('❌ Gagal menyimpan database.');
-      console.error('[dev-config-mqtt] DB backup error:', err);
-    }
-  }
-
   render() {
     return html`
-      <mode-selector @save-db=${this.handleSaveDb}></mode-selector>
-
       <div class="space-y-4">
         <div>
           <label class="text-sm font-semibold">Device Tags</label>

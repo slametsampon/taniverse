@@ -3,7 +3,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { consume } from '@lit/context';
-import { mqttContext, type MqttContextValue } from '../context/mqtt-context';
+import { mqttContext, type MqttContextValue } from 'src/context/mqtt-context';
 
 @customElement('mode-selector')
 export class ModeSelector extends LitElement {

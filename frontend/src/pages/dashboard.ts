@@ -3,9 +3,8 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import '../components/ui/ui-tabs.js';
-import '../components/dashboard-mqtt.ts';
-import '../components/mode-selector.js';
+import 'src/components/ui/ui-tabs.js';
+import 'src/components/dashboard-mqtt.ts';
 
 // Impor komponen halaman domain produksi
 import './produksi/hidroponik.ts';
@@ -83,14 +82,6 @@ export class PageDashboard extends LitElement {
   // 🔌 Konten untuk tab "Devices" (dashboard-mqtt)
   private renderMqttContent() {
     return html`
-      <div class="mb-4">
-        <label class="block mb-2 text-sm font-medium text-gray-700">
-          Konfigurasi & Mode:
-        </label>
-        <!-- mode-selector tetap di dalam tab ini -->
-        <mode-selector></mode-selector>
-      </div>
-
       <section class="space-y-6">
         <dashboard-mqtt class="block"></dashboard-mqtt>
       </section>

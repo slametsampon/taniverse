@@ -3,18 +3,16 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { fetchAllDevices } from 'src/services/device.service';
-import type { Device } from '@models/device.model';
+import type { DeviceModel, DeviceStatus } from '@models/device.model';
 import { devicesStore } from 'src/services/devices-store';
+import type { DeviceView } from 'src/models/device-view.model';
 
 import './cards/device-card';
 
-/**
- * Komponen untuk menampilkan daftar semua perangkat dengan nilai terkini.
- */
 @customElement('device-list')
 export class DeviceList extends LitElement {
   @state()
-  private devices: Device[] = [];
+  private devices: DeviceView[] = [];
 
   createRenderRoot() {
     return this;
@@ -22,34 +20,45 @@ export class DeviceList extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    fetchAllDevices().then((list: Device[]) => {
-      this.devices = list;
+
+    devicesStore.onChange(() => {
+      // Update live data saat store berubah
+      this.devices = this.devices.map((d) => this.toView(d));
       this.requestUpdate();
     });
+
+    this.loadDevices();
   }
 
-  /**
-   * Dapatkan nilai terkini berdasarkan tipe device
-   */
-  private getCurrentValue(device: Device): string | null {
-    const live = devicesStore.get(device.tagNumber);
-    if (!live) return '--';
-
-    const value =
-      device.type === 'sensor'
-        ? live.value
-        : device.type === 'actuator'
-        ? live.state
-        : null;
-
-    if (value == null) return '--';
-
-    if (typeof value === 'number') {
-      return value.toFixed(device.display_precision ?? 1);
-    }
-
-    return String(value);
+  private async loadDevices() {
+    const raw = await fetchAllDevices();
+    this.devices = raw.map((dev) => this.toView(dev));
+    this.requestUpdate();
   }
+
+  private toView(dev: DeviceModel): DeviceView {
+    const live = devicesStore.get(dev.tagNumber);
+    const status: DeviceStatus = live?.status ?? {
+      mqtt: 'disconnected',
+      valueStatus: 'sensor-fail',
+      lastSeen: undefined,
+    };
+
+    const value = live?.value ?? undefined;
+    const state = live?.state ?? undefined;
+
+    return {
+      tagNumber: dev.tagNumber,
+      description: dev.description,
+      type: dev.type,
+      unit: dev.unit,
+      display_precision: dev.display_precision ?? 1,
+      value,
+      state,
+      status,
+    };
+  }
+
   render() {
     if (this.devices.length === 0) {
       return html`<div class="text-gray-500 text-sm">
@@ -61,16 +70,9 @@ export class DeviceList extends LitElement {
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       >
-        ${this.devices.map((device) => {
-          const value = this.getCurrentValue(device);
-          return html`
-            <device-card
-              class="min-h-[100px]"
-              .device=${device}
-              .value=${value}
-            ></device-card>
-          `;
-        })}
+        ${this.devices.map(
+          (device) => html`<device-card .device=${device}></device-card>`
+        )}
       </div>
     `;
   }
