@@ -20539,7 +20539,8 @@ var AppFooter = class extends i4 {
       <footer>
         <div class="container">
           <div>
-            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse. All rights reserved.
+            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.1"}. All
+            rights reserved.
           </div>
           <div>
             <a href="https://github.com/slametsampon/taniverse" target="_blank"
