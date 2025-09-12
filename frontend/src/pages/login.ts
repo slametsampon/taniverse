@@ -1,7 +1,8 @@
+// frontend/src/pages/login.ts
+
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { AuthService } from '../services/auth-service';
-import { API_BASE } from '../config/api-base';
+import { AuthService } from 'src/services/auth-service';
 
 @customElement('page-login')
 export class PageLogin extends LitElement {
@@ -39,7 +40,7 @@ export class PageLogin extends LitElement {
     this.error = '';
     this.loading = true;
     try {
-      // ✅ AuthService.login() akan trigger 'auth:changed'
+      // ✅ AuthService.login akan trigger 'auth:changed'
       await AuthService.login(this.username.trim(), this.password);
 
       const next = sessionStorage.getItem('next_path') || '/';
@@ -79,28 +80,17 @@ export class PageLogin extends LitElement {
       return;
     }
 
-    const payload = {
-      username: this.regUsername.trim(),
-      password: this.regPwd1,
-      role: this.regRole,
-      avatarUrl: `https://i.pravatar.cc/100?u=${this.regUsername.trim()}`,
-    };
-
     try {
-      const res = await fetch(`${API_BASE}/api/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      await AuthService.register({
+        username: this.regUsername.trim(),
+        password: this.regPwd1,
+        role: this.regRole as any,
+        avatarUrl: `https://i.pravatar.cc/100?u=${this.regUsername.trim()}`,
       });
 
-      if (res.status === 201) {
-        this.showRegister = false;
-        this.username = this.regUsername;
-        this.password = this.regPwd1;
-      } else {
-        const body = await res.text();
-        throw new Error(`Registrasi gagal. Status: ${res.status}\n${body}`);
-      }
+      this.showRegister = false;
+      this.username = this.regUsername;
+      this.password = this.regPwd1;
     } catch (err: any) {
       this.regError = err.message;
     }

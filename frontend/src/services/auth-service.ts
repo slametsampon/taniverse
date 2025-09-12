@@ -1,12 +1,14 @@
-// frontend/src/components/auth-service.ts
+// frontend/src/services/auth-service.ts
+
+import { fetchUserByUsername, createUser } from 'src/services/user.service';
+import { isMockMode } from 'src/services/mode';
+import { API_BASE } from 'src/config/api-base';
 import {
   ROLE_PERMS,
-  PERMS,
   roleGte,
   type Role,
   type Perm,
-} from '../components/roles';
-import { API_BASE } from '../config/api-base';
+} from 'src/components/roles';
 
 export type AuthUser = {
   username: string;
@@ -15,47 +17,39 @@ export type AuthUser = {
   role?: Role;
 };
 
-/**
- * Set true untuk testing tanpa backend (pakai JSON statis).
- * Saat backend siap, ubah ke false agar pakai /api/auth/login.
- */
-const USER_MOCK = false;
-
 export class AuthService {
   private static KEY = 'auth_token_v1';
   private static USER = 'auth_user_v1';
 
+  /**
+   * Login user → mock mode pakai UserRepository,
+   * live mode pakai API /api/auth/login
+   */
   static async login(username: string, password: string): Promise<AuthUser> {
-    if (USER_MOCK) {
-      const list = await this._readMockUsers();
-      const found = list.find(
-        (u) =>
-          String(u.username).toLowerCase() === username.toLowerCase() &&
-          String(u.password) === String(password)
-      );
-      await new Promise((r) => setTimeout(r, 300));
-      if (!found)
-        throw new Error('Login gagal (MOCK): username/password salah.');
+    if (isMockMode()) {
+      const user = await fetchUserByUsername(username);
 
-      const token = `mock-${found.username}-${Date.now()}`;
-      const role = ((found as any).role ?? 'guest')
-        .toString()
-        .toLowerCase() as Role;
-      const user = {
-        username: found.username,
-        avatarUrl: found.avatarUrl ?? '',
+      if (!user || user.passwordHash !== password) {
+        throw new Error('Login gagal (MOCK): username/password salah.');
+      }
+
+      const token = `mock-${user.username}-${Date.now()}`;
+      const role = (user.role ?? 'guest').toLowerCase() as Role;
+
+      const authUser: AuthUser = {
+        username: user.username,
+        avatarUrl: user.avatarUrl ?? '',
         role,
+        token,
       };
 
       localStorage.setItem(this.KEY, token);
-      localStorage.setItem(this.USER, JSON.stringify(user));
-
-      const fullUser: AuthUser = { ...user, token };
-      window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
-      return fullUser;
+      localStorage.setItem(this.USER, JSON.stringify(authUser));
+      window.dispatchEvent(new Event('auth:changed'));
+      return authUser;
     }
 
-    // --- MODE LIVE: call backend endpoint ---
+    // --- LIVE mode: call backend API ---
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -75,14 +69,12 @@ export class AuthService {
       username: string;
       avatarUrl?: string;
       role?: Role;
-      createdAt?: number;
-      updatedAt?: number;
     };
 
-    const role = (data.role ?? 'guest') as Role;
     const token = `session-${data.username}-${Date.now()}`;
+    const role = (data.role ?? 'guest') as Role;
 
-    const user: AuthUser = {
+    const authUser: AuthUser = {
       username: data.username,
       avatarUrl: data.avatarUrl ?? '',
       role,
@@ -93,20 +85,37 @@ export class AuthService {
     localStorage.setItem(
       this.USER,
       JSON.stringify({
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        role: user.role,
+        username: authUser.username,
+        avatarUrl: authUser.avatarUrl,
+        role: authUser.role,
       })
     );
 
-    window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
-    return user;
+    window.dispatchEvent(new Event('auth:changed'));
+    return authUser;
+  }
+
+  /**
+   * Registrasi user baru → konsisten lewat UserService
+   */
+  static async register(user: {
+    username: string;
+    password: string;
+    role?: Role;
+    avatarUrl?: string;
+  }) {
+    await createUser({
+      username: user.username,
+      password: user.password,
+      role: user.role ?? 'guest',
+      avatarUrl: user.avatarUrl,
+    });
   }
 
   static logout() {
     localStorage.removeItem(this.KEY);
     localStorage.removeItem(this.USER);
-    window.dispatchEvent(new Event('auth:changed')); // ✅ trigger context update
+    window.dispatchEvent(new Event('auth:changed'));
   }
 
   static getToken(): string | null {
@@ -133,9 +142,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Mengembalikan user lengkap beserta token untuk context
-   */
   static getUserWithToken(): AuthUser | null {
     const user = this.getUser();
     const token = this.getToken();
@@ -164,71 +170,4 @@ export class AuthService {
     if (u.role === 'admin') return true;
     return ROLE_PERMS[u.role].includes(perm);
   }
-
-  // ===== helpers =====
-  private static async _readMockUsers(): Promise<
-    Array<{
-      username: string;
-      password: string;
-      avatarUrl?: string;
-      role?: Role;
-    }>
-  > {
-    const ENV = (process.env.NODE_ENV as string) || 'development';
-    const BASE =
-      ENV === 'pre-release' ? '/taniverse/' : ENV === 'production' ? '' : '/';
-
-    const candidates = [
-      `${BASE}assets/mock/users.json`,
-      `${BASE}src/assets/mock/users.json`,
-      `${BASE}assets/mock/user.json`,
-      `${BASE}src/assets/mock/user.json`,
-    ];
-
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url, { cache: 'no-cache' });
-        if (!res.ok) continue;
-        const data = await res.json();
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.users)
-          ? data.users
-          : [];
-        if (Array.isArray(list)) return list as any[];
-      } catch {}
-    }
-
-    console.warn(
-      '[AuthService] users.json tidak ditemukan, pakai data embedded.'
-    );
-    return [
-      {
-        username: 'admin',
-        password: 'admin123',
-        role: 'admin' as Role,
-        avatarUrl: 'https://i.pravatar.cc/100?img=1',
-      },
-      {
-        username: 'engineer',
-        password: 'engineer123',
-        role: 'engineer' as Role,
-        avatarUrl: 'https://i.pravatar.cc/100?img=3',
-      },
-      {
-        username: 'operator',
-        password: 'operator123',
-        role: 'operator' as Role,
-        avatarUrl: 'https://i.pravatar.cc/100?img=2',
-      },
-      {
-        username: 'guest',
-        password: 'guest123',
-        role: 'guest' as Role,
-        avatarUrl: 'https://i.pravatar.cc/100?img=4',
-      },
-    ];
-  }
 }
-
-export { PERMS, type Perm, type Role };

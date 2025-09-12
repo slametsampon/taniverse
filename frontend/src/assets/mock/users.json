@@ -2,25 +2,25 @@
   "users": [
     {
       "username": "admin",
-      "password": "admin123",
+      "passwordHash": "admin123",
       "role": "admin",
       "avatarUrl": "https://i.pravatar.cc/100?img=1"
     },
     {
       "username": "engineer",
-      "password": "engineer123",
+      "passwordHash": "engineer123",
       "role": "engineer",
       "avatarUrl": "https://i.pravatar.cc/100?img=3"
     },
     {
       "username": "operator",
-      "password": "operator123",
+      "passwordHash": "operator123",
       "role": "operator",
       "avatarUrl": "https://i.pravatar.cc/100?img=2"
     },
     {
       "username": "guest",
-      "password": "guest123",
+      "passwordHash": "guest123",
       "role": "guest",
       "avatarUrl": "https://i.pravatar.cc/100?img=4"
     }

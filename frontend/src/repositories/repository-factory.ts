@@ -38,6 +38,10 @@ import { HydroponicBatchRepository } from './interfaces/HydroponicBatchRepositor
 import { MockHydroponicBatchRepository } from './mock/MockHydroponicBatchRepository';
 import { ApiHydroponicBatchRepository } from './api/ApiHydroponicBatchRepository';
 
+import { ApiUserRepository } from './api/ApiUserRepository';
+import { UserRepository } from './interfaces/UserRepository';
+import { MockUserRepository } from './mock/MockUserRepository';
+
 export function getDeviceRepository(): DeviceRepository {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
 }
@@ -85,4 +89,8 @@ export function getHydroponicBatchRepository(): HydroponicBatchRepository {
   return isMockMode()
     ? new MockHydroponicBatchRepository()
     : new ApiHydroponicBatchRepository();
+}
+
+export function getUserRepository(): UserRepository {
+  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
 }
