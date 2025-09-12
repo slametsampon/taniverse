@@ -1,0 +1,67 @@
+[
+  {
+    "id": "HYDRO-01",
+    "plantId": "PC01",
+    "system": "NFT",
+    "location": "Rak-A1",
+    "startDate": "2025-08-01",
+    "expectedHarvestDate": "2025-08-26",
+    "initialCount": 30,
+    "totalPlants": 30,
+    "status": "Planted",
+    "note": "Tray penuh",
+    "description": "Pakcoy ditanam dengan sistem NFT, tray penuh saat mulai tanam."
+  },
+  {
+    "id": "HYDRO-02",
+    "plantId": "KT01",
+    "system": "DWC",
+    "location": "Rak-B2",
+    "startDate": "2025-08-05",
+    "expectedHarvestDate": "2025-08-28",
+    "initialCount": 40,
+    "totalPlants": 40,
+    "status": "Planted",
+    "note": "Perlu cek pH harian",
+    "description": "Kangkung dalam sistem DWC, perlu pengecekan pH rutin."
+  },
+  {
+    "id": "HYDRO-03",
+    "plantId": "SC01",
+    "system": "NFT",
+    "location": "Rak-C3",
+    "startDate": "2025-08-08",
+    "expectedHarvestDate": "2025-09-05",
+    "initialCount": 25,
+    "totalPlants": 25,
+    "status": "Planted",
+    "note": "Selada tumbuh lambat minggu pertama",
+    "description": "Selada Crisp di sistem NFT menunjukkan pertumbuhan lambat awal."
+  },
+  {
+    "id": "HYDRO-04",
+    "plantId": "CB01",
+    "system": "Drip",
+    "location": "Rak-D1",
+    "startDate": "2025-08-10",
+    "expectedHarvestDate": "2025-10-10",
+    "initialCount": 20,
+    "totalPlants": 20,
+    "status": "Planted",
+    "note": "Pemangkasan daun dilakukan rutin",
+    "description": "Cabai merah ditanam di sistem Drip, dengan pemangkasan rutin."
+  },
+  {
+    "id": "HYDRO-05",
+    "plantId": "TR01",
+    "system": "DWC",
+    "location": "Rak-E2",
+    "startDate": "2025-08-12",
+    "expectedHarvestDate": "2025-10-20",
+    "initialCount": 15,
+    "totalPlants": 15,
+    "status": "Planted",
+    "note": "Pertumbuhan baik, daun lebat",
+    "description": "Terong ungu tumbuh baik dalam sistem DWC, daun lebat dan sehat."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "KANDANG-001",
+    "livestockId": "AYAMBRO001",
+    "location": "Kandang-A1",
+    "startDate": "2025-08-01",
+    "expectedHarvestDate": "2025-09-10",
+    "initialPopulation": 500,
+    "currentPopulation": 495,
+    "status": "Growing",
+    "note": "5 mati saat transport, sisanya sehat",
+    "description": "Batch broiler ayam 01 di Kandang-A1, 5 mati saat transportasi."
+  },
+  {
+    "id": "KANDANG-002",
+    "livestockId": "AYAMLAY001",
+    "location": "Kandang-B2",
+    "startDate": "2025-07-15",
+    "expectedHarvestDate": "2025-08-25",
+    "initialPopulation": 300,
+    "currentPopulation": 297,
+    "status": "Harvested",
+    "note": "Panen sukses, 3 ayam afkir",
+    "description": "Layer ayam 02 berhasil dipanen dengan 3 ayam afkir."
+  },
+  {
+    "id": "KANDANG-003",
+    "livestockId": "AYAMBRO001",
+    "location": "Kandang-C1",
+    "startDate": "2025-08-10",
+    "expectedHarvestDate": "2025-09-18",
+    "initialPopulation": 450,
+    "currentPopulation": 420,
+    "status": "Growing",
+    "note": "30 ayam menunjukkan gejala sakit",
+    "description": "Broiler ayam 03, 30 ayam menunjukkan gejala sakit pada minggu ke-2."
+  },
+  {
+    "id": "KANDANG-004",
+    "livestockId": "AYAMLAY001",
+    "location": "Kandang-D4",
+    "startDate": "2025-06-20",
+    "expectedHarvestDate": "2025-08-01",
+    "initialPopulation": 200,
+    "currentPopulation": 0,
+    "status": "Failed",
+    "note": "Kematian massal akibat gangguan ventilasi",
+    "description": "Layer ayam 04 gagal total akibat masalah ventilasi kandang."
+  }
+]

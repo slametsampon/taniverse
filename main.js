@@ -1688,6 +1688,763 @@ ${body}`);
   }
 });
 
+// src/components/ui/ui-tabs.ts
+var UiTabs;
+var init_ui_tabs = __esm({
+  "src/components/ui/ui-tabs.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    UiTabs = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.tabs = [];
+        this.active = "";
+        this.badges = {};
+      }
+      createRenderRoot() {
+        return this;
+      }
+      onClick(id) {
+        this.dispatchEvent(
+          new CustomEvent("dev-tab-change", {
+            detail: { id },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        return x`
+      <nav class="border-b border-slate-200 bg-white rounded-t-md">
+        <ul class="flex flex-row items-center gap-2 -mb-px px-2 list-none">
+          ${this.tabs.map((t5) => {
+          const isActive = t5.id === this.active;
+          const badge = this.badges[t5.id] ?? 0;
+          return x`
+              <li>
+                <button
+                  class="${[
+            "px-4 py-2 text-sm rounded-t-md border transition",
+            "inline-flex items-center gap-2",
+            isActive ? "bg-slate-100 text-slate-900 border-slate-300 border-b-white" : "border-transparent text-slate-500 hover:bg-slate-50"
+          ].join(" ")}"
+                  @click=${() => this.onClick(t5.id)}
+                >
+                  ${t5.icon ? x`<span>${t5.icon}</span>` : null}
+                  <span>${t5.label}</span>
+                  ${badge > 0 ? x`
+                        <span
+                          class="ml-1 grid place-items-center w-5 h-5 rounded-full bg-red-500 text-white text-xs"
+                          >${badge}</span
+                        >
+                      ` : null}
+                </button>
+              </li>
+            `;
+        })}
+        </ul>
+      </nav>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], UiTabs.prototype, "tabs", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "active", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "badges", 2);
+    UiTabs = __decorateClass([
+      t3("ui-tabs")
+    ], UiTabs);
+  }
+});
+
+// src/services/mode.ts
+function getMode() {
+  const raw = localStorage.getItem(KEY);
+  return VALID_MODES.includes(raw) ? raw : "mock";
+}
+function setMode(mode) {
+  if (VALID_MODES.includes(mode)) {
+    localStorage.setItem(KEY, mode);
+  } else {
+    console.warn(`[mode] Invalid mode "${mode}", ignoring`);
+  }
+}
+function isMockMode() {
+  return getMode() === "mock";
+}
+var KEY, VALID_MODES;
+var init_mode = __esm({
+  "src/services/mode.ts"() {
+    "use strict";
+    KEY = "device.mode";
+    VALID_MODES = ["mock", "mqtt", "sim"];
+  }
+});
+
+// src/services/mock-data.service.ts
+async function fetchMockData(filename) {
+  const path = `/assets/mock/${filename}`;
+  console.log(`\u{1F4E5} [fetchMockData] Fetching mock data: ${path}`);
+  try {
+    const res = await fetch(path);
+    console.log(`[fetchMockData] Response status: ${res.status}`);
+    if (!res.ok) {
+      throw new Error(
+        `\u274C Gagal fetch mock data: ${path} \u2192 ${res.status} ${res.statusText}`
+      );
+    }
+    const contentType = res.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      const text = await res.text();
+      console.warn(`\u26A0\uFE0F Bukan response JSON:
+${text.substring(0, 100)}...`);
+      throw new Error(`Respon bukan JSON: ${path}`);
+    }
+    const data = await res.json();
+    console.log(`\u2705 [fetchMockData] Sukses load ${filename}:`, data);
+    return data;
+  } catch (err) {
+    console.error(`\u274C [fetchMockData] Gagal memuat file ${filename}:`, err);
+    throw err;
+  }
+}
+var init_mock_data_service = __esm({
+  "src/services/mock-data.service.ts"() {
+    "use strict";
+  }
+});
+
+// src/repositories/mock/MockDeviceRepository.ts
+var MockDeviceRepository;
+var init_MockDeviceRepository = __esm({
+  "src/repositories/mock/MockDeviceRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockDeviceRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("devices.json");
+        }
+        return this.cache;
+      }
+      async getByTag(tag) {
+        const all = await this.getAll();
+        return all.find((device) => device.tagNumber === tag) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiDeviceRepository.ts
+var ApiDeviceRepository;
+var init_ApiDeviceRepository = __esm({
+  "src/repositories/api/ApiDeviceRepository.ts"() {
+    "use strict";
+    ApiDeviceRepository = class {
+      constructor() {
+        this.baseUrl = "/api/devices";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) {
+          throw new Error(
+            `[ApiDeviceRepository] Failed to fetch devices: ${res.status}`
+          );
+        }
+        return await res.json();
+      }
+      async getByTag(tag) {
+        const res = await fetch(`${this.baseUrl}/${encodeURIComponent(tag)}`);
+        if (!res.ok) {
+          if (res.status === 404) return null;
+          throw new Error(
+            `[ApiDeviceRepository] Failed to fetch device: ${res.status}`
+          );
+        }
+        return await res.json();
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockPlantRepository.ts
+var MockPlantRepository;
+var init_MockPlantRepository = __esm({
+  "src/repositories/mock/MockPlantRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockPlantRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("plants.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((p3) => p3.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiPlantRepository.ts
+var ApiPlantRepository;
+var init_ApiPlantRepository = __esm({
+  "src/repositories/api/ApiPlantRepository.ts"() {
+    "use strict";
+    ApiPlantRepository = class {
+      constructor() {
+        this.baseUrl = "/api/plants";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error(`[ApiPlantRepository] Failed to fetch list`);
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${encodeURIComponent(id)}`);
+        if (!res.ok) return null;
+        return await res.json();
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockEventRepository.ts
+var MockEventRepository;
+var init_MockEventRepository = __esm({
+  "src/repositories/mock/MockEventRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockEventRepository = class {
+      async getAll() {
+        return await fetchMockData("event.json");
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((e8) => e8.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiEventRepository.ts
+var ApiEventRepository;
+var init_ApiEventRepository = __esm({
+  "src/repositories/api/ApiEventRepository.ts"() {
+    "use strict";
+    ApiEventRepository = class {
+      async getAll() {
+        const res = await fetch("/api/events");
+        if (!res.ok) throw new Error("API fetch failed");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`/api/events/${id}`);
+        if (!res.ok) throw new Error("Event not found");
+        return await res.json();
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockAquaticSpeciesRepository.ts
+var MockAquaticSpeciesRepository;
+var init_MockAquaticSpeciesRepository = __esm({
+  "src/repositories/mock/MockAquaticSpeciesRepository.ts"() {
+    "use strict";
+    MockAquaticSpeciesRepository = class {
+      async getAll() {
+        const res = await fetch("/assets/mock/species.json");
+        if (!res.ok) throw new Error("Gagal load species mock");
+        return await res.json();
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((s7) => s7.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiAquaticSpeciesRepository.ts
+var ApiAquaticSpeciesRepository;
+var init_ApiAquaticSpeciesRepository = __esm({
+  "src/repositories/api/ApiAquaticSpeciesRepository.ts"() {
+    "use strict";
+    ApiAquaticSpeciesRepository = class {
+      async getAll() {
+        const res = await fetch("/api/aquatic-species");
+        if (!res.ok) throw new Error("Failed to fetch aquatic species");
+        return await res.json();
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((s7) => s7.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockLivestockRepository.ts
+var MockLivestockRepository;
+var init_MockLivestockRepository = __esm({
+  "src/repositories/mock/MockLivestockRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockLivestockRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("livestock.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((s7) => s7.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiLivestockRepository.ts
+var ApiLivestockRepository;
+var init_ApiLivestockRepository = __esm({
+  "src/repositories/api/ApiLivestockRepository.ts"() {
+    "use strict";
+    ApiLivestockRepository = class {
+      async getAll() {
+        const res = await fetch("/api/livestock");
+        if (!res.ok) throw new Error("Failed to fetch livestock data");
+        return await res.json();
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((s7) => s7.id === id) ?? null;
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockAquaticBatchRepository.ts
+var MockAquaticBatchRepository;
+var init_MockAquaticBatchRepository = __esm({
+  "src/repositories/mock/MockAquaticBatchRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockAquaticBatchRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("aquatic-batches.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((batch) => batch.id === id);
+      }
+      async create(batch) {
+        const all = await this.getAll();
+        all.push(batch);
+      }
+      async update(id, batch) {
+        const all = await this.getAll();
+        const index = all.findIndex((b3) => b3.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...batch };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((b3) => b3.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiAquaticBatchRepository.ts
+var ApiAquaticBatchRepository;
+var init_ApiAquaticBatchRepository = __esm({
+  "src/repositories/api/ApiAquaticBatchRepository.ts"() {
+    "use strict";
+    ApiAquaticBatchRepository = class {
+      constructor() {
+        this.baseUrl = "/api/aquatic-batches";
+      }
+      // sesuaikan endpoint API kamu
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch aquatic batches");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(batch) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to create batch");
+      }
+      async update(id, batch) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to update batch");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete batch");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockLivestockBatchRepository.ts
+var MockLivestockBatchRepository;
+var init_MockLivestockBatchRepository = __esm({
+  "src/repositories/mock/MockLivestockBatchRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockLivestockBatchRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData(
+            "livestock-batches.json"
+          );
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((b3) => b3.id === id);
+      }
+      async create(batch) {
+        const all = await this.getAll();
+        all.push(batch);
+      }
+      async update(id, batch) {
+        const all = await this.getAll();
+        const index = all.findIndex((b3) => b3.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...batch };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((b3) => b3.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiLivestockBatchRepository.ts
+var ApiLivestockBatchRepository;
+var init_ApiLivestockBatchRepository = __esm({
+  "src/repositories/api/ApiLivestockBatchRepository.ts"() {
+    "use strict";
+    ApiLivestockBatchRepository = class {
+      constructor() {
+        this.baseUrl = "/api/livestock-batches";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch livestock batches");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(batch) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to create batch");
+      }
+      async update(id, batch) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to update batch");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete batch");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockHortiBatchRepository.ts
+var MockHortiBatchRepository;
+var init_MockHortiBatchRepository = __esm({
+  "src/repositories/mock/MockHortiBatchRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockHortiBatchRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("horti-batches.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((b3) => b3.id === id);
+      }
+      async create(batch) {
+        const all = await this.getAll();
+        all.push(batch);
+      }
+      async update(id, batch) {
+        const all = await this.getAll();
+        const index = all.findIndex((b3) => b3.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...batch };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((b3) => b3.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiHortiBatchRepository.ts
+var ApiHortiBatchRepository;
+var init_ApiHortiBatchRepository = __esm({
+  "src/repositories/api/ApiHortiBatchRepository.ts"() {
+    "use strict";
+    ApiHortiBatchRepository = class {
+      constructor() {
+        this.baseUrl = "/api/planting-batches";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch planting batches");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(batch) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to create planting batch");
+      }
+      async update(id, batch) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to update planting batch");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete planting batch");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockHydroponicBatchRepository.ts
+var MockHydroponicBatchRepository;
+var init_MockHydroponicBatchRepository = __esm({
+  "src/repositories/mock/MockHydroponicBatchRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockHydroponicBatchRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("hydro-batches.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((b3) => b3.id === id);
+      }
+      async create(batch) {
+        const all = await this.getAll();
+        all.push(batch);
+      }
+      async update(id, batch) {
+        const all = await this.getAll();
+        const index = all.findIndex((b3) => b3.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...batch };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((b3) => b3.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiHydroponicBatchRepository.ts
+var ApiHydroponicBatchRepository;
+var init_ApiHydroponicBatchRepository = __esm({
+  "src/repositories/api/ApiHydroponicBatchRepository.ts"() {
+    "use strict";
+    ApiHydroponicBatchRepository = class {
+      constructor() {
+        this.baseUrl = "/api/hydroponic-batches";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch hydroponic batches");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(batch) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to create batch");
+      }
+      async update(id, batch) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batch)
+        });
+        if (!res.ok) throw new Error("Failed to update batch");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete batch");
+      }
+    };
+  }
+});
+
+// src/repositories/repository-factory.ts
+function getDeviceRepository() {
+  return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
+}
+function getPlantRepository() {
+  return isMockMode() ? new MockPlantRepository() : new ApiPlantRepository();
+}
+function getEventRepository() {
+  return isMockMode() ? new MockEventRepository() : new ApiEventRepository();
+}
+function getAquaticSpeciesRepository() {
+  return isMockMode() ? new MockAquaticSpeciesRepository() : new ApiAquaticSpeciesRepository();
+}
+function getLivestockRepository() {
+  return isMockMode() ? new MockLivestockRepository() : new ApiLivestockRepository();
+}
+function getAquaticBatchRepository() {
+  return isMockMode() ? new MockAquaticBatchRepository() : new ApiAquaticBatchRepository();
+}
+function getLivestockBatchRepository() {
+  return isMockMode() ? new MockLivestockBatchRepository() : new ApiLivestockBatchRepository();
+}
+function getHortiBatchRepository() {
+  return isMockMode() ? new MockHortiBatchRepository() : new ApiHortiBatchRepository();
+}
+function getHydroponicBatchRepository() {
+  return isMockMode() ? new MockHydroponicBatchRepository() : new ApiHydroponicBatchRepository();
+}
+var init_repository_factory = __esm({
+  "src/repositories/repository-factory.ts"() {
+    "use strict";
+    init_mode();
+    init_MockDeviceRepository();
+    init_ApiDeviceRepository();
+    init_MockPlantRepository();
+    init_ApiPlantRepository();
+    init_MockEventRepository();
+    init_ApiEventRepository();
+    init_MockAquaticSpeciesRepository();
+    init_ApiAquaticSpeciesRepository();
+    init_MockLivestockRepository();
+    init_ApiLivestockRepository();
+    init_MockAquaticBatchRepository();
+    init_ApiAquaticBatchRepository();
+    init_MockLivestockBatchRepository();
+    init_ApiLivestockBatchRepository();
+    init_MockHortiBatchRepository();
+    init_ApiHortiBatchRepository();
+    init_MockHydroponicBatchRepository();
+    init_ApiHydroponicBatchRepository();
+  }
+});
+
+// src/services/device.service.ts
+var repo, fetchAllDevices;
+var init_device_service = __esm({
+  "src/services/device.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo = getDeviceRepository();
+    fetchAllDevices = () => repo.getAll();
+  }
+});
+
 // ../node_modules/mqtt/dist/mqtt.esm.js
 function cs(t5) {
   throw new Error("Node.js process " + t5 + " is not supported by JSPM core outside of Node.js");
@@ -13112,76 +13869,7 @@ var init_mqtt_service = __esm({
   }
 });
 
-// src/services/mode.ts
-function getMode() {
-  const raw = localStorage.getItem(KEY);
-  return VALID_MODES.includes(raw) ? raw : "mock";
-}
-function setMode(mode) {
-  if (VALID_MODES.includes(mode)) {
-    localStorage.setItem(KEY, mode);
-  } else {
-    console.warn(`[mode] Invalid mode "${mode}", ignoring`);
-  }
-}
-function isMockMode() {
-  return getMode() === "mock";
-}
-var KEY, VALID_MODES;
-var init_mode = __esm({
-  "src/services/mode.ts"() {
-    "use strict";
-    KEY = "device.mode";
-    VALID_MODES = ["mock", "mqtt", "sim"];
-  }
-});
-
-// src/services/devices-service.ts
-function detectBasePath() {
-  const ENV = typeof process !== "undefined" && "pre-release" || "development";
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  const m2 = path.match(/^\/([^/]+)\//);
-  const sub = m2 ? `/${m2[1]}/` : "/";
-  if (ENV === "pre-release") return sub;
-  if (ENV === "production") return "";
-  return "/";
-}
-async function readMockDevices() {
-  const BASE = detectBasePath();
-  const candidates = [
-    `${BASE}assets/mock/devices.json`,
-    // hasil build (vite/esbuild)
-    `${BASE}src/assets/mock/devices.json`,
-    // serve source (live-server)
-    `${BASE}mock/devices.json`,
-    // folder publik
-    `${BASE}devices.json`
-    // root fallback
-  ];
-  for (const url of candidates) {
-    try {
-      const res = await fetch(url, { cache: "no-cache" });
-      if (!res.ok) {
-        console.warn(
-          `[devicesStore] \u26A0\uFE0F Tidak bisa fetch dari ${url} (status: ${res.status})`
-        );
-        continue;
-      }
-      const data = await res.json();
-      const list = Array.isArray(data) ? data : Array.isArray(data?.devices) ? data.devices : null;
-      if (Array.isArray(list)) {
-        return list;
-      } else {
-        console.warn(`[devicesStore] \u274C Format tidak dikenali di: ${url}`);
-      }
-    } catch (err) {
-      console.error(`[devicesStore] \u274C Gagal load dari ${url}:`, err);
-    }
-  }
-  throw new Error(
-    "\u274C Tidak menemukan mock devices.json di lokasi kandidat mana pun."
-  );
-}
+// src/services/devices-store.ts
 function parseValue(s7) {
   if (/^-?\d+(\.\d+)?$/.test(s7)) return Number(s7);
   try {
@@ -13195,19 +13883,72 @@ function parseState(s7) {
   return s7.toUpperCase() === "ON" ? "ON" : "OFF";
 }
 var DevicesStore, devicesStore;
-var init_devices_service = __esm({
-  "src/services/devices-service.ts"() {
+var init_devices_store = __esm({
+  "src/services/devices-store.ts"() {
     "use strict";
     init_mqtt_service();
     init_mode();
+    init_repository_factory();
     DevicesStore = class {
       constructor() {
         this.devices = /* @__PURE__ */ new Map();
         this.listeners = /* @__PURE__ */ new Set();
         this.ready = false;
-        // MQTT (opsional)
         this.mqttClient = null;
+        this.repo = getDeviceRepository();
       }
+      // ===== INIT =====
+      async init(force = false) {
+        if (this.ready && !force) return;
+        this.devices.clear();
+        this.stopSimulation();
+        const mode = getMode();
+        await this.loadFromRepository();
+        if (mode === "mqtt") {
+          await this.connectMqtt();
+        } else if (mode === "sim") {
+          this.startSimulation();
+        }
+        this.ready = true;
+        this.emit();
+      }
+      // ===== Load Data dari Repository (Mock/API/MQTT) =====
+      async loadFromRepository() {
+        try {
+          const list = await this.repo.getAll();
+          list.forEach((d3) => {
+            this.updateStatus(d3);
+            this.devices.set(d3.tagNumber, d3);
+          });
+        } catch (err) {
+          console.error("[devicesStore] \u274C Gagal load data:", err);
+        }
+      }
+      // ===== MQTT =====
+      async connectMqtt() {
+        if (isMockMode()) return;
+        await mqttService.connect();
+        mqttService.onMessage((topic, rawPayload) => {
+          try {
+            const msg = rawPayload.trim();
+            const parts = topic.split("/");
+            const tag = parts[2];
+            const leaf = parts[3];
+            const dev = this.devices.get(tag);
+            if (!dev) return;
+            if (dev.type === "sensor" && leaf === "value") {
+              dev.value = parseValue(msg);
+            } else if (dev.type === "actuator" && leaf === "state") {
+              dev.state = parseState(msg);
+            }
+            this.updateStatus(dev);
+            this.emit();
+          } catch (err) {
+            console.error("[devicesStore] \u274C Error parsing MQTT message:", err);
+          }
+        });
+      }
+      // ===== Simulasi (Sensor Random Value) =====
       startSimulation() {
         this.simulationInterval && clearInterval(this.simulationInterval);
         this.simulationInterval = window.setInterval(() => {
@@ -13226,85 +13967,40 @@ var init_devices_service = __esm({
           this.emit();
         }, 2e3);
       }
-      updateStatus(dev) {
-        if (dev.type === "sensor") {
-          if (dev.value === null || dev.value === void 0) {
-            dev.status = "disconnected";
-            return;
-          }
-          const val = dev.value;
-          const lo = dev.alarms?.low ?? null;
-          const hi = dev.alarms?.high ?? null;
-          if (lo !== null && val < lo) {
-            dev.status = "alarm-low";
-          } else if (hi !== null && val > hi) {
-            dev.status = "alarm-high";
-          } else {
-            dev.status = "ok";
-          }
-        } else if (dev.type === "actuator") {
-          dev.status = dev.state ? "ok" : "disconnected";
-        } else {
-          dev.status = "unknown";
-        }
-      }
       stopSimulation() {
         if (this.simulationInterval) {
           clearInterval(this.simulationInterval);
           this.simulationInterval = void 0;
         }
       }
-      /** Inisialisasi: selalu muat katalog dari mock, lalu opsional sambung MQTT */
-      async init(force = false) {
-        if (this.ready && !force) return;
-        this.devices.clear();
-        this.stopSimulation();
-        const mode = getMode();
-        await this.loadMock();
-        if (mode === "mqtt") {
-          await this.connectMqtt();
-        } else if (mode === "sim") {
-          this.startSimulation();
+      // ===== Status Logic =====
+      updateStatus(dev) {
+        const now = (/* @__PURE__ */ new Date()).toISOString();
+        if (dev.type === "sensor") {
+          const val = dev.value;
+          const lo = dev.alarms?.low ?? null;
+          const hi = dev.alarms?.high ?? null;
+          const valueStatus = val === null || val === void 0 ? "sensor-fail" : lo !== null && val < lo ? "low-alarm" : hi !== null && val > hi ? "high-alarm" : "normal";
+          dev.status = {
+            mqtt: this.mqttClient ? "connected" : "disconnected",
+            valueStatus,
+            lastSeen: now
+          };
+        } else if (dev.type === "actuator") {
+          dev.status = {
+            mqtt: this.mqttClient ? "connected" : "disconnected",
+            valueStatus: dev.state ? "normal" : "sensor-fail",
+            lastSeen: now
+          };
+        } else {
+          dev.status = {
+            mqtt: "disconnected",
+            valueStatus: "sensor-fail",
+            lastSeen: now
+          };
         }
-        this.ready = true;
-        this.emit();
       }
-      async loadMock() {
-        try {
-          const list = await readMockDevices();
-          list.forEach((d3) => {
-            this.updateStatus(d3);
-            this.devices.set(d3.tagNumber, d3);
-          });
-        } catch (err) {
-          console.error("[devices] loadMock gagal:", err);
-        }
-      }
-      async connectMqtt() {
-        if (isMockMode()) return;
-        await mqttService.connect();
-        mqttService.onMessage((topic, rawPayload) => {
-          try {
-            const msg = rawPayload.trim();
-            const parts = topic.split("/");
-            const tag = parts[2];
-            const leaf = parts[3];
-            const dev = this.devices.get(tag);
-            if (!dev) return;
-            if (dev.type === "sensor" && leaf === "value") {
-              dev.value = parseValue(msg);
-              this.updateStatus(dev);
-            } else if (dev.type === "actuator" && leaf === "state") {
-              dev.state = parseState(msg);
-              this.updateStatus(dev);
-            }
-            this.emit();
-          } catch (err) {
-            console.error("[devicesStore] \u274C Error parsing MQTT message:", err);
-          }
-        });
-      }
-      // ===== API untuk UI =====
+      // ===== Public API =====
       onChange(cb2) {
         this.listeners.add(cb2);
         return () => this.listeners.delete(cb2);
@@ -13332,417 +14028,181 @@ var init_devices_service = __esm({
         const d3 = this.devices.get(tag);
         if (d3 && d3.type === "sensor") {
           d3.value = value;
+          this.updateStatus(d3);
           this.emit();
         }
       }
+      getStatus(tag) {
+        return this.devices.get(tag)?.status ?? {
+          mqtt: "disconnected",
+          valueStatus: "sensor-fail",
+          lastSeen: void 0
+        };
+      }
       getMode() {
         return isMockMode() ? "mock" : "mqtt";
+      }
+      getSensorValue(tag) {
+        const dev = this.devices.get(tag);
+        return dev?.type === "sensor" ? dev.value ?? null : null;
+      }
+      getActuatorState(tag) {
+        const dev = this.devices.get(tag);
+        return dev?.type === "actuator" && (dev.state === "ON" || dev.state === "OFF") ? dev.state : "OFF";
       }
     };
     devicesStore = new DevicesStore();
   }
 });
 
-// src/services/device-helper.ts
-var DeviceHelper;
-var init_device_helper = __esm({
-  "src/services/device-helper.ts"() {
+// src/components/cards/device-card.ts
+var DeviceCard;
+var init_device_card = __esm({
+  "src/components/cards/device-card.ts"() {
     "use strict";
-    init_devices_service();
-    DeviceHelper = class {
-      static getSensorValue(id) {
-        const dev = devicesStore.get(id);
-        return dev?.type === "sensor" ? dev.value ?? null : null;
+    init_lit();
+    init_decorators();
+    DeviceCard = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.openDetail = () => {
+          const dlg = document.querySelector("device-dialog");
+          dlg?.open?.(this.device.tagNumber);
+        };
       }
-      static getActuatorState(id) {
-        const dev = devicesStore.get(id);
-        return dev?.type === "actuator" && (dev.state === "ON" || dev.state === "OFF") ? dev.state : "OFF";
+      createRenderRoot() {
+        return this;
       }
-      static getDeviceStatus(tag) {
-        const dev = devicesStore.get(tag);
-        return dev?.status ?? "unknown";
-      }
-      static getStatusClass(status) {
+      getStatusClass(status) {
         switch (status) {
-          case "ok":
-            return "text-green-700";
-          case "alarm-low":
-          case "alarm-high":
-            return "text-red-700";
-          case "disconnected":
-            return "text-gray-500 italic";
+          case "normal":
+            return "bg-green-100 text-green-700";
+          case "low-alarm":
+          case "high-alarm":
+            return "bg-red-100 text-red-700";
+          case "sensor-fail":
+            return "bg-gray-100 text-gray-500";
           default:
-            return "text-yellow-700";
+            return "bg-yellow-100 text-yellow-800";
         }
       }
-    };
-  }
-});
-
-// src/views/domains/dashboard-hidoponik.ts
-var DashboardHidroponik;
-var init_dashboard_hidoponik = __esm({
-  "src/views/domains/dashboard-hidoponik.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_devices_service();
-    init_device_helper();
-    DashboardHidroponik = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.suhuAir = null;
-        this.levelAir = null;
-        this.phAir = null;
-        this.konsentrasiNutrisi = null;
-        this.pompaState = "OFF";
-        this.statusMap = {};
-        this.openDetail = (tag) => {
-          const dlg = document.querySelector("device-dialog");
-          if (!dlg || typeof dlg.open !== "function") {
-            console.error("[dashboard] device-dialog not found or invalid.");
-            return;
-          }
-          const dev = devicesStore.get(tag);
-          if (!dev) {
-            console.warn(`[dashboard] Device ${tag} not found`);
-          }
-          dlg.open(tag);
-        };
-        this.togglePompa = () => {
-          const next = this.pompaState === "ON" ? "OFF" : "ON";
-          devicesStore.setActuatorState("P-001", next);
-        };
-      }
-      createRenderRoot() {
-        return this;
-      }
-      async connectedCallback() {
-        super.connectedCallback();
-        await devicesStore.init();
-        this.pull();
-        this.off = devicesStore.onChange(() => {
-          this.pull();
-        });
-      }
-      pull() {
-        const ids = ["TI-001", "LI-004", "AI-005", "AI-006", "P-001"];
-        const statusMap = {};
-        ids.forEach((tag) => {
-          statusMap[tag] = DeviceHelper.getDeviceStatus(tag);
-        });
-        this.statusMap = statusMap;
-        this.suhuAir = DeviceHelper.getSensorValue("TI-001");
-        this.levelAir = DeviceHelper.getSensorValue("LI-004");
-        this.phAir = DeviceHelper.getSensorValue("AI-005");
-        this.konsentrasiNutrisi = DeviceHelper.getSensorValue("AI-006");
-        this.pompaState = DeviceHelper.getActuatorState("P-001");
-      }
-      disconnectedCallback() {
-        this.off?.();
-        super.disconnectedCallback();
-      }
       render() {
-        const status = this.statusMap;
-        const aktif = this.pompaState === "ON";
-        const warna = aktif ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-        const suhuTxt = this.suhuAir == null ? "--" : `${this.suhuAir.toFixed(1)} \xB0C`;
-        const levelTxt = this.levelAir == null ? "--" : `${this.levelAir.toFixed(1)} %`;
-        const phTxt = this.phAir == null ? "--" : `${this.phAir.toFixed(1)} pH`;
-        const konsentrasiTxt = this.konsentrasiNutrisi == null ? "--" : `${this.konsentrasiNutrisi.toFixed(0)} ppm`;
-        const card = (label, value, status2, click) => {
-          const kelas = DeviceHelper.getStatusClass(status2);
-          return x`
-        <div
-          class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
-          role="button"
-          tabindex="0"
-          @click=${click}
-          @keydown=${(e8) => (e8.key === "Enter" || e8.key === " ") && click()}
-        >
-          <div class="text-sm text-gray-500">${label}</div>
-          <div class="text-lg font-bold ${kelas}">${value}</div>
-        </div>
-      `;
-        };
+        const {
+          tagNumber,
+          description,
+          type,
+          unit,
+          display_precision,
+          value,
+          state,
+          status
+        } = this.device;
+        const valueDisplay = type === "sensor" ? value !== void 0 ? `${value.toFixed(display_precision)} ${unit ?? ""}` : "--" : state ?? "--";
+        const statusLabel = status.valueStatus ?? "unknown";
+        const statusClass = this.getStatusClass(status.valueStatus);
         return x`
-      <section class="bg-white rounded shadow p-4">
-        <div class="flex justify-between items-center mb-4">
-          <h2
-            class="text-xl font-semibold text-green-800 flex items-center gap-2"
-          >
-            🌱 Hidroponik
-          </h2>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          ${card(
-          "\u{1F4A7} Suhu Air",
-          suhuTxt,
-          status["TI-001"],
-          () => this.openDetail("TI-001")
-        )}
-          ${card(
-          "\u{1F30A} Ketinggian Air",
-          levelTxt,
-          status["LI-004"],
-          () => this.openDetail("LI-004")
-        )}
-          ${card(
-          "\u{1F9EA} Nutrisi",
-          konsentrasiTxt,
-          status["AI-006"],
-          () => this.openDetail("AI-006")
-        )}
-          ${card(
-          "\u{1F33F} pH Air",
-          phTxt,
-          status["AI-005"],
-          () => this.openDetail("AI-005")
-        )}
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="text-sm font-medium">Pompa Nutrisi (P-001):</div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm px-2 py-1 rounded ${warna}">
-              ${aktif ? "Aktif" : "Mati"}
-            </span>
-            <button
-              class="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-              @click=${this.togglePompa}
-            >
-              ${aktif ? "Matikan" : "Nyalakan"}
-            </button>
-          </div>
-        </div>
-      </section>
-    `;
-      }
-    };
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "suhuAir", 2);
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "levelAir", 2);
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "phAir", 2);
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "konsentrasiNutrisi", 2);
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "pompaState", 2);
-    __decorateClass([
-      r5()
-    ], DashboardHidroponik.prototype, "statusMap", 2);
-    DashboardHidroponik = __decorateClass([
-      t3("dashboard-hidroponik")
-    ], DashboardHidroponik);
-  }
-});
-
-// src/views/domains/dashboard-aquakultur.ts
-var DashboardAquakultur;
-var init_dashboard_aquakultur = __esm({
-  "src/views/domains/dashboard-aquakultur.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_devices_service();
-    init_device_helper();
-    DashboardAquakultur = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.suhuAir = null;
-        this.phAir = null;
-        this.oksigen = null;
-        this.aeratorState = "OFF";
-        this.statusMap = {};
-      }
-      createRenderRoot() {
-        return this;
-      }
-      async connectedCallback() {
-        super.connectedCallback();
-        await devicesStore.init(true);
-        this.pull();
-        this.off = devicesStore.onChange(() => {
-          this.pull();
-        });
-      }
-      disconnectedCallback() {
-        this.off?.();
-        super.disconnectedCallback();
-      }
-      pull() {
-        const ids = ["TI-101", "AI-105", "AI-106", "P-101"];
-        const statusMap = {};
-        ids.forEach((tag) => {
-          statusMap[tag] = DeviceHelper.getDeviceStatus(tag);
-        });
-        this.statusMap = statusMap;
-        this.suhuAir = DeviceHelper.getSensorValue("TI-101");
-        this.phAir = DeviceHelper.getSensorValue("AI-105");
-        this.oksigen = DeviceHelper.getSensorValue("AI-106");
-        this.aeratorState = DeviceHelper.getActuatorState("P-001");
-      }
-      openDetail(tag) {
-        const dlg = document.querySelector("device-dialog");
-        if (!dlg || typeof dlg.open !== "function") return;
-        dlg.open(tag);
-      }
-      toggleAerator() {
-        const next = this.aeratorState === "ON" ? "OFF" : "ON";
-        devicesStore.setActuatorState("P-101", next);
-      }
-      render() {
-        const status = this.statusMap;
-        const aktif = this.aeratorState === "ON";
-        const warna = aktif ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-        const suhuTxt = this.suhuAir == null ? "--" : `${this.suhuAir.toFixed(1)} \xB0C`;
-        const phTxt = this.phAir == null ? "--" : `${this.phAir.toFixed(1)} pH`;
-        const oksigenTxt = this.oksigen == null ? "--" : `${this.oksigen.toFixed(1)} mg/L`;
-        const card = (label, value, status2, click) => {
-          const kelas = DeviceHelper.getStatusClass(status2);
-          return x`
-        <div
-          class="p-3 border rounded bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
-          role="button"
-          tabindex="0"
-          @click=${click}
-          @keydown=${(e8) => (e8.key === "Enter" || e8.key === " ") && click()}
-        >
-          <div class="text-sm text-gray-500">${label}</div>
-          <div class="text-lg font-bold ${kelas}">${value}</div>
-        </div>
-      `;
-        };
-        return x`
-      <section class="bg-white rounded shadow p-4">
-        <div class="flex justify-between items-center mb-4">
-          <h2
-            class="text-xl font-semibold text-blue-800 flex items-center gap-2"
-          >
-            🐟 Akuakultur
-          </h2>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 mb-4">
-          ${card(
-          "\u{1F4A7} Suhu Air",
-          suhuTxt,
-          status["TI-101"],
-          () => this.openDetail("TI-101")
-        )}
-          ${card(
-          "\u{1F33F} pH Air",
-          phTxt,
-          status["AI-105"],
-          () => this.openDetail("AI-105")
-        )}
-          ${card(
-          "\u{1F9EA} Oksigen Terlarut",
-          oksigenTxt,
-          status["AI-106"],
-          () => this.openDetail("AI-106")
-        )}
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="text-sm font-medium">Aerator (P-101):</div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm px-2 py-1 rounded ${warna}"
-              >${aktif ? "Aktif" : "Mati"}</span
-            >
-            <button
-              class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-              @click=${this.toggleAerator}
-            >
-              ${aktif ? "Matikan" : "Nyalakan"}
-            </button>
-          </div>
-        </div>
-      </section>
-    `;
-      }
-    };
-    __decorateClass([
-      r5()
-    ], DashboardAquakultur.prototype, "suhuAir", 2);
-    __decorateClass([
-      r5()
-    ], DashboardAquakultur.prototype, "phAir", 2);
-    __decorateClass([
-      r5()
-    ], DashboardAquakultur.prototype, "oksigen", 2);
-    __decorateClass([
-      r5()
-    ], DashboardAquakultur.prototype, "aeratorState", 2);
-    __decorateClass([
-      r5()
-    ], DashboardAquakultur.prototype, "statusMap", 2);
-    DashboardAquakultur = __decorateClass([
-      t3("dashboard-aquakultur")
-    ], DashboardAquakultur);
-  }
-});
-
-// src/views/domains/dashboard-peternakan.ts
-var DashboardPeternakan;
-var init_dashboard_peternakan = __esm({
-  "src/views/domains/dashboard-peternakan.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    DashboardPeternakan = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <section
-        class="bg-white rounded-xl shadow p-6 space-y-4 border border-yellow-100"
+      <div
+        class="p-4 rounded-xl shadow bg-gray-50 space-y-2 cursor-pointer hover:bg-gray-100 transition"
+        @click=${this.openDetail}
       >
-        <header class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-yellow-800 flex items-center gap-2">
-            🐔 Peternakan
-          </h2>
-          <span class="text-sm text-gray-500">Kandang A</span>
-        </header>
+        <div class="text-lg font-semibold text-green-600">${tagNumber}</div>
+        <div class="text-xs font-mono text-gray-800">${description}</div>
+        <div class="text-sm text-gray-500 capitalize">${type}</div>
 
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <p class="text-sm text-gray-500 mb-1">🌡️ Suhu Kandang</p>
-            <div class="text-lg font-semibold text-yellow-700">32°C</div>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">🌀 Ventilasi</p>
-            <div class="text-lg font-semibold text-green-600">Aktif</div>
-          </div>
+        <div class="text-xl font-bold">${valueDisplay}</div>
 
-          <div>
-            <p class="text-sm text-gray-500 mb-1">💡 Penerangan</p>
-            <div class="text-lg font-semibold text-yellow-600">On</div>
-          </div>
-          <div>
-            <p class="text-sm text-gray-500 mb-1">🥚 Produksi Telur</p>
-            <div class="text-lg font-semibold text-gray-700">82 butir/hari</div>
-          </div>
+        <div
+          class="text-xs px-2 py-1 rounded inline-block font-medium ${statusClass}"
+        >
+          Status: ${statusLabel}
         </div>
-
-        <footer class="text-xs text-gray-400 text-right">
-          Terakhir diperbarui: 07:34 WIB
-        </footer>
-      </section>
+      </div>
     `;
       }
     };
-    DashboardPeternakan = __decorateClass([
-      t3("dashboard-peternakan")
-    ], DashboardPeternakan);
+    __decorateClass([
+      n4({ type: Object })
+    ], DeviceCard.prototype, "device", 2);
+    DeviceCard = __decorateClass([
+      t3("device-card")
+    ], DeviceCard);
+  }
+});
+
+// src/components/device-list.ts
+var DeviceList;
+var init_device_list = __esm({
+  "src/components/device-list.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_device_service();
+    init_devices_store();
+    init_device_card();
+    DeviceList = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.devices = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        devicesStore.onChange(() => {
+          this.devices = this.devices.map((d3) => this.toView(d3));
+          this.requestUpdate();
+        });
+        this.loadDevices();
+      }
+      async loadDevices() {
+        const raw = await fetchAllDevices();
+        this.devices = raw.map((dev) => this.toView(dev));
+        this.requestUpdate();
+      }
+      toView(dev) {
+        const live = devicesStore.get(dev.tagNumber);
+        const status = live?.status ?? {
+          mqtt: "disconnected",
+          valueStatus: "sensor-fail",
+          lastSeen: void 0
+        };
+        const value = live?.value ?? void 0;
+        const state = live?.state ?? void 0;
+        return {
+          tagNumber: dev.tagNumber,
+          description: dev.description,
+          type: dev.type,
+          unit: dev.unit,
+          display_precision: dev.display_precision ?? 1,
+          value,
+          state,
+          status
+        };
+      }
+      render() {
+        if (this.devices.length === 0) {
+          return x`<div class="text-gray-500 text-sm">
+        Tidak ada perangkat terdeteksi.
+      </div>`;
+        }
+        return x`
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      >
+        ${this.devices.map(
+          (device) => x`<device-card .device=${device}></device-card>`
+        )}
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DeviceList.prototype, "devices", 2);
+    DeviceList = __decorateClass([
+      t3("device-list")
+    ], DeviceList);
   }
 });
 
@@ -13837,7 +14297,7 @@ var init_mqtt_context = __esm({
     init_context();
     init_mqtt_esm();
     init_mode();
-    init_devices_service();
+    init_devices_store();
     mqttContext = n5("mqtt-context");
     MQTT_CONTEXT_EVENT = "mqtt:context-updated";
   }
@@ -13867,83 +14327,41 @@ var init_mode_selector = __esm({
           this.mqttCtx?.setMode?.(value);
         }
       }
-      async onSaveDb() {
-        if (this.saving) return;
-        this.saving = true;
-        console.info("[mode-selector] request DB backup\u2026");
-        try {
-          const res = await fetch("/api/db/backup", { method: "POST" });
-          if (!res.ok) throw new Error(await res.text());
-          console.info("[mode-selector] DB backup success");
-          alert("\u2705 Database berhasil disimpan/backup.");
-        } catch (err) {
-          console.warn("[mode-selector] DB backup endpoint error:", err);
-          this.dispatchEvent(
-            new CustomEvent("save-db", { bubbles: true, composed: true })
-          );
-          alert("\u2139\uFE0F Perintah simpan DB dikirim ke parent (fallback event).");
-        } finally {
-          this.saving = false;
-        }
+      async onSaveClick() {
+        this.dispatchEvent(
+          new CustomEvent("save-db", {
+            bubbles: true,
+            composed: true
+          })
+        );
       }
       render() {
         return x`
       <div
-        style="
-          display: flex;
-          align-items: center;
-          justify-content: flex-end;
-          padding: 0.5rem 1rem;
-          margin-bottom: 1rem;
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          gap: 0.5rem;
-        "
+        class="flex flex-wrap items-center gap-4 p-3 rounded-lg border bg-slate-50 text-sm"
       >
-        <label for="mode" style="color: #374151; font-weight: 500;"
-          >Mode:</label
-        >
+        <div class="flex items-center gap-2">
+          <label for="mode" class="text-gray-700 font-medium">Mode:</label>
+          <select
+            id="mode"
+            class="px-3 py-1.5 rounded border text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            .value=${this.mqttCtx?.mode ?? "mock"}
+            @change=${this.onChange}
+          >
+            <option value="mock">🧪 Mock</option>
+            <option value="mqtt">📡 MQTT</option>
+            <option value="sim">🌀 Simulasi</option>
+          </select>
+        </div>
 
-        <select
-          id="mode"
-          .value=${this.mqttCtx?.mode ?? "mock"}
-          @change=${this.onChange}
-          style="
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
-            background-color: #fff;
-            font-size: 0.875rem;
-            outline: none;
-          "
-        >
-          <option value="mock">🧪 Mock</option>
-          <option value="mqtt">📡 MQTT</option>
-          <option value="sim">🌀 Simulasi</option>
-        </select>
+        <div class="flex-1"></div>
 
-        <!-- Tombol Simpan Database -->
         <button
-          @click=${this.onSaveDb}
-          ?disabled=${this.saving}
-          title="Simpan/backup database"
-          style="
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: 0.375rem 0.75rem;
-            border-radius: 0.375rem;
-            border: 1px solid #10b981;
-            background: ${this.saving ? "#a7f3d0" : "#10b981"};
-            color: white;
-            cursor: ${this.saving ? "not-allowed" : "pointer"};
-            transition: filter .15s ease;
-          "
+          class="flex items-center gap-2 px-4 py-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
+          title="Simpan database (backup)"
+          @click=${this.onSaveClick}
         >
-          <span>💾</span>
-          <span>${this.saving ? "Menyimpan\u2026" : "Simpan DB"}</span>
+          💾 Simpan DB
         </button>
       </div>
     `;
@@ -13961,14 +14379,341 @@ var init_mode_selector = __esm({
   }
 });
 
-// src/components/device-dialog.ts
-var DeviceDialog;
-var init_device_dialog = __esm({
-  "src/components/device-dialog.ts"() {
+// src/components/dashboard-mqtt.ts
+var DashboardMqtt;
+var init_dashboard_mqtt = __esm({
+  "src/components/dashboard-mqtt.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    init_devices_service();
+    init_device_list();
+    init_mode_selector();
+    DashboardMqtt = class extends i4 {
+      createRenderRoot() {
+        return this;
+      }
+      render() {
+        return x`
+      <div class="p-4 space-y-4">
+        <h1 class="text-xl font-bold text-gray-800">Dashboard MQTT</h1>
+        <mode-selector></mode-selector>
+        <device-list></device-list>
+      </div>
+    `;
+      }
+    };
+    DashboardMqtt = __decorateClass([
+      t3("dashboard-mqtt")
+    ], DashboardMqtt);
+  }
+});
+
+// src/mappers/fromHydroponicBatch.ts
+function fromHydroponicBatch(batch) {
+  return {
+    id: batch.id,
+    itemId: batch.plantId,
+    domain: "hidroponik",
+    location: batch.location,
+    startDate: batch.startDate,
+    expectedHarvestDate: batch.expectedHarvestDate,
+    initialCount: batch.initialCount,
+    currentCount: batch.currentCount,
+    status: batch.status === "Planted" ? "Active" : batch.status,
+    note: batch.note ?? "-"
+  };
+}
+var init_fromHydroponicBatch = __esm({
+  "src/mappers/fromHydroponicBatch.ts"() {
+    "use strict";
+  }
+});
+
+// src/utils/format-display.ts
+function formatDate(value) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (isNaN(date.getTime())) return value.toString();
+  return date.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+}
+function formatDeviceValue(device) {
+  if (!device) return "--";
+  const live = devicesStore.get(device.tagNumber);
+  if (!live) return "--";
+  if (device.type === "sensor") {
+    const raw = live.value;
+    return raw == null ? "--" : typeof raw === "number" ? `${raw.toFixed(device.display_precision ?? 1)} ${device.unit ?? ""}`.trim() : `${raw} ${device.unit ?? ""}`.trim();
+  }
+  if (device.type === "actuator") {
+    return live.state ?? "--";
+  }
+  return "--";
+}
+function formatKey(key) {
+  return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/\b\w/g, (l3) => l3.toUpperCase());
+}
+var init_format_display = __esm({
+  "src/utils/format-display.ts"() {
+    "use strict";
+    init_devices_store();
+  }
+});
+
+// src/components/hydroponic-batch.ts
+var HydroponicBatchTable;
+var init_hydroponic_batch = __esm({
+  "src/components/hydroponic-batch.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_format_display();
+    HydroponicBatchTable = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.batches = [];
+        this.plants = [];
+        this.map = {};
+      }
+      createRenderRoot() {
+        return this;
+      }
+      updated(chg) {
+        if (chg.has("plants")) {
+          this.map = Object.fromEntries((this.plants || []).map((p3) => [p3.id, p3]));
+        }
+      }
+      onPlantClick(plant, wantedId) {
+        this.dispatchEvent(
+          new CustomEvent("plant-click", {
+            detail: { itemId: wantedId, plant },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      onBatchClick(batch) {
+        this.dispatchEvent(
+          new CustomEvent("batch-click", {
+            detail: batch,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      badge(status) {
+        const map = {
+          Active: "bg-green-100 text-green-700",
+          Harvested: "bg-blue-100 text-blue-700",
+          Failed: "bg-red-100 text-red-700"
+        };
+        return x`<span
+      class="px-2 py-1 rounded text-xs font-medium ${map[status] ?? "bg-gray-100 text-gray-700"}"
+      >${status}</span
+    >`;
+      }
+      render() {
+        return x`
+      <div class="overflow-auto border rounded-xl shadow-sm">
+        <table class="table-auto border-collapse w-full text-sm text-left">
+          <thead class="bg-emerald-100 text-emerald-900 text-sm font-semibold">
+            <tr>
+              <th class="px-4 py-2">🌱 Batch</th>
+              <th class="px-4 py-2">🪴 Tanaman</th>
+              <th class="px-4 py-2">💧 Sistem</th>
+              <th class="px-4 py-2">📅 Mulai</th>
+              <th class="px-4 py-2">🌾 Estimasi Panen</th>
+              <th class="px-4 py-2 text-center">🌿 Jumlah</th>
+              <th class="px-4 py-2">📊 Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.batches.map((b3) => {
+          const plant = this.map[b3.itemId];
+          const [system, loc] = b3.location.split(" - ");
+          return x`
+                <tr class="hover:bg-gray-50 transition">
+                  <td
+                    class="px-4 py-2 font-mono text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onBatchClick(b3)}
+                  >
+                    ${b3.id}
+                  </td>
+                  <td
+                    class="px-4 py-2 text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onPlantClick(plant, b3.itemId)}
+                  >
+                    ${plant?.name ?? b3.itemId}
+                  </td>
+                  <td class="px-4 py-2">${system} (${loc})</td>
+                  <td class="px-4 py-2">${formatDate(b3.startDate)}</td>
+                  <td class="px-4 py-2">
+                    ${formatDate(b3.expectedHarvestDate)}
+                  </td>
+                  <td class="px-4 py-2 text-center font-medium">
+                    ${b3.currentCount} / ${b3.initialCount}
+                  </td>
+                  <td class="px-4 py-2">${this.badge(b3.status)}</td>
+                </tr>
+              `;
+        })}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], HydroponicBatchTable.prototype, "batches", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], HydroponicBatchTable.prototype, "plants", 2);
+    __decorateClass([
+      r5()
+    ], HydroponicBatchTable.prototype, "map", 2);
+    HydroponicBatchTable = __decorateClass([
+      t3("hydroponic-batch")
+    ], HydroponicBatchTable);
+  }
+});
+
+// src/components/dialogs/entity-detail-dialog.ts
+function formatValueSafe(v2) {
+  if (v2 === null || v2 === void 0) return "\u2014";
+  if (typeof v2 === "boolean") return v2 ? "Yes" : "No";
+  if (typeof v2 === "number") return Number.isFinite(v2) ? String(v2) : "\u2014";
+  if (typeof v2 === "string") return v2.trim() === "" ? "\u2014" : v2;
+  if (Array.isArray(v2)) return v2.length ? JSON.stringify(v2) : "[]";
+  if (typeof v2 === "object")
+    return Object.keys(v2).length ? JSON.stringify(v2) : "{}";
+  return String(v2);
+}
+var EntityDetailDialog;
+var init_entity_detail_dialog = __esm({
+  "src/components/dialogs/entity-detail-dialog.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_format_display();
+    EntityDetailDialog = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.visible = false;
+        this.dlgTitle = "Detail";
+        this.sections = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      // Terima: show(obj) atau show({ A: obj1, B: obj2 }, 'Title')
+      show(data, title = "Detail") {
+        this.dlgTitle = title;
+        const isPlain = (v2) => v2 && typeof v2 === "object" && !Array.isArray(v2);
+        if (isPlain(data) && Object.values(data).every(isPlain)) {
+          this.sections = Object.entries(data);
+        } else if (isPlain(data)) {
+          this.sections = [["Detail", data]];
+        } else {
+          console.warn("[entity-detail-dialog] show() tipe tidak didukung:", data);
+          this.sections = [];
+        }
+        console.groupCollapsed("[entity-detail-dialog] show() payload");
+        console.log("title:", this.dlgTitle);
+        this.sections.forEach(([t5, o6]) => {
+          console.log(`section: ${t5}`, {
+            keys: Object.keys(o6),
+            sample: Object.entries(o6).slice(0, 5)
+          });
+        });
+        console.groupEnd();
+        this.visible = true;
+      }
+      close() {
+        this.visible = false;
+      }
+      renderSection(title, obj) {
+        const entries = Object.entries(obj ?? {});
+        if (!entries.length) {
+          return x`
+        <div class="mt-4">
+          <h3 class="font-semibold text-base mb-1">${title}</h3>
+          <div class="text-sm italic text-gray-500">Tidak ada data.</div>
+        </div>
+      `;
+        }
+        return x`
+      <div class="mt-4">
+        <h3 class="font-semibold text-base mb-1">${title}</h3>
+        <table class="w-full text-sm mb-2">
+          <tbody>
+            ${entries.map(
+          ([key, val]) => x`
+                <tr class="border-b">
+                  <td class="py-1 px-2 font-medium text-gray-600 w-1/3">
+                    ${formatKey(key)}
+                  </td>
+                  <td class="py-1 px-2">${formatValueSafe(val)}</td>
+                </tr>
+              `
+        )}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+      render() {
+        if (!this.visible) return x``;
+        return x`
+      <div
+        class="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-50"
+        @click=${this.close}
+      >
+        <div
+          class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl"
+          @click=${(e8) => e8.stopPropagation()}
+        >
+          <div class="flex justify-between items-center mb-4">
+            <div class="text-lg font-bold">${this.dlgTitle}</div>
+            <button
+              class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full"
+              @click=${this.close}
+              title="Tutup"
+            >
+              ✕
+            </button>
+          </div>
+          ${this.sections.map(([t5, o6]) => this.renderSection(t5, o6))}
+        </div>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], EntityDetailDialog.prototype, "visible", 2);
+    __decorateClass([
+      r5()
+    ], EntityDetailDialog.prototype, "dlgTitle", 2);
+    __decorateClass([
+      r5()
+    ], EntityDetailDialog.prototype, "sections", 2);
+    EntityDetailDialog = __decorateClass([
+      t3("entity-detail-dialog")
+    ], EntityDetailDialog);
+  }
+});
+
+// src/components/dialogs/device-dialog.ts
+var DeviceDialog;
+var init_device_dialog = __esm({
+  "src/components/dialogs/device-dialog.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_store();
     DeviceDialog = class extends i4 {
       constructor() {
         super(...arguments);
@@ -14070,63 +14815,160 @@ var init_device_dialog = __esm({
   }
 });
 
-// src/components/device-card.ts
-var DeviceCard;
-var init_device_card = __esm({
-  "src/components/device-card.ts"() {
+// src/components/batch-result.ts
+var BatchResultTable;
+var init_batch_result = __esm({
+  "src/components/batch-result.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    init_devices_service();
-    DeviceCard = class extends i4 {
+    init_format_display();
+    BatchResultTable = class extends i4 {
       constructor() {
         super(...arguments);
-        this.openDetail = (tag) => {
-          const dlg = document.querySelector("device-dialog");
-          if (!dlg || typeof dlg.open !== "function") {
-            console.error("[dashboard] device-dialog not found or invalid.");
-            return;
+        this.harvests = [];
+        this.batches = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      getBatchMap() {
+        return Object.fromEntries((this.batches ?? []).map((b3) => [b3.id, b3]));
+      }
+      emitBatchClick(batchId, batch) {
+        console.debug("[batch-result] emit batch-click", {
+          batchId,
+          found: !!batch
+        });
+        this.dispatchEvent(
+          new CustomEvent("batch-click", {
+            detail: { batchId, batch },
+            // <-- kirim KEDUANYA
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      // ... fmtInt, fmtRp, render header tetap
+      render() {
+        const batchMap = this.getBatchMap();
+        if (!this.harvests?.length) {
+          return x`<p class="italic text-gray-500">
+        Belum ada data hasil panen…
+      </p>`;
+        }
+        return x`
+      <div class="overflow-auto border rounded-xl shadow-sm">
+        <table class="table-auto border-collapse w-full text-sm text-left">
+          <thead class="bg-yellow-100 text-yellow-900 text-sm font-semibold">
+            <tr>
+              <th class="px-4 py-2">🌿 Batch</th>
+              <th class="px-4 py-2">🗓️ Tanggal Panen</th>
+              <th class="px-4 py-2 text-right">⚖️ Berat (g)</th>
+              <th class="px-4 py-2 text-right">🪙 Pendapatan (Rp)</th>
+              <th class="px-4 py-2 text-right">📈 Laba Bersih (Rp)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.harvests.map((h3) => {
+          const batch = batchMap[h3.batchId];
+          return x`
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-4 py-2">
+                    <button
+                      type="button"
+                      class="text-blue-600 hover:underline font-semibold cursor-pointer"
+                      @click=${() => this.emitBatchClick(h3.batchId, batch)}
+                      title="Lihat detail batch"
+                    >
+                      ${batch?.id ?? h3.batchId}
+                    </button>
+                  </td>
+                  <td class="px-4 py-2">${formatDate(h3.harvestDate)}</td>
+                  <td class="px-4 py-2 text-right">
+                    ${this.fmtInt(h3.totalWeightG)}
+                  </td>
+                  <td class="px-4 py-2 text-right text-green-700 font-semibold">
+                    ${this.fmtRp(h3.revenue)}
+                  </td>
+                  <td class="px-4 py-2 text-right text-blue-700 font-semibold">
+                    ${this.fmtRp(h3.netProfit)}
+                  </td>
+                </tr>
+              `;
+        })}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+      fmtInt(n6) {
+        if (n6 === null || n6 === void 0 || Number.isNaN(n6)) return "\u2014";
+        return new Intl.NumberFormat("id-ID").format(n6);
+      }
+      fmtRp(n6) {
+        if (n6 === null || n6 === void 0 || Number.isNaN(n6)) return "\u2014";
+        return "Rp " + new Intl.NumberFormat("id-ID").format(n6);
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchResultTable.prototype, "harvests", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchResultTable.prototype, "batches", 2);
+    BatchResultTable = __decorateClass([
+      t3("batch-result")
+    ], BatchResultTable);
+  }
+});
+
+// src/components/cards/dashboard-device-card.ts
+var DashboardDeviceCard;
+var init_dashboard_device_card = __esm({
+  "src/components/cards/dashboard-device-card.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    DashboardDeviceCard = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.value = null;
+        // fallback jika device belum tersedia
+        this.handleClick = () => {
+          const tag = this.device?.tagNumber ?? this.tag;
+          if (tag) {
+            this.dispatchEvent(
+              new CustomEvent("device-click", {
+                detail: { tag },
+                bubbles: true,
+                composed: true
+              })
+            );
           }
-          const dev = devicesStore.get(tag);
-          if (!dev) {
-            console.warn(`[dashboard] Device ${tag} not found`);
-          }
-          dlg.open(tag);
         };
       }
       createRenderRoot() {
         return this;
       }
-      getStatusClass(status) {
-        switch (status) {
-          case "ok":
-            return "bg-green-100 text-green-700";
-          case "alarm-low":
-          case "alarm-high":
-            return "bg-red-100 text-red-700";
-          case "disconnected":
-            return "bg-gray-100 text-gray-500";
-          default:
-            return "bg-yellow-100 text-yellow-800";
-        }
-      }
       render() {
-        const { tagNumber, description, type, status = "unknown" } = this.device;
+        const tagNumber = this.device?.tagNumber ?? this.tag ?? "--";
+        const description = this.device?.description ?? "";
+        const displayValue = this.value ?? "--";
         return x`
       <div
-        class="p-4 rounded-xl shadow bg-white space-y-2 cursor-pointer"
-        @click=${() => this.openDetail(tagNumber)}
+        class="flex items-center justify-between gap-4 px-4 py-2 border-b hover:bg-gray-50 cursor-pointer"
+        @click=${this.handleClick}
+        role="button"
+        tabindex="0"
+        @keydown=${(e8) => (e8.key === "Enter" || e8.key === " ") && this.handleClick()}
       >
-        <div class="text-lg font-semibold text-green-600">${tagNumber}</div>
-        <div class="text-xs font-mono text-gray-800">${description}</div>
-        <div class="text-sm text-gray-500 capitalize">${type}</div>
-
-        <div
-          class="text-xs px-2 py-1 rounded inline-block font-medium ${this.getStatusClass(
-          status
-        )}"
-        >
-          Status: ${status}
+        <div class="flex flex-col">
+          <div class="text-sm font-semibold text-green-700">${tagNumber}</div>
+          <div class="text-xs text-gray-500">${description}</div>
+        </div>
+        <div class="text-lg font-bold text-right text-gray-800 min-w-[60px]">
+          ${displayValue}
         </div>
       </div>
     `;
@@ -14134,170 +14976,1557 @@ var init_device_card = __esm({
     };
     __decorateClass([
       n4({ type: Object })
-    ], DeviceCard.prototype, "device", 2);
-    DeviceCard = __decorateClass([
-      t3("device-card")
-    ], DeviceCard);
+    ], DashboardDeviceCard.prototype, "device", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], DashboardDeviceCard.prototype, "value", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], DashboardDeviceCard.prototype, "tag", 2);
+    DashboardDeviceCard = __decorateClass([
+      t3("dashboard-device-card")
+    ], DashboardDeviceCard);
   }
 });
 
-// src/components/device-list.ts
-var DeviceList;
-var init_device_list = __esm({
-  "src/components/device-list.ts"() {
+// src/pages/produksi/views/hidroponik-devices.ts
+var DashboardHidroponik;
+var init_hidroponik_devices = __esm({
+  "src/pages/produksi/views/hidroponik-devices.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    init_devices_service();
-    init_device_card();
-    DeviceList = class extends i4 {
+    init_devices_store();
+    init_dashboard_device_card();
+    init_format_display();
+    DashboardHidroponik = class extends i4 {
       constructor() {
         super(...arguments);
-        this.devices = [];
+        this.pompaState = "OFF";
+        this.statusMap = {};
+        // 🏷️ Daftar TAG device yang ingin ditampilkan
+        this.deviceTags = ["TI-001", "LI-004", "AI-005", "AI-006", "P-001"];
+      }
+      // Disable shadow DOM agar styling global tetap berpengaruh
+      createRenderRoot() {
+        return this;
+      }
+      // ⛓️ Lifecycle Hook: Saat komponen di-*attach* ke DOM
+      async connectedCallback() {
+        super.connectedCallback();
+        await devicesStore.init();
+        this.pull();
+        this.off = devicesStore.onChange(() => this.pull());
+      }
+      // 🔌 Bersihkan listener saat komponen di-*detach*
+      disconnectedCallback() {
+        this.off?.();
+        super.disconnectedCallback();
+      }
+      // 🔄 Tarik status terbaru dari devicesStore
+      pull() {
+        const statusMap = {};
+        this.deviceTags.forEach((tag) => {
+          statusMap[tag] = devicesStore.getStatus(tag);
+        });
+        this.statusMap = statusMap;
+      }
+      // 📥 Handler ketika user klik salah satu device
+      handleDeviceClick(e8) {
+        const tag = e8.detail.tag;
+        const dlg = document.querySelector("device-dialog");
+        dlg?.open?.(tag);
+      }
+      // 🎨 Render UI dashboard
+      render() {
+        return x`
+      <section
+        class="bg-white rounded-2xl shadow-md p-6 border border-gray-100"
+        @device-click=${this.handleDeviceClick}
+      >
+        <!-- 🧠 Header Seksi Dashboard -->
+        <div class="mb-6">
+          <h2
+            class="text-xl font-semibold text-gray-800 flex items-center gap-3"
+          >
+            🌡️💧 Hidroponik Sensor & Aktuator
+          </h2>
+        </div>
+
+        <!-- 📊 Grid Tampilan Perangkat -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${this.deviceTags.map((tag) => {
+          const device = devicesStore.get(tag);
+          if (!device) return null;
+          const value = formatDeviceValue(device);
+          return x`
+              <dashboard-device-card
+                .device=${device}
+                .tag=${tag}
+                .value=${value}
+              ></dashboard-device-card>
+            `;
+        })}
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "pompaState", 2);
+    __decorateClass([
+      r5()
+    ], DashboardHidroponik.prototype, "statusMap", 2);
+    DashboardHidroponik = __decorateClass([
+      t3("hidroponik-devices")
+    ], DashboardHidroponik);
+  }
+});
+
+// src/pages/produksi/hidroponik.ts
+var hidroponik_exports = {};
+__export(hidroponik_exports, {
+  PageProduksiHidroponik: () => PageProduksiHidroponik
+});
+var PageProduksiHidroponik;
+var init_hidroponik = __esm({
+  "src/pages/produksi/hidroponik.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_fromHydroponicBatch();
+    init_hydroponic_batch();
+    init_entity_detail_dialog();
+    init_device_dialog();
+    init_batch_result();
+    init_hidroponik_devices();
+    PageProduksiHidroponik = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.plants = [];
+        this.batches = [];
+        this.harvests = [];
+        this.onPlantClick = (e8) => {
+          const { itemId, plant } = e8.detail;
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F331} Tanaman": plant ?? { _warn: "not found", wantedId: itemId } },
+            "Detail Tanaman"
+          );
+        };
+        this.onBatchClick = (e8) => {
+          const batch = e8.detail;
+          const plant = this.plants.find((p3) => p3.id === batch.itemId);
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F4E6} Batch": batch, "\u{1F331} Tanaman": plant ?? {} },
+            "Detail Batch Hidroponik"
+          );
+        };
+        // di render:
+        this.handleHarvestBatchClick = (e8) => {
+          const { batchId, batch } = e8.detail || {};
+          console.groupCollapsed("[Page] handleHarvestBatchClick");
+          console.log("payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          if (!dlg) return;
+          const resolved = batch ?? this.batches.find((b3) => b3.id === batchId);
+          if (!resolved) {
+            dlg.show(
+              { "\u26A0\uFE0F Info": { message: "Batch tidak ditemukan", batchId } },
+              "Detail Batch"
+            );
+            return;
+          }
+          dlg.show({ "\u{1F4E6} Batch": resolved }, "Detail Batch");
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const plants = await (await fetch("/assets/mock/plants.json")).json();
+        const raw = await (await fetch("/assets/mock/hydro-batches.json")).json();
+        this.plants = plants;
+        this.batches = raw.map(fromHydroponicBatch);
+        this.harvests = await (await fetch("/assets/mock/harvests.json")).json();
+        console.groupCollapsed("[Hidroponik] mapped GenericBatch");
+        console.table(
+          this.batches.map((b3) => ({
+            id: b3.id,
+            itemId: b3.itemId,
+            location: b3.location
+          }))
+        );
+        console.groupEnd();
+      }
+      render() {
+        const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
+        return x`
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">💧 Produksi Hidroponik</h1>
+        <div>
+          <hydroponic-batch
+            .batches=${this.batches}
+            .plants=${this.plants}
+            @plant-click=${this.onPlantClick}
+            @batch-click=${this.onBatchClick}
+          ></hydroponic-batch>
+          <hidroponik-devices style=${cardStyle}></hidroponik-devices>
+        </div>
+
+        <batch-result
+          .harvests=${this.harvests}
+          .batches=${this.batches}
+          @batch-click=${this.handleHarvestBatchClick}
+        ></batch-result>
+
+        <entity-detail-dialog></entity-detail-dialog>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PageProduksiHidroponik.prototype, "plants", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiHidroponik.prototype, "batches", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiHidroponik.prototype, "harvests", 2);
+    PageProduksiHidroponik = __decorateClass([
+      t3("hidroponik-page")
+    ], PageProduksiHidroponik);
+  }
+});
+
+// src/mappers/fromPlantingBatch.ts
+function fromPlantingBatch(batch) {
+  return {
+    id: batch.id,
+    itemId: batch.plantId,
+    domain: "hortikultura",
+    location: batch.location,
+    startDate: batch.startDate,
+    expectedHarvestDate: batch.expectedHarvestDate,
+    initialCount: batch.totalPlants,
+    currentCount: batch.totalPlants,
+    status: batch.status === "Planted" ? "Active" : batch.status,
+    note: batch.note
+  };
+}
+var init_fromPlantingBatch = __esm({
+  "src/mappers/fromPlantingBatch.ts"() {
+    "use strict";
+  }
+});
+
+// src/pages/produksi/views/hortikultura-devices.ts
+var DashboardHortikultura;
+var init_hortikultura_devices = __esm({
+  "src/pages/produksi/views/hortikultura-devices.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_store();
+    init_dashboard_device_card();
+    init_format_display();
+    DashboardHortikultura = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.statusMap = {};
+        // 🌱 Daftar TAG perangkat hortikultura
+        this.deviceTags = ["TI-401", "AI-401", "AI-402", "P-401", "P-402"];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        await devicesStore.init();
+        this.pull();
+        this.off = devicesStore.onChange(() => this.pull());
+      }
+      disconnectedCallback() {
+        this.off?.();
+        super.disconnectedCallback();
+      }
+      pull() {
+        const statusMap = {};
+        this.deviceTags.forEach((tag) => {
+          statusMap[tag] = devicesStore.getStatus(tag);
+        });
+        this.statusMap = statusMap;
+      }
+      handleDeviceClick(e8) {
+        const tag = e8.detail.tag;
+        const dlg = document.querySelector("device-dialog");
+        dlg?.open?.(tag);
+      }
+      render() {
+        return x`
+      <section
+        class="bg-white rounded-2xl shadow-md p-6 border border-gray-100"
+        @device-click=${this.handleDeviceClick}
+      >
+        <div class="mb-6">
+          <h2
+            class="text-xl font-semibold text-gray-800 flex items-center gap-3"
+          >
+            🌾 Hortikultura Sensor & Aktuator
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${this.deviceTags.map((tag) => {
+          const device = devicesStore.get(tag);
+          if (!device) return null;
+          const value = formatDeviceValue(device);
+          return x`
+              <dashboard-device-card
+                .device=${device}
+                .tag=${tag}
+                .value=${value}
+              ></dashboard-device-card>
+            `;
+        })}
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DashboardHortikultura.prototype, "statusMap", 2);
+    DashboardHortikultura = __decorateClass([
+      t3("hortikultura-devices")
+    ], DashboardHortikultura);
+  }
+});
+
+// src/components/plant-batch.ts
+function isGenericBatch(x3) {
+  return x3 && typeof x3 === "object" && "itemId" in x3 && "initialCount" in x3 && "currentCount" in x3;
+}
+var PlantBatchTable;
+var init_plant_batch = __esm({
+  "src/components/plant-batch.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_format_display();
+    PlantBatchTable = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.batches = [];
+        this.plants = [];
+        this.plantMap = {};
       }
       createRenderRoot() {
         return this;
       }
       connectedCallback() {
         super.connectedCallback();
-        devicesStore.init().then(() => {
-          this.updateDevices();
-        });
-        devicesStore.onChange(() => {
-          this.updateDevices();
-        });
+        this.plantMap = Object.fromEntries(
+          (this.plants || []).map((p3) => [p3.id, p3])
+        );
       }
-      updateDevices() {
-        const tags = devicesStore.getAllTags();
-        this.devices = tags.map((tag) => {
-          const d3 = devicesStore.get(tag);
-          return d3 ? { ...d3 } : void 0;
-        }).filter((d3) => d3 !== void 0);
+      updated(changed) {
+        if (changed.has("plants")) {
+          this.plantMap = Object.fromEntries(
+            (this.plants || []).map((p3) => [p3.id, p3])
+          );
+        }
+      }
+      onPlantClick(plant) {
+        this.dispatchEvent(
+          new CustomEvent("plant-click", {
+            detail: plant,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      onBatchClick(batch) {
+        this.dispatchEvent(
+          new CustomEvent("batch-click", {
+            detail: batch,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      renderStatus(status) {
+        const map = {
+          Active: "bg-green-100 text-green-700",
+          Harvested: "bg-blue-100 text-blue-700",
+          Failed: "bg-red-100 text-red-700"
+        };
+        const cls = map[status] ?? "bg-gray-100 text-gray-700";
+        return x`<span class="px-2 py-1 rounded text-xs font-medium ${cls}"
+      >${status}</span
+    >`;
       }
       render() {
-        if (this.devices.length === 0) {
-          return x`<div class="text-gray-500 text-sm">
-        Tidak ada perangkat terdeteksi.
-      </div>`;
-        }
         return x`
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      <div class="overflow-auto border rounded-xl shadow-sm">
+        <table class="table-auto border-collapse w-full text-sm text-left">
+          <thead class="bg-green-200 text-green-900 text-sm font-semibold">
+            <tr>
+              <th class="px-4 py-2">🌱 Batch</th>
+              <th class="px-4 py-2">🪴 Tanaman</th>
+              <th class="px-4 py-2">📅 Mulai</th>
+              <th class="px-4 py-2">🌾 Estimasi Panen</th>
+              <th class="px-4 py-2 text-center">🌿 Jumlah</th>
+              <th class="px-4 py-2">📍 Lokasi</th>
+              <th class="px-4 py-2">📊 Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.batches.map((b3) => {
+          if (!isGenericBatch(b3)) {
+            return x`
+                  <tr class="bg-yellow-50">
+                    <td class="px-4 py-2 font-mono text-red-600" colspan="7">
+                      ⚠️ Komponen menerima tipe batch non-GenericBatch. Pastikan
+                      map dengan fromPlantingBatch().
+                    </td>
+                  </tr>
+                `;
+          }
+          const plant = this.plantMap[b3.itemId];
+          return x`
+                <tr class="hover:bg-gray-50 transition">
+                  <td
+                    class="px-4 py-2 font-mono text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onBatchClick(b3)}
+                  >
+                    ${b3.id}
+                  </td>
+                  <td
+                    class="px-4 py-2 cursor-pointer text-blue-600 hover:underline"
+                    @click=${() => this.onPlantClick(plant)}
+                  >
+                    ${plant?.name ?? b3.itemId}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700">
+                    ${formatDate(b3.startDate)}
+                  </td>
+                  <td class="px-4 py-2 text-gray-700">
+                    ${formatDate(b3.expectedHarvestDate)}
+                  </td>
+                  <td class="px-4 py-2 text-center font-medium">
+                    ${b3.currentCount} / ${b3.initialCount}
+                  </td>
+                  <td class="px-4 py-2">${b3.location}</td>
+                  <td class="px-4 py-2">${this.renderStatus(b3.status)}</td>
+                </tr>
+              `;
+        })}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], PlantBatchTable.prototype, "batches", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], PlantBatchTable.prototype, "plants", 2);
+    __decorateClass([
+      r5()
+    ], PlantBatchTable.prototype, "plantMap", 2);
+    PlantBatchTable = __decorateClass([
+      t3("plant-batch")
+    ], PlantBatchTable);
+  }
+});
+
+// src/pages/produksi/hortikultura.ts
+var hortikultura_exports = {};
+__export(hortikultura_exports, {
+  PageProduksiHortikultura: () => PageProduksiHortikultura
+});
+var PageProduksiHortikultura;
+var init_hortikultura = __esm({
+  "src/pages/produksi/hortikultura.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_fromPlantingBatch();
+    init_hortikultura_devices();
+    init_plant_batch();
+    init_entity_detail_dialog();
+    PageProduksiHortikultura = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.plants = [];
+        this.batches = [];
+        this.harvests = [];
+        this.handlePlantClick = (e8) => {
+          console.groupCollapsed("[Horti] open plant dialog");
+          console.log("plant payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show({ "\u{1F331} Tanaman": e8.detail ?? {} }, "Detail Tanaman");
+        };
+        this.handleBatchClick = (e8) => {
+          const batch = e8.detail;
+          const plant = this.plants.find((p3) => p3.id === batch.itemId);
+          console.groupCollapsed("[Horti] open batch dialog");
+          console.log("batch payload:", batch);
+          console.log("plant payload:", plant);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F4E6} Batch": batch, "\u{1F331} Tanaman": plant ?? {} },
+            "Detail Batch Tanam"
+          );
+        };
+        this.handleHarvestBatchClick = (e8) => {
+          const { batchId, batch } = e8.detail || {};
+          console.groupCollapsed("[Page] handleHarvestBatchClick");
+          console.log("payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          if (!dlg) return;
+          const resolved = batch ?? this.batches.find((b3) => b3.id === batchId);
+          if (!resolved) {
+            dlg.show(
+              { "\u26A0\uFE0F Info": { message: "Batch tidak ditemukan", batchId } },
+              "Detail Batch"
+            );
+            return;
+          }
+          dlg.show({ "\u{1F4E6} Batch": resolved }, "Detail Batch");
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const plants = await (await fetch("/assets/mock/plants.json")).json();
+        const rawBatches = await (await fetch("/assets/mock/horti-batches.json")).json();
+        this.plants = plants;
+        this.batches = rawBatches.map(fromPlantingBatch);
+        this.harvests = await (await fetch("/assets/mock/horti-harvests.json")).json();
+        console.groupCollapsed("[Horti] mapped GenericBatch");
+        console.table(
+          this.batches.map((b3) => ({
+            id: b3.id,
+            itemId: b3.itemId,
+            initial: b3.initialCount,
+            current: b3.currentCount
+          }))
+        );
+        console.groupEnd();
+      }
+      render() {
+        const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
+        return x`
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">🌿 Produksi Hortikultura</h1>
+
+        <div>
+          <plant-batch
+            .batches=${this.batches}
+            .plants=${this.plants}
+            @plant-click=${this.handlePlantClick}
+            @batch-click=${this.handleBatchClick}
+          ></plant-batch>
+
+          <hortikultura-devices style=${cardStyle}></hortikultura-devices>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Hasil Panen</h2>
+          <batch-result
+            .harvests=${this.harvests}
+            .batches=${this.batches}
+            @batch-click=${this.handleHarvestBatchClick}
+          ></batch-result>
+        </div>
+
+        <entity-detail-dialog></entity-detail-dialog>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PageProduksiHortikultura.prototype, "plants", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiHortikultura.prototype, "batches", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiHortikultura.prototype, "harvests", 2);
+    PageProduksiHortikultura = __decorateClass([
+      t3("hortikultura-page")
+    ], PageProduksiHortikultura);
+  }
+});
+
+// src/mappers/fromAquaticBatch.ts
+function fromAquaticBatch(batch) {
+  return {
+    id: batch.id,
+    itemId: batch.speciesId,
+    domain: "akuakultur",
+    location: batch.pond,
+    startDate: batch.startDate,
+    expectedHarvestDate: batch.expectedHarvestDate,
+    initialCount: batch.initialPopulation,
+    currentCount: batch.currentPopulation,
+    status: batch.status === "Growing" ? "Active" : batch.status,
+    note: batch.note ?? "-"
+  };
+}
+var init_fromAquaticBatch = __esm({
+  "src/mappers/fromAquaticBatch.ts"() {
+    "use strict";
+  }
+});
+
+// src/components/aquaculture-batch.ts
+var AquaticBatchTable;
+var init_aquaculture_batch = __esm({
+  "src/components/aquaculture-batch.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_format_display();
+    AquaticBatchTable = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.batches = [];
+        this.species = [];
+        this.map = {};
+      }
+      createRenderRoot() {
+        return this;
+      }
+      updated(chg) {
+        if (chg.has("species")) {
+          this.map = Object.fromEntries(
+            (this.species || []).map((s7) => [s7.id ?? s7.speciesId, s7])
+          );
+        }
+      }
+      onSpeciesClick(item, wantedId) {
+        this.dispatchEvent(
+          new CustomEvent("species-click", {
+            detail: { itemId: wantedId, item },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      onBatchClick(batch) {
+        this.dispatchEvent(
+          new CustomEvent("batch-click", {
+            detail: batch,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      badge(status) {
+        const m2 = {
+          Active: "bg-green-100 text-green-700",
+          Harvested: "bg-blue-100 text-blue-700",
+          Failed: "bg-red-100 text-red-700"
+        };
+        return x`<span
+      class="px-2 py-1 rounded text-xs font-medium ${m2[status] ?? "bg-gray-100 text-gray-700"}"
+      >${status}</span
+    >`;
+      }
+      render() {
+        return x`
+      <div class="overflow-auto border rounded-xl shadow-sm">
+        <table class="table-auto border-collapse w-full text-sm text-left">
+          <thead class="bg-blue-100 text-blue-900 text-sm font-semibold">
+            <tr>
+              <th class="px-4 py-2">🐟 Batch</th>
+              <th class="px-4 py-2">🦐 Spesies</th>
+              <th class="px-4 py-2">📅 Mulai</th>
+              <th class="px-4 py-2">🧺 Estimasi Panen</th>
+              <th class="px-4 py-2 text-center">👥 Populasi</th>
+              <th class="px-4 py-2">🏞️ Kolam</th>
+              <th class="px-4 py-2">📊 Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.batches.map((b3) => {
+          const sp = this.map[b3.itemId];
+          return x`
+                <tr class="hover:bg-gray-50 transition">
+                  <td
+                    class="px-4 py-2 font-mono text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onBatchClick(b3)}
+                  >
+                    ${b3.id}
+                  </td>
+                  <td
+                    class="px-4 py-2 text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onSpeciesClick(sp, b3.itemId)}
+                  >
+                    ${sp?.name ?? b3.itemId}
+                  </td>
+                  <td class="px-4 py-2">${formatDate(b3.startDate)}</td>
+                  <td class="px-4 py-2">
+                    ${formatDate(b3.expectedHarvestDate)}
+                  </td>
+                  <td class="px-4 py-2 text-center font-medium">
+                    ${b3.currentCount} / ${b3.initialCount}
+                  </td>
+                  <td class="px-4 py-2">${b3.location}</td>
+                  <td class="px-4 py-2">${this.badge(b3.status)}</td>
+                </tr>
+              `;
+        })}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], AquaticBatchTable.prototype, "batches", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], AquaticBatchTable.prototype, "species", 2);
+    __decorateClass([
+      r5()
+    ], AquaticBatchTable.prototype, "map", 2);
+    AquaticBatchTable = __decorateClass([
+      t3("aquatic-batch")
+    ], AquaticBatchTable);
+  }
+});
+
+// src/pages/produksi/views/aquakultur-devices.ts
+var DashboardAquakultur;
+var init_aquakultur_devices = __esm({
+  "src/pages/produksi/views/aquakultur-devices.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_store();
+    init_dashboard_device_card();
+    init_format_display();
+    DashboardAquakultur = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.statusMap = {};
+        this.deviceTags = ["TI-101", "AI-105", "AI-106", "P-101"];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        await devicesStore.init(true);
+        this.pull();
+        this.off = devicesStore.onChange(() => this.pull());
+      }
+      disconnectedCallback() {
+        this.off?.();
+        super.disconnectedCallback();
+      }
+      pull() {
+        const statusMap = {};
+        this.deviceTags.forEach((tag) => {
+          statusMap[tag] = devicesStore.getStatus(tag);
+        });
+        this.statusMap = statusMap;
+      }
+      handleDeviceClick(e8) {
+        const tag = e8.detail.tag;
+        const dlg = document.querySelector("device-dialog");
+        dlg?.open?.(tag);
+      }
+      render() {
+        return x`
+      <section
+        class="bg-white rounded shadow p-4"
+        @device-click=${this.handleDeviceClick}
       >
-        ${this.devices.map(
-          (device) => x`<device-card .device=${device}></device-card>`
-        )}
+        <!-- 🧠 Header Seksi Dashboard -->
+        <div class="mb-6">
+          <h2
+            class="text-xl font-semibold text-gray-800 flex items-center gap-3"
+          >
+            🌡️💧 Akuakultur Sensor & Aktuator
+          </h2>
+        </div>
+
+        <!-- 📊 Grid Tampilan Perangkat -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          ${this.deviceTags.map((tag) => {
+          const device = devicesStore.get(tag);
+          if (!device) return null;
+          const value = formatDeviceValue(device);
+          return x`
+              <dashboard-device-card
+                .device=${device}
+                .tag=${tag}
+                .value=${value}
+              ></dashboard-device-card>
+            `;
+        })}
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DashboardAquakultur.prototype, "statusMap", 2);
+    DashboardAquakultur = __decorateClass([
+      t3("aquakultur-devices")
+    ], DashboardAquakultur);
+  }
+});
+
+// src/pages/produksi/akuakultur.ts
+var akuakultur_exports = {};
+__export(akuakultur_exports, {
+  PageProduksiAkuakultur: () => PageProduksiAkuakultur
+});
+var PageProduksiAkuakultur;
+var init_akuakultur = __esm({
+  "src/pages/produksi/akuakultur.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_fromAquaticBatch();
+    init_aquaculture_batch();
+    init_entity_detail_dialog();
+    init_aquakultur_devices();
+    PageProduksiAkuakultur = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.species = [];
+        this.batches = [];
+        this.harvests = [];
+        this.onSpeciesClick = (e8) => {
+          const { itemId, item } = e8.detail;
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F41F} Spesies": item ?? { _warn: "not found", wantedId: itemId } },
+            "Detail Spesies"
+          );
+        };
+        this.onBatchClick = (e8) => {
+          const batch = e8.detail;
+          const sp = this.species.find(
+            (s7) => (s7.id ?? s7.speciesId) === batch.itemId
+          );
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F4E6} Batch": batch, "\u{1F41F} Spesies": sp ?? {} },
+            "Detail Batch Akuakultur"
+          );
+        };
+        this.handleHarvestBatchClick = (e8) => {
+          const { batchId, batch } = e8.detail || {};
+          console.groupCollapsed("[Page] handleHarvestBatchClick");
+          console.log("payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          if (!dlg) return;
+          const resolved = batch ?? this.batches.find((b3) => b3.id === batchId);
+          if (!resolved) {
+            dlg.show(
+              { "\u26A0\uFE0F Info": { message: "Batch tidak ditemukan", batchId } },
+              "Detail Batch"
+            );
+            return;
+          }
+          dlg.show({ "\u{1F4E6} Batch": resolved }, "Detail Batch");
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const species = await (await fetch("/assets/mock/species.json")).json();
+        const raw = await (await fetch("/assets/mock/aquatic-batches.json")).json();
+        this.harvests = await (await fetch("/assets/mock/aqua-harvests.json")).json();
+        this.species = species;
+        this.batches = raw.map(fromAquaticBatch);
+        console.groupCollapsed("[Akuakultur] mapped GenericBatch");
+        console.table(
+          this.batches.map((b3) => ({
+            id: b3.id,
+            itemId: b3.itemId,
+            location: b3.location
+          }))
+        );
+        console.groupEnd();
+      }
+      render() {
+        const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
+        return x`
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">🐟 Produksi Akuakultur</h1>
+        <div>
+          <aquatic-batch
+            .batches=${this.batches}
+            .species=${this.species}
+            @species-click=${this.onSpeciesClick}
+            @batch-click=${this.onBatchClick}
+          ></aquatic-batch>
+          <aquakultur-devices style=${cardStyle}></aquakultur-devices>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Hasil Panen</h2>
+          <batch-result
+            .harvests=${this.harvests}
+            .batches=${this.batches}
+            @batch-click=${this.handleHarvestBatchClick}
+          ></batch-result>
+        </div>
+
+        <entity-detail-dialog></entity-detail-dialog>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PageProduksiAkuakultur.prototype, "species", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiAkuakultur.prototype, "batches", 2);
+    __decorateClass([
+      r5()
+    ], PageProduksiAkuakultur.prototype, "harvests", 2);
+    PageProduksiAkuakultur = __decorateClass([
+      t3("akuakultur-page")
+    ], PageProduksiAkuakultur);
+  }
+});
+
+// src/mappers/fromLivestockBatch.ts
+function fromLivestockBatch(batch) {
+  return {
+    id: batch.id,
+    itemId: batch.livestockId,
+    domain: "peternakan",
+    location: batch.pen,
+    startDate: batch.startDate,
+    expectedHarvestDate: batch.expectedHarvestDate,
+    initialCount: batch.initialCount,
+    currentCount: batch.currentCount,
+    status: batch.status === "Growing" ? "Active" : batch.status,
+    note: batch.note ?? "-"
+  };
+}
+var init_fromLivestockBatch = __esm({
+  "src/mappers/fromLivestockBatch.ts"() {
+    "use strict";
+  }
+});
+
+// src/components/livestock-batch.ts
+var LivestockBatchTable;
+var init_livestock_batch = __esm({
+  "src/components/livestock-batch.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_format_display();
+    LivestockBatchTable = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.batches = [];
+        this.livestock = [];
+        this.map = {};
+      }
+      createRenderRoot() {
+        return this;
+      }
+      updated(chg) {
+        if (chg.has("livestock")) {
+          this.map = Object.fromEntries(
+            (this.livestock || []).map((l3) => [l3.id, l3])
+          );
+        }
+      }
+      onAnimalClick(item) {
+        this.dispatchEvent(
+          new CustomEvent("animal-click", {
+            detail: item,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      onBatchClick(batch) {
+        this.dispatchEvent(
+          new CustomEvent("batch-click", {
+            detail: batch,
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      badge(status) {
+        const m2 = {
+          Active: "bg-green-100 text-green-700",
+          Harvested: "bg-blue-100 text-blue-700",
+          Failed: "bg-red-100 text-red-700"
+        };
+        const cls = m2[status] ?? "bg-gray-100 text-gray-700";
+        return x`<span class="px-2 py-1 rounded text-xs font-medium ${cls}"
+      >${status}</span
+    >`;
+      }
+      render() {
+        return x`
+      <div class="overflow-auto border rounded-xl shadow-sm">
+        <table class="table-auto border-collapse w-full text-sm text-left">
+          <thead class="bg-amber-100 text-amber-900 text-sm font-semibold">
+            <tr>
+              <th class="px-4 py-2">🐄 Batch</th>
+              <th class="px-4 py-2">🐮 Ternak</th>
+              <th class="px-4 py-2">📅 Mulai</th>
+              <th class="px-4 py-2">🧺 Estimasi Panen</th>
+              <th class="px-4 py-2 text-center">👥 Populasi</th>
+              <th class="px-4 py-2">🏠 Kandang</th>
+              <th class="px-4 py-2">📊 Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${this.batches.map((b3) => {
+          const item = this.map[b3.itemId];
+          return x`
+                <tr class="hover:bg-gray-50 transition">
+                  <td
+                    class="px-4 py-2 font-mono text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onBatchClick(b3)}
+                  >
+                    ${b3.id}
+                  </td>
+                  <td
+                    class="px-4 py-2 text-blue-600 hover:underline cursor-pointer"
+                    @click=${() => this.onAnimalClick(item)}
+                  >
+                    ${item?.name ?? item?.code ?? b3.itemId}
+                  </td>
+                  <td class="px-4 py-2">${formatDate(b3.startDate)}</td>
+                  <td class="px-4 py-2">
+                    ${formatDate(b3.expectedHarvestDate)}
+                  </td>
+                  <td class="px-4 py-2 text-center font-medium">
+                    ${b3.currentCount} / ${b3.initialCount}
+                  </td>
+                  <td class="px-4 py-2">${b3.location}</td>
+                  <td class="px-4 py-2">${this.badge(b3.status)}</td>
+                </tr>
+              `;
+        })}
+          </tbody>
+        </table>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], LivestockBatchTable.prototype, "batches", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], LivestockBatchTable.prototype, "livestock", 2);
+    __decorateClass([
+      r5()
+    ], LivestockBatchTable.prototype, "map", 2);
+    LivestockBatchTable = __decorateClass([
+      t3("livestock-batch")
+    ], LivestockBatchTable);
+  }
+});
+
+// src/pages/produksi/views/peternakan-devices.ts
+var PeternakanDevices;
+var init_peternakan_devices = __esm({
+  "src/pages/produksi/views/peternakan-devices.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_devices_store();
+    init_format_display();
+    init_dashboard_device_card();
+    PeternakanDevices = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.statusMap = {};
+        // daftar device untuk kandang ayam
+        this.deviceTags = ["TI-301", "AI-301", "AI-302", "H-301", "B-301"];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        await devicesStore.init(true);
+        this.pull();
+        this.off = devicesStore.onChange(() => this.pull());
+      }
+      disconnectedCallback() {
+        this.off?.();
+        super.disconnectedCallback();
+      }
+      pull() {
+        const statusMap = {};
+        this.deviceTags.forEach((tag) => {
+          statusMap[tag] = devicesStore.getStatus(tag);
+        });
+        this.statusMap = statusMap;
+      }
+      handleDeviceClick(e8) {
+        const tag = e8.detail.tag;
+        const dlg = document.querySelector("device-dialog");
+        dlg?.open?.(tag);
+      }
+      render() {
+        return x`
+      <section
+        class="bg-white rounded shadow p-4"
+        @device-click=${this.handleDeviceClick}
+      >
+        <!-- 🧠 Header Seksi Dashboard -->
+        <div class="mb-6">
+          <h2
+            class="text-xl font-semibold text-gray-800 flex items-center gap-3"
+          >
+            🌡️💧 Peternakan Sensor & Aktuator
+          </h2>
+        </div>
+
+        <!-- 📊 Grid Tampilan Perangkat -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          ${this.deviceTags.map((tag) => {
+          const device = devicesStore.get(tag);
+          if (!device) return null;
+          const value = formatDeviceValue(device);
+          return x`
+              <dashboard-device-card
+                .device=${device}
+                .tag=${tag}
+                .value=${value}
+              ></dashboard-device-card>
+            `;
+        })}
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PeternakanDevices.prototype, "statusMap", 2);
+    PeternakanDevices = __decorateClass([
+      t3("peternakan-devices")
+    ], PeternakanDevices);
+  }
+});
+
+// src/pages/produksi/peternakan.ts
+var peternakan_exports = {};
+__export(peternakan_exports, {
+  PeternakanPage: () => PeternakanPage
+});
+var PeternakanPage;
+var init_peternakan = __esm({
+  "src/pages/produksi/peternakan.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_fromLivestockBatch();
+    init_entity_detail_dialog();
+    init_device_dialog();
+    init_livestock_batch();
+    init_batch_result();
+    init_peternakan_devices();
+    PeternakanPage = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.animals = [];
+        this.livestockList = [];
+        this.batches = [];
+        this.harvests = [];
+        this.onAnimalClick = (e8) => {
+          console.groupCollapsed("[Ternak] open animal dialog");
+          console.log("animal payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show({ "\u{1F42E} Ternak": e8.detail ?? {} }, "Detail Ternak");
+        };
+        this.onBatchClick = (e8) => {
+          const batch = e8.detail;
+          const animal = this.animals.find((a3) => a3.id === batch.itemId);
+          console.groupCollapsed("[Horti] open batch dialog");
+          console.log("batch payload:", batch);
+          console.log("plant payload:", animal);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          dlg?.show(
+            { "\u{1F4E6} Batch": batch, "\u{1F42E} Ternak": animal ?? {} },
+            "Detail Batch Ternak"
+          );
+        };
+        this.handleHarvestBatchClick = (e8) => {
+          const { batchId, batch } = e8.detail || {};
+          console.groupCollapsed("[Page] handleHarvestBatchClick");
+          console.log("payload:", e8.detail);
+          console.groupEnd();
+          const dlg = document.querySelector("entity-detail-dialog");
+          if (!dlg) return;
+          const resolved = batch ?? this.batches.find((b3) => b3.id === batchId);
+          if (!resolved) {
+            dlg.show(
+              { "\u26A0\uFE0F Info": { message: "Batch tidak ditemukan", batchId } },
+              "Detail Batch"
+            );
+            return;
+          }
+          dlg.show({ "\u{1F4E6} Batch": resolved }, "Detail Batch");
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const animals = await (await fetch("/assets/mock/livestock.json")).json();
+        const raw = await (await fetch("/assets/mock/livestock-batches.json")).json();
+        this.animals = animals;
+        this.batches = raw.map(fromLivestockBatch);
+        this.harvests = await (await fetch("/assets/mock/livestock-harvests.json")).json();
+        console.groupCollapsed("[Peternakan] mapped GenericBatch");
+        console.table(
+          this.batches.map((b3) => ({
+            id: b3.id,
+            itemId: b3.itemId,
+            init: b3.initialCount,
+            curr: b3.currentCount,
+            status: b3.status
+          }))
+        );
+        console.groupEnd();
+      }
+      render() {
+        const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
+        return x`
+      <section class="p-4 space-y-4">
+        <h1 class="text-2xl font-bold">🐄 Produksi Peternakan</h1>
+
+        <livestock-batch
+          .batches=${this.batches}
+          .livestock=${this.animals}
+          @animal-click=${this.onAnimalClick}
+          @batch-click=${this.onBatchClick}
+        ></livestock-batch>
+
+        <peternakan-devices style=${cardStyle}></peternakan-devices>
+        </div>
+
+        <div>
+          <h2 class="text-xl font-semibold mb-2">Hasil Panen</h2>
+          <batch-result
+            .harvests=${this.harvests}
+            .batches=${this.batches}
+          @batch-click=${this.handleHarvestBatchClick}
+          ></batch-result>
+        </div>
+        <entity-detail-dialog></entity-detail-dialog>
+       </section>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], PeternakanPage.prototype, "animals", 2);
+    __decorateClass([
+      r5()
+    ], PeternakanPage.prototype, "livestockList", 2);
+    __decorateClass([
+      r5()
+    ], PeternakanPage.prototype, "batches", 2);
+    __decorateClass([
+      r5()
+    ], PeternakanPage.prototype, "harvests", 2);
+    PeternakanPage = __decorateClass([
+      t3("peternakan-page")
+    ], PeternakanPage);
+  }
+});
+
+// src/utils/color.utils.ts
+function getRowColor(eventType) {
+  switch (eventType.toUpperCase()) {
+    case "ALARM_HI":
+    case "ALARMHI":
+    case "ALARM-HI":
+      return "bg-red-100 text-red-800";
+    case "ALARM_LO":
+    case "ALARMLOW":
+    case "ALARM-LO":
+      return "bg-blue-100 text-blue-800";
+    case "STATUS":
+      return "bg-green-100 text-green-800";
+    case "ERROR":
+      return "bg-yellow-100 text-yellow-900";
+    case "INFO":
+      return "bg-gray-100 text-gray-800";
+    default:
+      return "bg-white";
+  }
+}
+var init_color_utils = __esm({
+  "src/utils/color.utils.ts"() {
+    "use strict";
+  }
+});
+
+// src/services/event.service.ts
+var repo2, fetchAllEvents;
+var init_event_service = __esm({
+  "src/services/event.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo2 = getEventRepository();
+    fetchAllEvents = () => repo2.getAll();
+  }
+});
+
+// src/components/event-table.ts
+var EventTable;
+var init_event_table = __esm({
+  "src/components/event-table.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_color_utils();
+    init_event_service();
+    EventTable = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.events = [];
+        this.filterId = "";
+        this.filterType = "";
+        this.filterStartTime = "";
+        this.filterEndTime = "";
+        this.highlightedKey = "";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        await this.loadMockEvents();
+      }
+      async loadMockEvents() {
+        try {
+          const data = await fetchAllEvents();
+          const prevKey = this.events[0] ? this.getEventKey(this.events[0]) : "";
+          const newKey = data[0] ? this.getEventKey(data[0]) : "";
+          this.events = data;
+          if (newKey && newKey !== prevKey) {
+            this.highlightedKey = newKey;
+            setTimeout(() => this.highlightedKey = "", 3e3);
+          }
+        } catch (err) {
+          console.error("Load failed:", err);
+        }
+      }
+      getEventKey(e8) {
+        return `${e8.timestamp}_${e8.id}`;
+      }
+      formatDateTime(ts) {
+        const date = new Date(ts);
+        return date.toLocaleString("sv-SE").replace("T", " ");
+      }
+      get filteredEvents() {
+        const start = this.filterStartTime ? new Date(this.filterStartTime).getTime() : null;
+        const end = this.filterEndTime ? new Date(this.filterEndTime).getTime() : null;
+        return this.events.filter((e8) => {
+          const eventTime = new Date(e8.timestamp).getTime();
+          const matchId = !this.filterId || e8.id.toLowerCase().includes(this.filterId.trim().toLowerCase());
+          const matchType = !this.filterType || e8.event.toLowerCase() === this.filterType.trim().toLowerCase();
+          const matchStart = !start || eventTime >= start;
+          const matchEnd = !end || eventTime <= end;
+          return matchId && matchType && matchStart && matchEnd;
+        });
+      }
+      handleFilter(e8) {
+        const t5 = e8.target;
+        switch (t5.name) {
+          case "filterId":
+            this.filterId = t5.value;
+            break;
+          case "filterType":
+            this.filterType = t5.value;
+            break;
+          case "filterStart":
+            this.filterStartTime = t5.value;
+            break;
+          case "filterEnd":
+            this.filterEndTime = t5.value;
+            break;
+        }
+      }
+      resetTimeFilter() {
+        this.filterStartTime = "";
+        this.filterEndTime = "";
+        const startInput = this.renderRoot.querySelector(
+          'input[name="filterStart"]'
+        );
+        const endInput = this.renderRoot.querySelector(
+          'input[name="filterEnd"]'
+        );
+        if (startInput) startInput.value = "";
+        if (endInput) endInput.value = "";
+      }
+      render() {
+        return x`
+      <div class="mb-4 flex flex-wrap gap-4 items-end">
+        <!-- Filter by ID -->
+        <div class="flex flex-col min-w-[160px]">
+          <label class="text-xs font-bold text-gray-600 mb-1"
+            >Filter by ID</label
+          >
+          <input
+            name="filterId"
+            type="text"
+            class="border border-gray-300 px-3 py-1 rounded text-sm"
+            placeholder="e.g. TANK01"
+            @input=${this.handleFilter}
+          />
+        </div>
+
+        <!-- Filter by Event -->
+        <div class="flex flex-col min-w-[160px]">
+          <label class="text-xs font-bold text-gray-600 mb-1">Event Type</label>
+          <select
+            name="filterType"
+            class="border border-gray-300 px-3 py-1 rounded text-sm"
+            @change=${this.handleFilter}
+          >
+            <option value="">All Events</option>
+            <option>ALARM_HI</option>
+            <option>ALARM_LO</option>
+            <option>STATUS</option>
+            <option>ERROR</option>
+            <option>INFO</option>
+          </select>
+        </div>
+        <div class="flex flex-row gap-4">
+          <!-- Start Time -->
+          <div class="flex flex-col min-w-[180px]">
+            <label class="text-xs font-bold text-gray-600 mb-1"
+              >Start Time</label
+            >
+            <input
+              name="filterStart"
+              type="datetime-local"
+              class="border border-gray-300 px-3 py-1 rounded text-sm"
+              @change=${this.handleFilter}
+            />
+          </div>
+
+          <!-- End Time -->
+          <div class="flex flex-col min-w-[180px]">
+            <label class="text-xs font-bold text-gray-600 mb-1">End Time</label>
+            <input
+              name="filterEnd"
+              type="datetime-local"
+              class="border border-gray-300 px-3 py-1 rounded text-sm"
+              @change=${this.handleFilter}
+            />
+          </div>
+
+          <!-- Reset Time Button -->
+          <div class="flex flex-col justify-end">
+            <button
+              class="h-[38px] px-3 text-sm bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded flex items-center"
+              @click=${this.resetTimeFilter}
+            >
+              Reset Time
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
+          <table class="table-auto w-full text-sm">
+            <thead
+              class="bg-gray-100 text-left text-gray-700 uppercase tracking-wider"
+            >
+              <tr>
+                <th class="px-4 py-2">Timestamp</th>
+                <th class="px-4 py-2">ID</th>
+                <th class="px-4 py-2">Event</th>
+                <th class="px-4 py-2">Description</th>
+                <th class="px-4 py-2">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${this.filteredEvents.map((e8) => {
+          const highlight = this.getEventKey(e8) === this.highlightedKey ? "animate-pulse ring-2 ring-yellow-400" : "";
+          return x`
+                  <tr class="${getRowColor(e8.event)} ${highlight}">
+                    <td class="px-4 py-2">
+                      ${this.formatDateTime(e8.timestamp)}
+                    </td>
+                    <td class="px-4 py-2">${e8.id}</td>
+                    <td class="px-4 py-2 font-bold uppercase">${e8.event}</td>
+                    <td class="px-4 py-2">${e8.description}</td>
+                    <td class="px-4 py-2">${e8.value}</td>
+                  </tr>
+                `;
+        })}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
       }
     };
     __decorateClass([
       r5()
-    ], DeviceList.prototype, "devices", 2);
-    DeviceList = __decorateClass([
-      t3("device-list")
-    ], DeviceList);
-  }
-});
-
-// src/components/dashboard-mqtt.ts
-var DashboardMqtt;
-var init_dashboard_mqtt = __esm({
-  "src/components/dashboard-mqtt.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_device_list();
-    DashboardMqtt = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <div class="p-4 space-y-4">
-        <h1 class="text-2xl font-bold text-gray-800">Dashboard MQTT</h1>
-
-        <device-list></device-list>
-      </div>
-    `;
-      }
-    };
-    DashboardMqtt = __decorateClass([
-      t3("dashboard-mqtt")
-    ], DashboardMqtt);
-  }
-});
-
-// src/views/ui-tabs.ts
-var UiTabs;
-var init_ui_tabs = __esm({
-  "src/views/ui-tabs.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    UiTabs = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.tabs = [];
-        this.active = "general";
-        this.badges = {};
-      }
-      createRenderRoot() {
-        return this;
-      }
-      onClick(id) {
-        this.dispatchEvent(
-          new CustomEvent("dev-tab-change", {
-            detail: { id },
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
-      render() {
-        return x`
-      <nav class="border-b border-slate-200 bg-white rounded-t-md">
-        <ul class="flex gap-2 -mb-px px-2">
-          ${this.tabs.map((t5) => {
-          const is = t5.id === this.active;
-          const badge = this.badges[t5.id] ?? 0;
-          return x`
-              <li>
-                <button
-                  class="${[
-            "px-4 py-2 text-sm rounded-t-md border transition",
-            "inline-flex items-center gap-2",
-            is ? "bg-slate-100 text-slate-900 border-slate-300 border-b-white" : "border-transparent text-slate-500 hover:bg-slate-50"
-          ].join(" ")}"
-                  @click=${() => this.onClick(t5.id)}
-                >
-                  ${t5.icon ? x`<span>${t5.icon}</span>` : null}
-                  <span>${t5.label}</span>
-                  ${badge > 0 ? x`<span
-                        class="ml-1 grid place-items-center w-5 h-5 rounded-full bg-red-500 text-white text-xs"
-                        >${badge}</span
-                      >` : null}
-                </button>
-              </li>
-            `;
-        })}
-        </ul>
-      </nav>
-    `;
-      }
-    };
+    ], EventTable.prototype, "events", 2);
     __decorateClass([
-      n4({ attribute: false })
-    ], UiTabs.prototype, "tabs", 2);
+      r5()
+    ], EventTable.prototype, "filterId", 2);
     __decorateClass([
-      n4()
-    ], UiTabs.prototype, "active", 2);
+      r5()
+    ], EventTable.prototype, "filterType", 2);
     __decorateClass([
-      n4({ attribute: false })
-    ], UiTabs.prototype, "badges", 2);
-    UiTabs = __decorateClass([
-      t3("ui-tabs")
-    ], UiTabs);
+      r5()
+    ], EventTable.prototype, "filterStartTime", 2);
+    __decorateClass([
+      r5()
+    ], EventTable.prototype, "filterEndTime", 2);
+    __decorateClass([
+      r5()
+    ], EventTable.prototype, "highlightedKey", 2);
+    EventTable = __decorateClass([
+      t3("event-table")
+    ], EventTable);
   }
 });
 
@@ -14312,58 +16541,92 @@ var init_dashboard = __esm({
     "use strict";
     init_lit();
     init_decorators();
-    init_dashboard_hidoponik();
-    init_dashboard_aquakultur();
-    init_dashboard_peternakan();
-    init_mode_selector();
-    init_device_dialog();
-    init_dashboard_mqtt();
     init_ui_tabs();
+    init_dashboard_mqtt();
+    init_hidroponik();
+    init_hortikultura();
+    init_akuakultur();
+    init_peternakan();
+    init_event_table();
     PageDashboard = class extends i4 {
       constructor() {
         super(...arguments);
-        this.activeTab = "operation";
+        this.activeTab = "produksi";
+        this.domain = "hidroponik";
       }
       createRenderRoot() {
         return this;
       }
-      get tabs() {
-        return [
-          { id: "operation", label: "Operation", icon: "\u2699\uFE0F" },
-          { id: "mqtt", label: "MQTT Devices", icon: "\u{1F9EA}" }
-        ];
-      }
-      onTabChange(e8) {
+      handleTabChange(e8) {
         this.activeTab = e8.detail.id;
       }
-      renderContent() {
-        const cardStyle = "display:block;margin-bottom:1.5rem;";
-        if (this.activeTab === "operation") {
-          return x`
-        <mode-selector></mode-selector>
-        <section>
-          <dashboard-hidroponik style=${cardStyle}></dashboard-hidroponik>
-          <dashboard-aquakultur style=${cardStyle}></dashboard-aquakultur>
-          <dashboard-peternakan style=${cardStyle}></dashboard-peternakan>
-        </section>
-      `;
-        } else if (this.activeTab === "mqtt") {
-          return x`<dashboard-mqtt></dashboard-mqtt>`;
-        }
+      handleDomainSelect(e8) {
+        const selected = e8.target.value;
+        this.domain = selected;
+      }
+      renderProduksiContent() {
+        return x`
+      <div class="mb-4">
+        <label class="block mb-2 text-sm font-medium text-gray-700">
+          Pilih Domain Produksi:
+        </label>
+        <select
+          @change=${this.handleDomainSelect}
+          class="w-full p-2 border border-gray-300 rounded-md text-sm text-gray-800"
+        >
+          <option value="hidroponik" ?selected=${this.domain === "hidroponik"}>
+            🌱 Hidroponik
+          </option>
+          <option
+            value="hortikultura"
+            ?selected=${this.domain === "hortikultura"}
+          >
+            🥬 Hortikultura
+          </option>
+          <option value="akuakultur" ?selected=${this.domain === "akuakultur"}>
+            🐟 Akuakultur
+          </option>
+          <option value="peternakan" ?selected=${this.domain === "peternakan"}>
+            🐔 Peternakan
+          </option>
+        </select>
+      </div>
+
+      <section>
+        ${this.domain === "hidroponik" ? x`<hidroponik-page class="block mb-6"></hidroponik-page>` : this.domain === "hortikultura" ? x`<hortikultura-page class="block mb-6"></hortikultura-page>` : this.domain === "akuakultur" ? x`<akuakultur-page class="block mb-6"></akuakultur-page>` : this.domain === "peternakan" ? x`<peternakan-page class="block mb-6"></peternakan-page>` : null}
+      </section>
+    `;
+      }
+      // 🔌 Konten untuk tab "Devices" (dashboard-mqtt)
+      renderMqttContent() {
+        return x`
+      <section class="space-y-6">
+        <dashboard-mqtt class="block"></dashboard-mqtt>
+      </section>
+    `;
+      }
+      // 📜 Konten untuk tab "History"
+      renderHistoryContent() {
+        return x`
+      <section class="space-y-6">
+        <event-table class="block mt-6"></event-table>
+      </section>
+    `;
       }
       render() {
         return x`
       <div class="p-4 space-y-4">
         <ui-tabs
           .tabs=${[
-          { id: "operation", label: "Operation", icon: "\u2699\uFE0F" },
-          { id: "mqtt", label: "MQTT Devices", icon: "\u{1F9EA}" }
+          { id: "produksi", label: "Produksi", icon: "\u{1F3ED}" },
+          { id: "devices", label: "Devices", icon: "\u{1F50C}" },
+          { id: "history", label: "Event History", icon: "\u{1F4DC}" }
         ]}
           .active=${this.activeTab}
-          @dev-tab-change=${this.onTabChange}
+          @dev-tab-change=${this.handleTabChange}
         ></ui-tabs>
 
-        ${this.renderContent()}
+        ${this.activeTab === "produksi" ? this.renderProduksiContent() : this.activeTab === "devices" ? this.renderMqttContent() : this.renderHistoryContent()}
       </div>
     `;
       }
@@ -14371,107 +16634,12 @@ var init_dashboard = __esm({
     __decorateClass([
       r5()
     ], PageDashboard.prototype, "activeTab", 2);
+    __decorateClass([
+      r5()
+    ], PageDashboard.prototype, "domain", 2);
     PageDashboard = __decorateClass([
       t3("page-dashboard")
     ], PageDashboard);
-  }
-});
-
-// src/pages/histori.ts
-var histori_exports = {};
-__export(histori_exports, {
-  PageHistori: () => PageHistori
-});
-var PageHistori;
-var init_histori = __esm({
-  "src/pages/histori.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    PageHistori = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <section class="bg-white shadow rounded p-6">
-        <div class="mb-4">
-          <h2 class="text-2xl font-bold text-green-800">📜 Riwayat Sensor</h2>
-          <p class="text-gray-500 text-sm">
-            Histori pembacaan data sensor hidroponik
-          </p>
-        </div>
-
-        <div class="flex justify-between items-center mb-3">
-          <label class="text-sm text-gray-600 font-medium"
-            >Filter tanggal:
-            <input
-              type="date"
-              class="ml-2 border border-gray-300 rounded px-2 py-1 text-sm"
-            />
-          </label>
-          <button
-            class="bg-green-600 text-white text-sm px-4 py-1 rounded hover:bg-green-700 transition"
-          >
-            🔄 Refresh
-          </button>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full text-sm text-left border">
-            <thead class="bg-gray-100 text-gray-700 font-semibold border-b">
-              <tr>
-                <th class="px-4 py-2">⏱ Waktu</th>
-                <th class="px-4 py-2">🌡 Suhu</th>
-                <th class="px-4 py-2">💧 pH</th>
-                <th class="px-4 py-2">🌿 Nutrisi</th>
-                <th class="px-4 py-2">📶 Status</th>
-              </tr>
-            </thead>
-            <tbody class="text-gray-700">
-              ${this.renderRow(
-          "2025-07-29 09:12",
-          "25.3\xB0C",
-          "6.1",
-          "890 ppm",
-          "Normal"
-        )}
-              ${this.renderRow(
-          "2025-07-29 08:45",
-          "26.0\xB0C",
-          "6.5",
-          "870 ppm",
-          "Normal"
-        )}
-              ${this.renderRow(
-          "2025-07-29 08:15",
-          "28.4\xB0C",
-          "6.9",
-          "1020 ppm",
-          "\u26A0\uFE0F Tinggi"
-        )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    `;
-      }
-      renderRow(waktu, suhu, ph, nutrisi, status) {
-        const statusColor = status.includes("Tinggi") ? "text-red-600" : "text-green-700";
-        return x`
-      <tr class="border-b">
-        <td class="px-4 py-2">${waktu}</td>
-        <td class="px-4 py-2">${suhu}</td>
-        <td class="px-4 py-2">${ph}</td>
-        <td class="px-4 py-2">${nutrisi}</td>
-        <td class="px-4 py-2 font-medium ${statusColor}">${status}</td>
-      </tr>
-    `;
-      }
-    };
-    PageHistori = __decorateClass([
-      t3("page-histori")
-    ], PageHistori);
   }
 });
 
@@ -14551,55 +16719,6 @@ async function deleteDevice(tag) {
   cache2.delete(tag);
   return true;
 }
-function validateDevice(d3, isNew) {
-  const errs = [];
-  if (!d3.tagNumber) errs.push({ field: "tagNumber", message: "Tag wajib" });
-  if (!d3.type) errs.push({ field: "type", message: "Type wajib" });
-  if (!d3.description || !String(d3.description).trim())
-    errs.push({ field: "description", message: "Deskripsi wajib" });
-  if (isNew && cache2.has(d3.tagNumber)) {
-    errs.push({ field: "tagNumber", message: "Tag sudah dipakai" });
-  }
-  if (d3.ranges) {
-    const lo = d3.ranges.low ?? null, hi = d3.ranges.high ?? null;
-    if (lo !== null && hi !== null && Number(lo) >= Number(hi))
-      errs.push({ field: "ranges.high", message: "High harus > Low" });
-  }
-  if (d3.alarms && d3.ranges && d3.ranges.low !== null && d3.ranges.high !== null) {
-    const { low: rL, high: rH } = d3.ranges;
-    const { low: aL, high: aH } = d3.alarms;
-    if (aL !== null && (aL < rL || aL > rH))
-      errs.push({ field: "alarms.low", message: "Alarm low di luar range" });
-    if (aH !== null && (aH < rL || aH > rH))
-      errs.push({ field: "alarms.high", message: "Alarm high di luar range" });
-    if (aL !== null && aH !== null && aL >= aH)
-      errs.push({
-        field: "alarms.high",
-        message: "Alarm high harus > alarm low"
-      });
-  }
-  if (!d3.mqtt?.topic)
-    errs.push({ field: "mqtt.topic", message: "MQTT topic wajib" });
-  if (d3.type === "actuator") {
-    if (!d3.allowedStates || d3.allowedStates.length === 0)
-      errs.push({ field: "allowedStates", message: "allowedStates wajib" });
-    if (d3.defaultState && d3.allowedStates && !d3.allowedStates.includes(d3.defaultState))
-      errs.push({
-        field: "defaultState",
-        message: "defaultState harus ada di allowedStates"
-      });
-    if (!d3.writable)
-      errs.push({ field: "writable", message: "Actuator harus writable" });
-  }
-  if (!d3.io?.bus) errs.push({ field: "io.bus", message: "Bus wajib" });
-  if (d3.io.bus === "gpio" && (d3.io.pin === null || Number.isNaN(d3.io.pin)))
-    errs.push({ field: "io.pin", message: "GPIO pin wajib" });
-  if (d3.io.bus === "i2c" && !d3.io.address)
-    errs.push({ field: "io.address", message: "I2C address wajib" });
-  if (d3.io.bus === "adc" && (d3.io.channel === null || Number.isNaN(d3.io.channel)))
-    errs.push({ field: "io.channel", message: "ADC channel wajib" });
-  return errs;
-}
 async function readMockDevicesCfg() {
   const ENV = "pre-release";
   const BASE = ENV === "pre-release" ? "/taniverse/" : ENV === "production" ? "" : "/";
@@ -14625,10 +16744,509 @@ var USE_HTTP, API_BASE2, LS_KEY, cache2;
 var init_devices_config_service = __esm({
   "src/services/devices-config.service.ts"() {
     "use strict";
-    USE_HTTP = true;
+    USE_HTTP = false;
     API_BASE2 = import.meta?.env?.VITE_API_BASE || "http://localhost:8080/api";
     LS_KEY = "mock.devices.config";
     cache2 = /* @__PURE__ */ new Map();
+  }
+});
+
+// src/components/device-events.ts
+var DeviceEvents;
+var init_device_events = __esm({
+  "src/components/device-events.ts"() {
+    "use strict";
+    init_devices_config_service();
+    DeviceEvents = class {
+      static async handleTagPicked(tag, tags, setDevice) {
+        let found = getByTag(tag);
+        if (!found) {
+          const list = await loadDevices();
+          const f3 = list.find((d3) => d3.tagNumber === tag);
+          if (f3) {
+            setDevice(structuredClone(f3), "edit");
+          }
+          return;
+        }
+        setDevice(structuredClone(found), "edit");
+      }
+      static async loadAllDevices() {
+        return await loadDevices();
+      }
+      static async handleDelete(tag, tags, onAfterDelete) {
+        if (!tag) return false;
+        const confirm1 = confirm(
+          "Perubahan belum disimpan akan hilang.\nHapus device ini?"
+        );
+        const confirm2 = confirm(`Hapus device "${tag}"?`);
+        if (!confirm1 || !confirm2) return false;
+        try {
+          await deleteDevice(tag);
+          const updatedTags = tags.filter((t5) => t5 !== tag);
+          const list = await loadDevices();
+          const nextDev = list.find((d3) => d3.tagNumber === updatedTags[0]);
+          if (nextDev) {
+            onAfterDelete(structuredClone(nextDev), "edit");
+          } else {
+            onAfterDelete();
+          }
+          return true;
+        } catch (err) {
+          alert(`Gagal hapus: ${err?.message || err}`);
+          return false;
+        }
+      }
+      static async handleSave(device, mode, tags, onAfterSave) {
+        const now = (/* @__PURE__ */ new Date()).toISOString();
+        device.meta = {
+          createdAt: device.meta?.createdAt ?? now,
+          updatedAt: now
+        };
+        try {
+          const saved = await upsertDevice(device);
+          const newTags = tags.includes(saved.tagNumber) ? tags : [...tags, saved.tagNumber].sort();
+          onAfterSave(structuredClone(saved), newTags, "edit");
+          return true;
+        } catch (err) {
+          alert(`Gagal simpan: ${err?.message || err}`);
+          return false;
+        }
+      }
+      static async handleEditMode(currentTag, tags, onLoaded) {
+        const sel = currentTag && tags.includes(currentTag) ? currentTag : tags[0] ?? "";
+        if (!sel) return;
+        const found = getByTag(sel);
+        if (found) {
+          onLoaded(structuredClone(found));
+        } else {
+          const list = await loadDevices();
+          const f3 = list.find((d3) => d3.tagNumber === sel);
+          if (f3) onLoaded(structuredClone(f3));
+        }
+      }
+    };
+  }
+});
+
+// src/components/form-builder-field.ts
+function isObjectOption(opt) {
+  return typeof opt === "object" && "value" in opt && "label" in opt;
+}
+var FormBuilder;
+var init_form_builder_field = __esm({
+  "src/components/form-builder-field.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    FormBuilder = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.inputId = "";
+        this.error = "";
+        this.value = "";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      render() {
+        const f3 = this.field;
+        const span = f3.colSpan ?? 1;
+        const base = `${f3.widthClass ?? "w-full"} px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500`;
+        if (f3.type === "separator") {
+          return x`
+        <div class="col-span-2 border-b border-gray-300 mt-2 mb-1">
+          ${f3.label ? x`<h3 class="text-sm font-semibold text-gray-600 mb-1">
+                ${f3.label}
+              </h3>` : null}
+        </div>
+      `;
+        }
+        const errorHtml = this.error ? x`<p class="text-sm text-red-600 mt-1">${this.error}</p>` : null;
+        switch (f3.type) {
+          case "textarea":
+            return x`
+          <div class="col-span-${span}">
+            <label for=${this.inputId} class="block text-sm text-gray-700 mb-1">
+              ${f3.label}${f3.required ? " *" : ""}
+            </label>
+            <textarea
+              id=${this.inputId}
+              class="${base} resize-none min-h-[90px]"
+              .value=${this.value ?? ""}
+              ?disabled=${f3.disabled ?? false}
+              @input=${(e8) => this.onInput(e8, f3.key)}
+            ></textarea>
+            ${errorHtml}
+          </div>
+        `;
+          case "select":
+            return x`
+          <div class="col-span-${span}">
+            <label for=${this.inputId} class="block text-sm text-gray-700 mb-1">
+              ${f3.label}${f3.required ? " *" : ""}
+            </label>
+            <select
+              id=${this.inputId}
+              class="${base}"
+              .value=${String(this.value ?? "")}
+              ?disabled=${f3.disabled ?? false}
+              @change=${(e8) => this.onInput(e8, f3.key)}
+            >
+              <option value="">-- Pilih --</option>
+              ${f3.options?.map(
+              (opt) => isObjectOption(opt) ? x`
+                      <option
+                        value=${String(opt.value)}
+                        ?selected=${String(this.value) === String(opt.value)}
+                      >
+                        ${opt.label}
+                      </option>
+                    ` : x`
+                      <option
+                        value=${String(opt)}
+                        ?selected=${String(this.value) === String(opt)}
+                      >
+                        ${opt}
+                      </option>
+                    `
+            )}
+            </select>
+            ${errorHtml}
+          </div>
+        `;
+          default:
+            return x`
+          <div class="col-span-${span}">
+            <label for=${this.inputId} class="block text-sm text-gray-700 mb-1">
+              ${f3.label}${f3.required ? " *" : ""}
+            </label>
+            <input
+              id=${this.inputId}
+              type=${f3.type}
+              class="${base}"
+              .value=${this.value ?? ""}
+              ?required=${f3.required ?? false}
+              ?disabled=${f3.disabled ?? false}
+              @input=${(e8) => this.onInput(e8, f3.key)}
+            />
+            ${errorHtml}
+          </div>
+        `;
+        }
+      }
+    };
+    __decorateClass([
+      n4({ type: Object })
+    ], FormBuilder.prototype, "field", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], FormBuilder.prototype, "inputId", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], FormBuilder.prototype, "onInput", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], FormBuilder.prototype, "error", 2);
+    __decorateClass([
+      n4({ type: Object })
+    ], FormBuilder.prototype, "value", 2);
+    FormBuilder = __decorateClass([
+      t3("form-builder-field")
+    ], FormBuilder);
+  }
+});
+
+// src/components/form-builder-buttons.ts
+var FormBuilderButtons;
+var init_form_builder_buttons = __esm({
+  "src/components/form-builder-buttons.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    FormBuilderButtons = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.mode = "new";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        console.log("[CRUD BUTTONS] mounted with kind:", this.mode);
+      }
+      emit(event) {
+        this.dispatchEvent(
+          new CustomEvent(event, { bubbles: false, composed: true })
+        );
+      }
+      render() {
+        return x`
+      <div class="flex flex-wrap gap-3 pt-4">
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700 transition cursor-pointer"
+          @click=${() => this.emit("submit")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+          <span class="text-sm font-semibold">Submit</span>
+        </button>
+
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 transition cursor-pointer"
+          @click=${() => this.emit("cancel")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+          <span class="text-sm font-semibold">Cancel</span>
+        </button>
+
+        ${this.mode === "edit" ? x`
+              <button
+                class="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md shadow hover:bg-red-700 transition cursor-pointer"
+                @click=${() => this.emit("delete")}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7L5 7M10 11v6m4-6v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12"
+                  />
+                </svg>
+                <span class="text-sm font-semibold">Delete</span>
+              </button>
+            ` : null}
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], FormBuilderButtons.prototype, "mode", 2);
+    FormBuilderButtons = __decorateClass([
+      t3("form-builder-buttons")
+    ], FormBuilderButtons);
+  }
+});
+
+// src/components/form-builder-section.ts
+var FormBuilderSection;
+var init_form_builder_section = __esm({
+  "src/components/form-builder-section.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    FormBuilderSection = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.title = "";
+        this.desc = "";
+        this.fields = [];
+        this.model = {};
+        this.errors = {};
+        this.cols = 2;
+      }
+      createRenderRoot() {
+        return this;
+      }
+      render() {
+        return x`
+      <div class="mb-6">
+        ${this.title ? x`<h2 class="text-lg font-semibold text-gray-800 mb-2">
+              ${this.title}
+            </h2>` : null}
+        ${this.desc ? x`<p class="text-sm text-gray-600 mb-4">${this.desc}</p>` : null}
+
+        <!-- ✅ Flat key → langsung akses model[key] -->
+        <div class="grid grid-cols-1 sm:grid-cols-${this.cols} gap-x-4 gap-y-4">
+          ${this.fields.map((field) => {
+          const val = this.model[field.key];
+          const err = this.errors[field.key] ?? "";
+          const span = field.colSpan ?? 1;
+          return x`
+              <div class="col-span-${span}">
+                <form-builder-field
+                  .field=${field}
+                  .value=${val}
+                  .inputId=${`fld-${field.key}`}
+                  .error=${err}
+                  .onInput=${this.onFieldChange}
+                ></form-builder-field>
+              </div>
+            `;
+        })}
+        </div>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], FormBuilderSection.prototype, "title", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], FormBuilderSection.prototype, "desc", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], FormBuilderSection.prototype, "fields", 2);
+    __decorateClass([
+      n4({ type: Object })
+    ], FormBuilderSection.prototype, "model", 2);
+    __decorateClass([
+      n4({ type: Object })
+    ], FormBuilderSection.prototype, "errors", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], FormBuilderSection.prototype, "onFieldChange", 2);
+    __decorateClass([
+      n4({ type: Number })
+    ], FormBuilderSection.prototype, "cols", 2);
+    FormBuilderSection = __decorateClass([
+      t3("form-builder-section")
+    ], FormBuilderSection);
+  }
+});
+
+// src/components/device-picker.ts
+var DevicePicker;
+var init_device_picker = __esm({
+  "src/components/device-picker.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_device_service();
+    DevicePicker = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.devices = [];
+        this.value = null;
+      }
+      createRenderRoot() {
+        return this;
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        fetchAllDevices().then((list) => {
+          this.devices = list;
+          this.requestUpdate();
+        });
+      }
+      handleChange(e8) {
+        const target = e8.target;
+        const selected = target.value;
+        this.value = selected;
+        const pickedDevice = this.devices.find((d3) => d3.tagNumber === selected);
+        console.log("[device-picker] Selected tagNumber:", selected);
+        console.log("[device-picker] Selected device:", pickedDevice);
+        this.dispatchEvent(
+          new CustomEvent("device-select", {
+            detail: {
+              mode: selected === "" ? "new" : "edit",
+              tagNumber: selected,
+              device: pickedDevice
+              // ✅ Kirim objek lengkap
+            },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        return x`
+      <div class="flex flex-col space-y-1 w-full max-w-md">
+        <label for="device-picker" class="text-sm font-medium text-gray-700">
+          Pilih Perangkat
+        </label>
+        <select
+          id="device-picker"
+          class="form-select w-full border rounded-md px-3 py-2 text-sm text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          @change=${this.handleChange}
+        >
+          <option value="">🆕 Tambah Tagnumber Baru</option>
+          ${this.devices.map(
+          (dev) => x`
+              <option
+                value=${dev.tagNumber}
+                ?selected=${this.value === dev.tagNumber}
+              >
+                ${dev.tagNumber} — ${dev.description}
+              </option>
+            `
+        )}
+        </select>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DevicePicker.prototype, "devices", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], DevicePicker.prototype, "value", 2);
+    DevicePicker = __decorateClass([
+      t3("device-picker")
+    ], DevicePicker);
+  }
+});
+
+// src/components/device-ui.ts
+var DeviceUI;
+var init_device_ui = __esm({
+  "src/components/device-ui.ts"() {
+    "use strict";
+    DeviceUI = class {
+      /**
+       * Kelas Tailwind untuk segmented button (mode switch)
+       */
+      static btnCls(active) {
+        const base = "relative px-3 md:px-4 py-1.5 rounded-md text-sm font-medium transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2";
+        const on = "bg-white text-slate-900 shadow ring-1 ring-slate-200";
+        const off = "text-slate-600 hover:text-slate-900 hover:bg-white/60";
+        return `${base} ${active ? on : off}`;
+      }
+      /**
+       * Tampilkan toast sementara (berbasis DOM langsung)
+       */
+      static showToast(msg, error = false, duration = 1600) {
+        const el2 = document.createElement("div");
+        el2.textContent = msg;
+        el2.className = `fixed z-50 bottom-4 right-4 px-3 py-2 rounded shadow ${error ? "bg-rose-600 text-white" : "bg-emerald-600 text-white"}`;
+        document.body.appendChild(el2);
+        setTimeout(() => el2.remove(), duration);
+      }
+    };
   }
 });
 
@@ -14654,646 +17272,525 @@ var init_device_model = __esm({
   }
 });
 
-// src/views/dev-config-general.ts
-var DevConfigGeneral;
-var init_dev_config_general = __esm({
-  "src/views/dev-config-general.ts"() {
+// src/pages/konfigurasi/schema/device-config-fields.ts
+var deviceConfigFields;
+var init_device_config_fields = __esm({
+  "src/pages/konfigurasi/schema/device-config-fields.ts"() {
     "use strict";
-    init_lit();
-    init_decorators();
     init_device_model();
-    DevConfigGeneral = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.errors = {};
-        this.mode = "edit";
-        this.tags = [];
-        // daftar Tag untuk dropdown
-        // ==== UI helpers ====
-        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
-        this.e = (f3) => this.errors[f3];
-        this.num = (v2) => v2 === "" ? null : Number(v2);
-        // ==== Initial pick (sekali) saat mode EDIT ====
-        this._initPicked = false;
-      }
-      // pakai light DOM supaya Tailwind global berlaku
-      createRenderRoot() {
-        return this;
-      }
-      emit(path, value) {
-        this.dispatchEvent(
-          new CustomEvent("dev-field-change", {
-            detail: { path, value },
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
-      updated(_c2) {
-        if (!this._initPicked && this.mode === "edit" && this.tags?.length) {
-          const initial = this.model.tagNumber || this.tags[0];
-          console.warn("[dev-config-general] init pick \u2192", {
-            mode: this.mode,
-            tags: this.tags,
-            modelTag: this.model.tagNumber,
-            initial
-          });
-          if (initial) {
-            this.dispatchEvent(
-              new CustomEvent("dev-tag-picked", {
-                detail: { tag: initial },
-                bubbles: true,
-                composed: true
-              })
-            );
-            this._initPicked = true;
+    deviceConfigFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "tagNumber",
+            label: "Tag Number",
+            type: "text",
+            required: true,
+            helpText: "Kode unik perangkat",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "type",
+            label: "Tipe",
+            type: "select",
+            required: true,
+            options: [
+              { value: "sensor", label: "Sensor" },
+              { value: "actuator", label: "Actuator" }
+            ],
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "description",
+            label: "Deskripsi",
+            type: "textarea",
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "unit",
+            label: "Satuan",
+            type: "select",
+            options: STANDARD_UNITS,
+            // value: string (mis. "°C", "%", "ppm", dll)
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "writable",
+            label: "Writable",
+            type: "select",
+            options: [
+              { value: true, label: "Ya (Actuator)" },
+              { value: false, label: "Tidak (Sensor)" }
+            ],
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "location",
+            label: "Lokasi",
+            type: "text",
+            widthClass: "w-full",
+            colSpan: 2
           }
+        ]
+      },
+      // ✅ Range & Alarm → flattened
+      {
+        title: "Range & Alarm",
+        fields: [
+          {
+            key: "ranges_low",
+            label: "Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "ranges_high",
+            label: "Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "alarms_low",
+            label: "Alarm Rendah",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "alarms_high",
+            label: "Alarm Tinggi",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      // ✅ IO → flattened
+      {
+        title: "Koneksi Fisik (IO)",
+        fields: [
+          {
+            key: "io_bus",
+            label: "Tipe Bus",
+            type: "select",
+            options: [
+              { value: "gpio", label: "GPIO" },
+              { value: "adc", label: "ADC" },
+              { value: "i2c", label: "I2C" }
+            ],
+            widthClass: "w-full max-w-md",
+            required: true
+          },
+          {
+            key: "io_pin",
+            label: "Pin (GPIO/ADC)",
+            type: "number",
+            helpText: "Pin fisik (jika GPIO atau ADC)",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "io_address",
+            label: "I2C Address",
+            type: "text",
+            helpText: "Contoh: 0x40",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "io_channel",
+            label: "Channel",
+            type: "number",
+            helpText: "Channel opsional (ADC multiplexer, dsb)",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      // ✅ Sampling → flattened
+      {
+        title: "Sampling (Sensor)",
+        fields: [
+          {
+            key: "sample_periodMs",
+            label: "Periode Sampling (ms)",
+            type: "number",
+            helpText: "Interval pengambilan data sensor",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "sample_deadband",
+            label: "Deadband",
+            type: "number",
+            helpText: "Perubahan minimum agar nilai dikirim",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      // ✅ Display → flattened
+      {
+        title: "Display",
+        fields: [
+          {
+            key: "display_precision",
+            label: "Presisi Tampilan",
+            type: "number",
+            helpText: "Jumlah angka di belakang koma",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      // ✅ Actuator control (allowedStates: string[])
+      {
+        title: "Kontrol Aktuator",
+        fields: [
+          {
+            key: "allowedStates",
+            label: "Daftar State Diizinkan",
+            type: "text",
+            helpText: "Pisahkan dengan koma, misal: ON,OFF,AUTO (akan di-parse menjadi array)",
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "defaultState",
+            label: "State Default",
+            type: "text",
+            helpText: "State awal saat startup",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/components/device-state-handler.ts
+var DeviceStateHandler;
+var init_device_state_handler = __esm({
+  "src/components/device-state-handler.ts"() {
+    "use strict";
+    DeviceStateHandler = class {
+      static newTemplate() {
+        return {
+          tagNumber: "",
+          location: "",
+          sensor: {
+            ph: 0,
+            ec: 0
+          }
+          // Tambah properti default lainnya
+        };
+      }
+      static revalidate(model, isNew = false) {
+        const errors = [];
+        const errorsMap = {};
+        if (!model.tagNumber) {
+          errors.push("Tag tidak boleh kosong");
+          errorsMap["tagNumber"] = "Wajib diisi";
         }
+        return { errors, errorsMap };
       }
-      render() {
-        const d3 = this.model;
-        const statesCsv = (d3.allowedStates ?? []).join(",");
-        return x`
-      <section class="p-4 space-y-6">
-        <!-- Identitas -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Tag Number</span>
-
-            ${this.mode === "edit" ? (() => {
-          const selectValue = this.model.tagNumber || (this.tags[0] ?? "");
-          console.warn(
-            "[dev-config-general] render EDIT, mode =",
-            this.mode,
-            "| selectValue =",
-            selectValue,
-            "| tags =",
-            this.tags
-          );
-          return x`
-                    <select
-                      class="${this.inputCls}"
-                      .value=${selectValue}
-                      @change=${(e8) => {
-            const val = e8.currentTarget.value;
-            console.warn("[dev-config-general] tag-change \u2192", val);
-            if (!val) return;
-            this.emit("tagNumber", val);
-            this.dispatchEvent(
-              new CustomEvent("dev-tag-picked", {
-                detail: { tag: val },
-                bubbles: true,
-                composed: true
-              })
-            );
-          }}
-                    >
-                      ${this.tags.map(
-            (t5) => x`<option value=${t5}>${t5}</option>`
-          )}
-                    </select>
-                  `;
-        })() : (() => {
-          console.warn(
-            "[dev-config-general] render NEW, mode =",
-            this.mode,
-            "| initial input =",
-            this.model.tagNumber ?? ""
-          );
-          return x`
-                    <!-- NEW: input bebas -->
-                    <input
-                      class="${this.inputCls}"
-                      .value=${d3.tagNumber ?? ""}
-                      placeholder="Ketik tag baru…"
-                      @input=${(e8) => {
-            const val = e8.currentTarget.value.trim();
-            console.warn(
-              "[dev-config-general] new-tag typing \u2192",
-              val
-            );
-            this.emit("tagNumber", val);
-          }}
-                    />
-                  `;
-        })()}
-            ${this.e("tagNumber") ? x`<p class="text-xs text-red-600 mt-1">
-                  ${this.e("tagNumber")}
-                </p>` : null}
-          </label>
-
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Description</span>
-            <input
-              class="${this.inputCls}"
-              .value=${d3.description ?? ""}
-              @input=${(e8) => this.emit(
-          "description",
-          e8.currentTarget.value
-        )}
-            />
-          </label>
-
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Location</span>
-            <input
-              class="${this.inputCls}"
-              .value=${d3.location ?? ""}
-              placeholder="Lokasi fisik (mis. zona A1)"
-              @input=${(e8) => this.emit(
-          "location",
-          e8.currentTarget.value
-        )}
-            />
-          </label>
-
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Type</span>
-            <select
-              class="${this.inputCls}"
-              .value=${d3.type}
-              @change=${(e8) => this.emit("type", e8.currentTarget.value)}
-            >
-              <option value="sensor">sensor</option>
-              <option value="actuator">actuator</option>
-            </select>
-          </label>
-
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Unit</span>
-            <select
-              class="${this.inputCls}"
-              .value=${d3.unit ?? ""}
-              @change=${(e8) => this.emit("unit", e8.currentTarget.value)}
-            >
-              <option value="">(pilih unit)</option>
-              ${STANDARD_UNITS.map(
-          (u3) => x`<option value=${u3.value}>${u3.label}</option>`
-        )}
-            </select>
-          </label>
-        </div>
-
-        ${d3.type === "sensor" ? x`
-              <!-- Pengukuran -->
-              <div class="space-y-3">
-                <h3 class="text-sm font-semibold text-slate-700">Pengukuran</h3>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Range Low</span
-                    >
-                    <input
-                      type="number"
-                      class="${this.inputCls}"
-                      .value=${d3.ranges?.low ?? ""}
-                      @input=${(e8) => this.emit(
-          "ranges.low",
-          this.num(e8.currentTarget.value)
-        )}
-                    />
-                  </label>
-
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Range High</span
-                    >
-                    <input
-                      type="number"
-                      class="${this.inputCls}"
-                      .value=${d3.ranges?.high ?? ""}
-                      @input=${(e8) => this.emit(
-          "ranges.high",
-          this.num(e8.currentTarget.value)
-        )}
-                    />
-                    ${this.e("ranges.high") ? x`<p class="text-xs text-red-600 mt-1">
-                          ${this.e("ranges.high")}
-                        </p>` : null}
-                  </label>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Alarm Low</span
-                    >
-                    <input
-                      type="number"
-                      class="${this.inputCls}"
-                      .value=${d3.alarms?.low ?? ""}
-                      @input=${(e8) => this.emit(
-          "alarms.low",
-          this.num(e8.currentTarget.value)
-        )}
-                    />
-                    ${this.e("alarms.low") ? x`<p class="text-xs text-red-600 mt-1">
-                          ${this.e("alarms.low")}
-                        </p>` : null}
-                  </label>
-
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Alarm High</span
-                    >
-                    <input
-                      type="number"
-                      class="${this.inputCls}"
-                      .value=${d3.alarms?.high ?? ""}
-                      @input=${(e8) => this.emit(
-          "alarms.high",
-          this.num(e8.currentTarget.value)
-        )}
-                    />
-                    ${this.e("alarms.high") ? x`<p class="text-xs text-red-600 mt-1">
-                          ${this.e("alarms.high")}
-                        </p>` : null}
-                  </label>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Sample Period (ms)</span
-                    >
-                    <input
-                      type="number"
-                      class="${this.inputCls}"
-                      .value=${d3.sample?.periodMs ?? 1e3}
-                      @input=${(e8) => this.emit(
-          "sample.periodMs",
-          this.num(e8.currentTarget.value)
-        )}
-                    />
-                  </label>
-
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Deadband</span
-                    >
-                    <input
-                      type="number"
-                      step="0.001"
-                      class="${this.inputCls}"
-                      .value=${d3.sample?.deadband ?? ""}
-                      @input=${(e8) => {
-          const t5 = e8.currentTarget;
-          const v2 = t5.value === "" ? null : Number(t5.value);
-          this.emit("sample.deadband", v2);
-        }}
-                    />
-                  </label>
-                </div>
-
-                <label class="block">
-                  <span class="text-sm font-medium text-slate-700"
-                    >Display Precision</span
-                  >
-                  <input
-                    type="number"
-                    class="${this.inputCls}"
-                    .value=${d3.display?.precision ?? 0}
-                    @input=${(e8) => this.emit(
-          "display.precision",
-          this.num(e8.currentTarget.value)
-        )}
-                  />
-                </label>
-              </div>
-            ` : x`
-              <!-- Kontrol (Actuator) -->
-              <div class="space-y-3">
-                <h3 class="text-sm font-semibold text-slate-700">Kontrol</h3>
-
-                <label class="block">
-                  <span class="text-sm font-medium text-slate-700"
-                    >Allowed States (comma)</span
-                  >
-                  <input
-                    class="${this.inputCls}"
-                    .value=${statesCsv}
-                    placeholder="OFF,ON"
-                    @input=${(e8) => this.emit(
-          "allowedStatesCsv",
-          e8.currentTarget.value
-        )}
-                  />
-                  ${this.e("allowedStates") ? x`<p class="text-xs text-red-600 mt-1">
-                        ${this.e("allowedStates")}
-                      </p>` : null}
-                </label>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <label class="block">
-                    <span class="text-sm font-medium text-slate-700"
-                      >Default State</span
-                    >
-                    <input
-                      class="${this.inputCls}"
-                      .value=${d3.defaultState ?? ""}
-                      @input=${(e8) => this.emit(
-          "defaultState",
-          e8.currentTarget.value
-        )}
-                    />
-                    ${this.e("defaultState") ? x`<p class="text-xs text-red-600 mt-1">
-                          ${this.e("defaultState")}
-                        </p>` : null}
-                  </label>
-
-                  <label class="inline-flex items-center gap-2 mt-7">
-                    <input
-                      type="checkbox"
-                      .checked=${!!d3.writable}
-                      @change=${(e8) => this.emit(
-          "writable",
-          e8.currentTarget.checked
-        )}
-                    />
-                    <span class="text-sm text-slate-700">Writable</span>
-                    ${this.e("writable") ? x`<span class="text-xs text-red-600 ml-2"
-                          >${this.e("writable")}</span
-                        >` : null}
-                  </label>
-                </div>
-              </div>
-            `}
-
-        <!-- Status (RO) -->
-        <div class="border rounded p-3 bg-slate-50">
-          <h3 class="text-sm font-semibold text-slate-700 mb-2">Status</h3>
-          ${d3.type === "sensor" ? x`<div class="text-sm">
-                Value:
-                <span class="font-medium">${d3.value ?? "-"}</span>
-              </div>` : x`<div class="text-sm">
-                State:
-                <span class="font-medium">${d3.state ?? "-"}</span>
-              </div>`}
-        </div>
-      </section>
-    `;
+      static patch(model, path, value) {
+        const keys = path.split(".");
+        let current = model;
+        keys.slice(0, -1).forEach((k2) => {
+          if (!(k2 in current)) current[k2] = {};
+          current = current[k2];
+        });
+        current[keys[keys.length - 1]] = value;
       }
     };
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigGeneral.prototype, "model", 2);
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigGeneral.prototype, "errors", 2);
-    __decorateClass([
-      n4()
-    ], DevConfigGeneral.prototype, "mode", 2);
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigGeneral.prototype, "tags", 2);
-    DevConfigGeneral = __decorateClass([
-      t3("dev-config-general")
-    ], DevConfigGeneral);
   }
 });
 
-// src/views/dev-config-hw-comm.ts
-var DevConfigHwComm;
-var init_dev_config_hw_comm = __esm({
-  "src/views/dev-config-hw-comm.ts"() {
+// src/pages/konfigurasi/devices/device-config.ts
+function setNestedValue(obj, path, value) {
+  const keys = path.split(".");
+  let current = obj;
+  keys.slice(0, -1).forEach((k2) => {
+    if (!(k2 in current)) current[k2] = {};
+    current = current[k2];
+  });
+  current[keys[keys.length - 1]] = value;
+}
+var DeviceConfig;
+var init_device_config = __esm({
+  "src/pages/konfigurasi/devices/device-config.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    DevConfigHwComm = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.errors = {};
-        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
-        this.e = (f3) => this.errors[f3];
-        this.num = (v2) => v2 === "" ? null : Number(v2);
-      }
-      createRenderRoot() {
-        return this;
-      }
-      emit(path, value) {
-        this.dispatchEvent(
-          new CustomEvent("dev-field-change", {
-            detail: { path, value },
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
-      render() {
-        const d3 = this.model;
-        const showGPIO = d3.io.bus === "gpio";
-        const showI2C = d3.io.bus === "i2c";
-        const showADC = d3.io.bus === "adc";
-        return x`
-      <section class="p-4 space-y-6">
-        <!-- I/O (Hardware) -->
-        <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-slate-700">I/O (Hardware)</h3>
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">Bus</span>
-            <select
-              class="${this.inputCls}"
-              .value=${d3.io.bus}
-              @change=${(e8) => this.emit("io.bus", e8.target.value)}
-            >
-              <option value="adc">adc</option>
-              <option value="i2c">i2c</option>
-              <option value="gpio">gpio</option>
-            </select>
-            ${this.e("io.bus") ? x`<p class="text-xs text-red-600 mt-1">
-                  ${this.e("io.bus")}
-                </p>` : null}
-          </label>
-
-          ${showGPIO ? x` <label class="block">
-                <span class="text-sm font-medium text-slate-700">GPIO Pin</span>
-                <input
-                  type="number"
-                  class="${this.inputCls}"
-                  .value=${String(d3.io.pin ?? "")}
-                  @input=${(e8) => this.emit("io.pin", this.num(e8.target.value))}
-                />
-                ${this.e("io.pin") ? x`<p class="text-xs text-red-600 mt-1">
-                      ${this.e("io.pin")}
-                    </p>` : null}
-              </label>` : null}
-          ${showI2C ? x` <label class="block">
-                <span class="text-sm font-medium text-slate-700"
-                  >I2C Address</span
-                >
-                <input
-                  class="${this.inputCls}"
-                  .value=${d3.io.address ?? ""}
-                  placeholder="0x40"
-                  @input=${(e8) => this.emit("io.address", e8.target.value)}
-                />
-                ${this.e("io.address") ? x`<p class="text-xs text-red-600 mt-1">
-                      ${this.e("io.address")}
-                    </p>` : null}
-              </label>` : null}
-          ${showADC ? x` <label class="block">
-                <span class="text-sm font-medium text-slate-700"
-                  >ADC Channel</span
-                >
-                <input
-                  type="number"
-                  class="${this.inputCls}"
-                  .value=${String(d3.io.channel ?? "")}
-                  @input=${(e8) => this.emit("io.channel", this.num(e8.target.value))}
-                />
-                ${this.e("io.channel") ? x`<p class="text-xs text-red-600 mt-1">
-                      ${this.e("io.channel")}
-                    </p>` : null}
-              </label>` : null}
-        </div>
-
-        <!-- Komunikasi (MQTT) -->
-        <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-slate-700">
-            Komunikasi (MQTT)
-          </h3>
-          <label class="block">
-            <span class="text-sm font-medium text-slate-700">MQTT Topic</span>
-            <input
-              class="${this.inputCls}"
-              .value=${d3.mqtt.topic ?? ""}
-              @input=${(e8) => this.emit("mqtt.topic", e8.target.value)}
-            />
-            ${this.e("mqtt.topic") ? x`<p class="text-xs text-red-600 mt-1">
-                  ${this.e("mqtt.topic")}
-                </p>` : null}
-          </label>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700">Read Cmd</span>
-              <input
-                class="${this.inputCls}"
-                .value=${d3.mqtt.readCmd ?? ""}
-                placeholder="state / null"
-                @input=${(e8) => this.emit("mqtt.readCmd", e8.target.value)}
-              />
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700">Write Cmd</span>
-              <input
-                class="${this.inputCls}"
-                .value=${d3.mqtt.writeCmd ?? ""}
-                placeholder="set / null"
-                @input=${(e8) => this.emit("mqtt.writeCmd", e8.target.value)}
-              />
-            </label>
-          </div>
-        </div>
-      </section>
-    `;
-      }
-    };
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigHwComm.prototype, "model", 2);
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigHwComm.prototype, "errors", 2);
-    DevConfigHwComm = __decorateClass([
-      t3("dev-config-hw-comm")
-    ], DevConfigHwComm);
-  }
-});
-
-// src/views/dev-config-loc-meta.ts
-var DevConfigLocMeta;
-var init_dev_config_loc_meta = __esm({
-  "src/views/dev-config-loc-meta.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    DevConfigLocMeta = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.inputCls = "mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500";
-      }
-      createRenderRoot() {
-        return this;
-      }
-      emit(path, value) {
-        this.dispatchEvent(
-          new CustomEvent("dev-field-change", {
-            detail: { path, value },
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
-      render() {
-        const d3 = this.model;
-        return x`
-      <section class="p-4 space-y-6">
-        <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-slate-700">Lokasi</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700">Area</span>
-              <input
-                class="${this.inputCls}"
-                .value=${d3.location.area ?? ""}
-                @input=${(e8) => this.emit("location.area", e8.target.value)}
-              />
-            </label>
-            <label class="block">
-              <span class="text-sm font-medium text-slate-700">Position</span>
-              <input
-                class="${this.inputCls}"
-                .value=${d3.location.position ?? ""}
-                @input=${(e8) => this.emit("location.position", e8.target.value)}
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <h3 class="text-sm font-semibold text-slate-700">Metadata</h3>
-          <div class="text-xs text-slate-600">
-            <div>Created At: <code>${d3.meta.createdAt}</code></div>
-            <div>Updated At: <code>${d3.meta.updatedAt}</code></div>
-          </div>
-        </div>
-      </section>
-    `;
-      }
-    };
-    __decorateClass([
-      n4({ attribute: false })
-    ], DevConfigLocMeta.prototype, "model", 2);
-    DevConfigLocMeta = __decorateClass([
-      t3("dev-config-loc-meta")
-    ], DevConfigLocMeta);
-  }
-});
-
-// src/views/dev-config-mqtt.ts
-var DevConfigMqtt;
-var init_dev_config_mqtt = __esm({
-  "src/views/dev-config-mqtt.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_mqtt_esm();
-    DevConfigMqtt = class extends i4 {
+    init_form_builder_field();
+    init_form_builder_buttons();
+    init_form_builder_section();
+    init_device_picker();
+    init_device_ui();
+    init_device_config_fields();
+    init_device_state_handler();
+    init_device_events();
+    DeviceConfig = class extends i4 {
       constructor() {
         super(...arguments);
         this.model = {};
-        this.selectedTags = /* @__PURE__ */ new Set();
-        this.client = null;
-        this.simulating = false;
-        this.logs = [];
-        this.deviceList = [];
+        this.errors = {};
+        this.tags = [];
+        this.dirty = false;
+        this.mode = "edit";
+        this.handleFieldChange = (e8, key) => {
+          const target = e8.target;
+          const raw = target.value;
+          const value = target.type === "number" && raw !== "" ? Number(raw) : raw;
+          setNestedValue(this.model, key, value);
+          this.dirty = true;
+          this.revalidate();
+        };
+        this.handleSave = async () => {
+          this.revalidate();
+          if (Object.keys(this.errors).length) return;
+          const success = await DeviceEvents.handleSave(
+            this.model,
+            this.mode,
+            this.tags,
+            (saved, updatedTags, mode) => {
+              this.tags = updatedTags;
+              this.setDevice(saved, mode);
+            }
+          );
+          if (success) DeviceUI.showToast("Saved \u2705");
+        };
+        this.handleDelete = async () => {
+          const success = await DeviceEvents.handleDelete(
+            this.model.tagNumber,
+            this.tags,
+            (next, mode) => {
+              if (next) {
+                this.setDevice(next, mode || "edit");
+                this.tags = this.tags.filter((t5) => t5 !== this.model.tagNumber);
+              } else {
+                const fresh = DeviceStateHandler.newTemplate();
+                this.setDevice(fresh, "new");
+                this.tags = [];
+              }
+            }
+          );
+          if (success) DeviceUI.showToast("Deleted \u{1F5D1}\uFE0F");
+        };
+        this.handleCancel = () => {
+          if (this.dirty && !confirm("Perubahan belum disimpan. Tetap keluar?"))
+            return;
+          window.history.back();
+        };
       }
       createRenderRoot() {
         return this;
       }
-      get allTags() {
-        return Array.isArray(this.model?.tags) ? this.model.tags : [];
+      async connectedCallback() {
+        super.connectedCallback();
+        await this.loadDevicesAndInit();
+        const list = await DeviceEvents.loadAllDevices();
+        this.tags = list.map((d3) => d3.tagNumber).filter(Boolean).sort();
+        const tagParam = new URL(location.href).searchParams.get("tag");
+        const picked = tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? "";
+        const found = picked ? list.find((d3) => d3.tagNumber === picked) : void 0;
+        if (found) {
+          this.setDevice(found, "edit");
+        } else {
+          const fresh = DeviceStateHandler.newTemplate();
+          this.setDevice(fresh, "new");
+        }
+      }
+      async loadDevicesAndInit() {
+        const list = await DeviceEvents.loadAllDevices();
+        this.tags = list.map((d3) => d3.tagNumber).filter(Boolean).sort();
+        const urlParams = new URL(location.href).searchParams;
+        const tagParam = urlParams.get("tag");
+        const picked = tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? "";
+        const found = picked ? list.find((d3) => d3.tagNumber === picked) : void 0;
+        if (found) {
+          this.setDevice(structuredClone(found), "edit");
+        } else {
+          const fresh = DeviceStateHandler.newTemplate();
+          this.setDevice(fresh, "new");
+        }
+      }
+      setDevice(device, mode) {
+        this.model = structuredClone(device);
+        this.mode = mode;
+        this.revalidate();
+        this.dirty = false;
+      }
+      revalidate() {
+        const { errors, errorsMap } = DeviceStateHandler.revalidate(
+          this.model,
+          this.mode === "new"
+        );
+        this.errors = errorsMap;
+      }
+      handleDevicePick(e8) {
+        const { mode, device } = e8.detail;
+        if (mode === "new") {
+          const fresh = DeviceStateHandler.newTemplate();
+          this.setDevice(fresh, "new");
+        } else if (device) {
+          this.setDevice(structuredClone(device), "edit");
+        }
+      }
+      render() {
+        return x`
+      <div class="mb-6">
+        <div class="mb-4">
+          <device-picker
+            .value=${this.model.tagNumber}
+            @device-select=${this.handleDevicePick}
+          >
+          </device-picker>
+        </div>
+
+        <h2 class="text-lg font-semibold text-gray-800 mb-1">
+          Konfigurasi Perangkat
+        </h2>
+
+        ${deviceConfigFields.map(
+          (section) => x`
+            <form-builder-section
+              .title=${section.title}
+              .desc=${section.desc ?? ""}
+              .fields=${section.fields}
+              .model=${this.model}
+              .errors=${this.errors}
+              .cols=${2}
+              .onFieldChange=${this.handleFieldChange}
+            ></form-builder-section>
+          `
+        )}
+
+        <form-builder-buttons
+          class="mt-4"
+          .mode=${this.mode}
+          @submit=${this.handleSave}
+          @cancel=${this.handleCancel}
+          @delete=${this.handleDelete}
+        ></form-builder-buttons>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "model", 2);
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "errors", 2);
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "tags", 2);
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "dirty", 2);
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "mode", 2);
+    DeviceConfig = __decorateClass([
+      t3("device-config")
+    ], DeviceConfig);
+  }
+});
+
+// src/components/mqtt-control-panel.ts
+var MqttControlPanel;
+var init_mqtt_control_panel = __esm({
+  "src/components/mqtt-control-panel.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    MqttControlPanel = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.simulating = false;
+      }
+      createRenderRoot() {
+        return this;
+      }
+      emit(name2) {
+        this.dispatchEvent(
+          new CustomEvent(name2, { bubbles: true, composed: true })
+        );
+      }
+      render() {
+        return x`
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button
+          class="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+          @click=${() => this.emit("publish")}
+        >
+          📤 Publish Now
+        </button>
+
+        <button
+          class="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+          @click=${() => this.emit("subscribe")}
+        >
+          📡 Subscribe
+        </button>
+
+        ${this.simulating ? x`
+              <button
+                class="px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700"
+                @click=${() => this.emit("stop-sim")}
+              >
+                ⏹️ Stop Simulation
+              </button>
+            ` : x`
+              <button
+                class="px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600"
+                @click=${() => this.emit("start-sim")}
+              >
+                ▶️ Start Simulation
+              </button>
+            `}
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Boolean })
+    ], MqttControlPanel.prototype, "simulating", 2);
+    MqttControlPanel = __decorateClass([
+      t3("mqtt-control-panel")
+    ], MqttControlPanel);
+  }
+});
+
+// src/pages/konfigurasi/devices/dev-config-mqtt.ts
+var DevConfigMqtt;
+var init_dev_config_mqtt = __esm({
+  "src/pages/konfigurasi/devices/dev-config-mqtt.ts"() {
+    "use strict";
+    init_lit();
+    init_context();
+    init_decorators();
+    init_mqtt_esm();
+    init_mqtt_context();
+    init_devices_config_service();
+    init_mqtt_control_panel();
+    DevConfigMqtt = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.allTags = [];
+        this.selectedTags = /* @__PURE__ */ new Set();
+        this.deviceList = [];
+        this.client = null;
+        this.simulating = false;
+        this.logs = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const list = await loadDevices();
+        this.deviceList = list;
+        this.allTags = list.map((d3) => d3.tagNumber).filter(Boolean).sort();
+      }
+      getDevice(tag) {
+        return this.deviceList.find((d3) => d3.tagNumber === tag);
       }
       connectMQTT() {
         if (this.client) return;
@@ -15325,15 +17822,17 @@ var init_dev_config_mqtt = __esm({
       }
       generateTopic(tag, type) {
         const nodeId = "esp-node-1";
-        const device = this.deviceList.find((d3) => d3.tagNumber === tag);
-        const location2 = (device?.location?.area ?? "").toLowerCase().replace(/[\/\\ ]/g, "-");
+        const device = this.getDevice(tag);
+        const location2 = (device?.location ?? "").toLowerCase().replace(/[\/\\ ]/g, "-");
         const suffix = type === "sensor" ? "value" : "state";
         return `${nodeId}/${location2}/${tag}/${suffix}`;
       }
       publishOnce() {
         this.connectMQTT();
         this.selectedTags.forEach((tag) => {
-          const topic = this.generateTopic(tag, "sensor");
+          const dev = this.getDevice(tag);
+          if (!dev) return;
+          const topic = this.generateTopic(tag, dev.type);
           const payload = this.buildPayload(tag);
           this.client?.publish(topic, payload);
           this.log(`\u{1F4E4} Published to ${topic}: ${payload}`);
@@ -15342,7 +17841,9 @@ var init_dev_config_mqtt = __esm({
       subscribeTopics() {
         this.connectMQTT();
         this.selectedTags.forEach((tag) => {
-          const topic = this.generateTopic(tag, "actuator");
+          const dev = this.getDevice(tag);
+          if (!dev) return;
+          const topic = this.generateTopic(tag, dev.type);
           this.client?.subscribe(topic);
           this.log(`\u{1F4E1} Subscribed to ${topic}`);
         });
@@ -15381,37 +17882,13 @@ var init_dev_config_mqtt = __esm({
           </div>
         </div>
 
-        <div class="flex flex-wrap gap-2">
-          <button
-            class="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-            @click=${this.publishOnce}
-          >
-            📤 Publish Now
-          </button>
-
-          <button
-            class="px-3 py-2 rounded bg-green-600 text-white hover:bg-green-700"
-            @click=${this.subscribeTopics}
-          >
-            📡 Subscribe
-          </button>
-
-          ${!this.simulating ? x`
-                <button
-                  class="px-3 py-2 rounded bg-amber-500 text-white hover:bg-amber-600"
-                  @click=${this.startSimulation}
-                >
-                  ▶️ Start Simulation
-                </button>
-              ` : x`
-                <button
-                  class="px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700"
-                  @click=${this.stopSimulation}
-                >
-                  ⏹️ Stop Simulation
-                </button>
-              `}
-        </div>
+        <mqtt-control-panel
+          .simulating=${this.simulating}
+          @publish=${this.publishOnce}
+          @subscribe=${this.subscribeTopics}
+          @start-sim=${this.startSimulation}
+          @stop-sim=${this.stopSimulation}
+        ></mqtt-control-panel>
 
         <div>
           <label class="text-sm font-semibold">Log</label>
@@ -15426,11 +17903,14 @@ var init_dev_config_mqtt = __esm({
       }
     };
     __decorateClass([
-      n4({ type: Object })
-    ], DevConfigMqtt.prototype, "model", 2);
+      r5()
+    ], DevConfigMqtt.prototype, "allTags", 2);
     __decorateClass([
       r5()
     ], DevConfigMqtt.prototype, "selectedTags", 2);
+    __decorateClass([
+      r5()
+    ], DevConfigMqtt.prototype, "deviceList", 2);
     __decorateClass([
       r5()
     ], DevConfigMqtt.prototype, "client", 2);
@@ -15441,595 +17921,1838 @@ var init_dev_config_mqtt = __esm({
       r5()
     ], DevConfigMqtt.prototype, "logs", 2);
     __decorateClass([
-      n4({ type: Array })
-    ], DevConfigMqtt.prototype, "deviceList", 2);
+      c4({ context: mqttContext, subscribe: true }),
+      r5()
+    ], DevConfigMqtt.prototype, "ctx", 2);
     DevConfigMqtt = __decorateClass([
       t3("dev-config-mqtt")
     ], DevConfigMqtt);
   }
 });
 
-// src/pages/device-config.ts
-var device_config_exports = {};
-__export(device_config_exports, {
-  PageDeviceConfig: () => PageDeviceConfig
+// src/services/plant.service.ts
+var repo3, fetchAllPlants;
+var init_plant_service = __esm({
+  "src/services/plant.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo3 = getPlantRepository();
+    fetchAllPlants = () => repo3.getAll();
+  }
 });
-var PageDeviceConfig;
-var init_device_config = __esm({
-  "src/pages/device-config.ts"() {
+
+// src/services/aquatic-species.service.ts
+var repo4, fetchAllAquaticSpecies;
+var init_aquatic_species_service = __esm({
+  "src/services/aquatic-species.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo4 = getAquaticSpeciesRepository();
+    fetchAllAquaticSpecies = () => repo4.getAll();
+  }
+});
+
+// src/services/livestock.service.ts
+var repo5, fetchAllLivestock;
+var init_livestock_service = __esm({
+  "src/services/livestock.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo5 = getLivestockRepository();
+    fetchAllLivestock = () => repo5.getAll();
+  }
+});
+
+// src/pages/konfigurasi/entitas/entitas-list.ts
+var EntitasList;
+var init_entitas_list = __esm({
+  "src/pages/konfigurasi/entitas/entitas-list.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    init_devices_config_service();
-    init_ui_tabs();
-    init_dev_config_general();
-    init_dev_config_hw_comm();
-    init_dev_config_loc_meta();
-    init_dev_config_mqtt();
-    PageDeviceConfig = class extends i4 {
+    EntitasList = class extends i4 {
       constructor() {
         super(...arguments);
-        this.errors = [];
-        this.errorsMap = {};
-        this.activeTab = "general";
-        this.mode = "edit";
-        this.tags = [];
-        this.dirty = false;
-        this._debug = false;
-        this.saving = false;
-        this.deleting = false;
-        this.TAB_KEY = "deviceConfig.activeTab";
-        this.beforeUnload = (e8) => {
-          if (!this.dirty) return;
-          e8.preventDefault();
-          e8.returnValue = "";
-        };
-        /* ====== EVENTS ====== */
-        this.onTabChange = (e8) => {
-          this.activeTab = e8.detail.id;
-          sessionStorage.setItem(this.TAB_KEY, this.activeTab);
-          const url = new URL(window.location.href);
-          url.searchParams.set("tab", this.activeTab);
-          history.replaceState({}, "", url.toString());
-        };
-        this.onChangeMode = (mode) => {
-          if (this.mode === mode) return;
-          this.mode = mode;
-          this.log("mode changed \u2192", mode);
-          if (mode === "edit") {
-            const sel = this.device?.tagNumber && this.tags.includes(this.device.tagNumber) ? this.device.tagNumber : this.tags[0] ?? "";
-            if (!sel) {
-              this.log("edit mode but no tags");
-              return;
-            }
-            let found = getByTag(sel);
-            if (!found) {
-              loadDevices().then((list) => {
-                const f3 = list.find((d3) => d3.tagNumber === sel);
-                if (f3) {
-                  this.device = structuredClone(f3);
-                  this.pristine = structuredClone(f3);
-                  this.requestUpdate();
-                }
-              });
-            } else {
-              this.device = structuredClone(found);
-              this.pristine = structuredClone(found);
-            }
-            const u3 = new URL(window.location.href);
-            u3.searchParams.set("tag", sel);
-            history.replaceState({}, "", u3.toString());
+        this.kind = "tanaman";
+        this.plants = [];
+        this.fishes = [];
+        this.poultry = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      handleAdd(kind) {
+        this.dispatchEvent(
+          new CustomEvent("add-item", {
+            detail: { kind },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      handleEdit(item, kind) {
+        this.dispatchEvent(
+          new CustomEvent("edit-item", {
+            detail: { item, kind },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      renderCard(title, emoji, kind, items) {
+        return x`
+      <div class="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-semibold">${emoji} ${title}</h3>
+          <button
+            class="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
+            @click=${() => this.handleAdd(kind)}
+          >
+            ➕ Tambah
+          </button>
+        </div>
+        ${items?.length ? x`
+              <ul class="space-y-2">
+                ${items.map(
+          (item) => x`
+                    <li
+                      class="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
+                      @click=${() => this.handleEdit(item, kind)}
+                    >
+                      <div class="font-medium">${item.name}</div>
+                      <div class="text-sm text-gray-500">${item.id}</div>
+                    </li>
+                  `
+        )}
+              </ul>
+            ` : x`<div class="text-gray-500 text-sm italic">
+              Belum ada data.
+            </div>`}
+      </div>
+    `;
+      }
+      render() {
+        return x`
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        ${this.renderCard("Tanaman", "\u{1F331}", "tanaman", this.plants)}
+        ${this.renderCard("Ikan", "\u{1F41F}", "ikan", this.fishes)}
+        ${this.renderCard("Ternak", "\u{1F413}", "ayam", this.poultry)}
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], EntitasList.prototype, "kind", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], EntitasList.prototype, "plants", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], EntitasList.prototype, "fishes", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], EntitasList.prototype, "poultry", 2);
+    EntitasList = __decorateClass([
+      t3("entitas-list")
+    ], EntitasList);
+  }
+});
+
+// src/pages/konfigurasi/schema/livestock-fields.ts
+var livestockFormFields;
+var init_livestock_fields = __esm({
+  "src/pages/konfigurasi/schema/livestock-fields.ts"() {
+    "use strict";
+    livestockFormFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "ID Ayam",
+            type: "text",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "name",
+            label: "Nama Ternak",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      },
+      {
+        title: "\u{1F4CA} Karakteristik",
+        fields: [
+          {
+            key: "breed",
+            label: "Ras / Jenis",
+            type: "text",
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "growthDaysMin",
+            label: "Hari Tumbuh Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "growthDaysMax",
+            label: "Hari Tumbuh Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "avgWeightKg",
+            label: "Berat Rata-rata (kg)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "pricePerKg",
+            label: "Harga per Kg",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "costPerUnit",
+            label: "Biaya per Ekor",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F4C8} Aspek Lingkungan",
+        fields: [
+          {
+            key: "tempMinC",
+            label: "Suhu Min (\xB0C)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "tempMaxC",
+            label: "Suhu Max (\xB0C)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMin",
+            label: "pH Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMax",
+            label: "pH Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/aquatic-fields.ts
+var aquaticFormFields;
+var init_aquatic_fields = __esm({
+  "src/pages/konfigurasi/schema/aquatic-fields.ts"() {
+    "use strict";
+    aquaticFormFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "ID Ikan",
+            type: "text",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "name",
+            label: "Nama Spesies",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      },
+      {
+        title: "\u{1F4CA} Karakteristik",
+        fields: [
+          {
+            key: "growthDaysMin",
+            label: "Hari Tumbuh Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "growthDaysMax",
+            label: "Hari Tumbuh Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "avgWeightG",
+            label: "Berat Rata-rata (g)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "pricePerKg",
+            label: "Harga per Kg",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "costPerUnit",
+            label: "Biaya per Benih",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F4C8} Parameter Lingkungan",
+        fields: [
+          {
+            key: "minTempC",
+            label: "Suhu Min (\xB0C)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "maxTempC",
+            label: "Suhu Max (\xB0C)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "salinityMinPpt",
+            label: "Salinitas Min (ppt)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "salinityMaxPpt",
+            label: "Salinitas Max (ppt)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMin",
+            label: "pH Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMax",
+            label: "pH Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/plant-fields.ts
+var plantFormFields;
+var init_plant_fields = __esm({
+  "src/pages/konfigurasi/schema/plant-fields.ts"() {
+    "use strict";
+    plantFormFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "ID Tanaman",
+            type: "text",
+            required: true,
+            helpText: "Kode unik tanaman",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "name",
+            label: "Nama Tanaman",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      },
+      {
+        title: "\u{1F4CA} Karakteristik",
+        fields: [
+          {
+            key: "growthDaysMin",
+            label: "Hari Tumbuh Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "growthDaysMax",
+            label: "Hari Tumbuh Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "pricePerKg",
+            label: "Harga per Kg",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "costPerUnit",
+            label: "Biaya per Tanaman",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "avgWeightG",
+            label: "Berat Rata-rata (g)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "Karakteristik",
+        fields: [
+          {
+            key: "heightMinCm",
+            label: "Tinggi Min (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "heightMaxCm",
+            label: "Tinggi Max (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "spacingRowCm",
+            label: "Jarak Baris (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "spacingColCm",
+            label: "Jarak Kolom (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "Parameter Lingkungan",
+        fields: [
+          {
+            key: "ecMin",
+            label: "EC Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "ecMax",
+            label: "EC Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMin",
+            label: "pH Min",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "phMax",
+            label: "pH Max",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/entitas/form-entitas.ts
+var FormEntitas;
+var init_form_entitas = __esm({
+  "src/pages/konfigurasi/entitas/form-entitas.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_livestock_fields();
+    init_aquatic_fields();
+    init_plant_fields();
+    init_form_builder_section();
+    init_form_builder_buttons();
+    FormEntitas = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.mode = "new";
+        this.value = {};
+        this.draft = {};
+        this.errors = {};
+        this.handleFieldChange = (e8, key) => {
+          const target = e8.target;
+          const field = this.allFields.find((f3) => f3.key === key);
+          let v2 = target.value;
+          if (field?.type === "number") {
+            const n6 = parseFloat(v2);
+            v2 = Number.isNaN(n6) ? 0 : n6;
+          }
+          this.draft = { ...this.draft, [key]: v2 };
+          if (field?.required && (v2 === "" || v2 === null || v2 === void 0)) {
+            this.errors = {
+              ...this.errors,
+              [key]: `Field "${field.label}" wajib diisi.`
+            };
           } else {
-            this.device = this.newTemplate();
-            this.pristine = structuredClone(this.device);
-            const u3 = new URL(window.location.href);
-            u3.searchParams.delete("tag");
-            history.replaceState({}, "", u3.toString());
+            const { [key]: _2, ...rest } = this.errors;
+            this.errors = rest;
           }
-          this.dirty = false;
-          this.revalidate(false);
         };
-        this.onTagPicked = (e8) => {
-          const tag = e8.detail.tag;
-          this.log("tag picked \u2192", tag);
-          let found = getByTag(tag);
-          if (!found) {
-            loadDevices().then((list) => {
-              const f3 = list.find((d3) => d3.tagNumber === tag);
-              if (f3) {
-                this.mode = "edit";
-                this.device = structuredClone(f3);
-                this.pristine = structuredClone(f3);
-                this.revalidate(false);
-                this.requestUpdate();
-              }
-            });
+        this.handleSubmit = (e8) => {
+          e8?.preventDefault();
+          e8?.stopPropagation();
+          const res = this.validate();
+          if (!res.valid) {
+            alert(res.message);
             return;
           }
-          this.mode = "edit";
-          this.device = structuredClone(found);
-          this.pristine = structuredClone(found);
-          const url = new URL(window.location.href);
-          url.searchParams.set("tag", tag);
-          history.replaceState({}, "", url.toString());
-          this.dirty = false;
-          this.revalidate(false);
+          this.dispatchEvent(
+            new CustomEvent("submit", {
+              detail: this.draft,
+              bubbles: true,
+              composed: true
+            })
+          );
         };
-        this.onFieldChange = (e8) => {
-          var _a, _b2;
-          this.patch(this.device, e8.detail.path, e8.detail.value);
-          if (e8.detail.path === "type") {
-            if (e8.detail.value === "sensor") {
-              this.device.writable = false;
-              this.device.allowedStates = null;
-              this.device.defaultState = null;
-              this.device.kind = null;
-              (_a = this.device).sample ?? (_a.sample = { periodMs: 1e3, deadband: 0 });
-              (_b2 = this.device).display ?? (_b2.display = { precision: 0 });
-            } else {
-              this.device.writable = true;
-              delete this.device.sample;
-              delete this.device.display;
-            }
-          }
-          if (e8.detail.path === "io.bus") {
-            const bus = e8.detail.value;
-            if (bus === "gpio")
-              this.device.io = { bus: "gpio", pin: 0, address: null, channel: null };
-            if (bus === "i2c")
-              this.device.io = {
-                bus: "i2c",
-                pin: null,
-                address: "0x40",
-                channel: null
-              };
-            if (bus === "adc")
-              this.device.io = { bus: "adc", pin: null, address: null, channel: 0 };
-          }
-          if (e8.detail.path === "allowedStatesCsv") {
-            const arr = String(e8.detail.value).split(",").map((s7) => s7.trim()).filter(Boolean);
-            this.device.allowedStates = arr.length ? arr : null;
-          }
-          this.dirty = true;
-          this.revalidate(false);
-          this.requestUpdate();
+        this.handleCancel = () => {
+          this.dispatchEvent(new CustomEvent("cancel"));
+          this.draft = { ...this.value };
         };
-        // Delete→ hapus device
-        this.onDelete = async () => {
-          if (this.mode !== "edit") return;
-          const tag = this.pristine?.tagNumber || this.device.tagNumber;
-          if (!tag) return;
-          if (this.dirty && !confirm("Perubahan belum disimpan akan hilang.\nHapus device ini?"))
-            return;
-          if (!confirm(`Hapus device "${tag}"?`)) return;
-          try {
-            this.deleting = true;
-            await deleteDevice(tag);
-            this.tags = this.tags.filter((t5) => t5 !== tag);
-            if (this.tags.length > 0) {
-              const next = this.tags[0];
-              const list = await loadDevices();
-              const nextDev = list.find((d3) => d3.tagNumber === next);
-              if (nextDev) {
-                this.mode = "edit";
-                this.device = structuredClone(nextDev);
-                this.pristine = structuredClone(nextDev);
-                const url = new URL(window.location.href);
-                url.searchParams.set("tag", next);
-                history.replaceState({}, "", url.toString());
-              }
-            } else {
-              this.mode = "new";
-              this.device = this.newTemplate();
-              this.pristine = structuredClone(this.device);
-              const url = new URL(window.location.href);
-              url.searchParams.delete("tag");
-              history.replaceState({}, "", url.toString());
-            }
-            this.dirty = false;
-            this.revalidate(false);
-            this.showToast("Deleted \u{1F5D1}\uFE0F");
-            this.log("deleted", tag);
-          } catch (err) {
-            console.error("[config] delete error:", err);
-            this.showToast("Delete failed \u274C", true);
-            alert(`Gagal hapus: ${err?.message || err}`);
-          } finally {
-            this.deleting = false;
-          }
-        };
-        // ⬇️ SAVE → simpan ke DB via backend
-        this.onSave = async () => {
-          const wasNew = this.mode === "new";
-          const now = (/* @__PURE__ */ new Date()).toISOString();
-          this.device.meta = {
-            createdAt: this.device.meta?.createdAt ?? now,
-            updatedAt: now
-          };
-          this.revalidate(true);
-          if (this.errors.length) {
-            this.log("save blocked: validation errors", this.errors);
-            return;
-          }
-          try {
-            this.saving = true;
-            const saved = await upsertDevice(this.device);
-            this.device = structuredClone(saved);
-            this.pristine = structuredClone(saved);
-            this.dirty = false;
-            if (!this.tags.includes(saved.tagNumber)) {
-              this.tags = [...this.tags, saved.tagNumber].sort();
-            }
-            if (wasNew) {
-              this.mode = "edit";
-              const url = new URL(window.location.href);
-              url.searchParams.set("tag", saved.tagNumber);
-              history.replaceState({}, "", url.toString());
-            }
-            this.log("saved", saved.tagNumber);
-            this.showToast("Saved \u2705");
-          } catch (err) {
-            console.error("[config] save error:", err);
-            this.showToast("Save failed \u274C", true);
-            alert(`Gagal simpan: ${err?.message || err}`);
-          } finally {
-            this.saving = false;
-          }
-        };
-        this.onReset = () => {
-          this.device = structuredClone(this.pristine);
-          this.errors = [];
-          this.errorsMap = {};
-          this.dirty = false;
-          this.log("reset to pristine");
-        };
-        this.onBack = () => {
-          if (this.dirty && !confirm("Perubahan belum disimpan. Tetap keluar?"))
-            return;
-          window.history.back();
+        this.handleDelete = () => {
+          if (!confirm("Yakin ingin menghapus data ini?")) return;
+          this.dispatchEvent(
+            new CustomEvent("delete", {
+              detail: {
+                kind: this.kind,
+                id: this.value?.id ?? this.value?.name
+              },
+              bubbles: true,
+              composed: true
+            })
+          );
         };
       }
       createRenderRoot() {
         return this;
       }
-      /* ====== LOGGER ====== */
-      log(...args) {
-        window.__tvdbg__ = window.__tvdbg__ || [];
-        window.__tvdbg__.push(args);
-        console.warn("[page-device-config]", ...args);
+      get formTitle() {
+        switch (this.kind) {
+          case "ayam":
+            return { icon: "\u{1F414}", text: "Jenis Ternak Ayam", color: "yellow" };
+          case "ikan":
+            return { icon: "\u{1F41F}", text: "Jenis Ikan / Akuatik", color: "blue" };
+          case "tanaman":
+            return { icon: "\u{1F331}", text: "Jenis Tanaman", color: "green" };
+          default:
+            return { icon: "", text: "", color: "gray" };
+        }
       }
-      /* ====== LIFECYCLE ====== */
-      async connectedCallback() {
+      get formSections() {
+        switch (this.kind) {
+          case "ayam":
+            return livestockFormFields;
+          case "ikan":
+            return aquaticFormFields;
+          case "tanaman":
+            return plantFormFields;
+          // ✅ FIXED
+          default:
+            return [];
+        }
+      }
+      get allFields() {
+        return this.formSections.flatMap((section) => section.fields);
+      }
+      connectedCallback() {
         super.connectedCallback();
-        this._debug = new URL(window.location.href).searchParams.get("debug") === "1";
-        this.setAttribute("data-connected", (/* @__PURE__ */ new Date()).toISOString());
-        window.dispatchEvent(
-          new CustomEvent("taniverse:cc", {
-            detail: { who: "page-device-config", ts: Date.now() }
+        console.log("[FORM ENTITAS] mounted with kind:", this.kind);
+      }
+      updated(changed) {
+        if (changed.has("value")) {
+          this.draft = { ...this.value };
+        }
+      }
+      validate() {
+        for (const f3 of this.allFields) {
+          const val = this.draft[f3.key];
+          if (f3.required && (val === void 0 || val === null || val === "")) {
+            return { valid: false, message: `Field "${f3.label}" wajib diisi.` };
+          }
+        }
+        return { valid: true };
+      }
+      render() {
+        const { icon, text, color } = this.formTitle;
+        const bgMap = {
+          yellow: "border-yellow-300 bg-yellow-50",
+          blue: "border-blue-300 bg-blue-50",
+          green: "border-green-300 bg-green-50",
+          gray: "border-gray-300 bg-gray-50"
+        };
+        const textMap = {
+          yellow: "text-yellow-800",
+          blue: "text-blue-800",
+          green: "text-green-800",
+          gray: "text-gray-800"
+        };
+        return x`
+      <section class="border rounded-xl p-4 shadow-sm ${bgMap[color]}">
+        <h2
+          class="text-xl font-semibold mb-3 flex items-center gap-2 ${textMap[color]}"
+        >
+          ${icon} ${text}
+        </h2>
+
+        ${this.formSections.map(
+          (section) => x`
+            <form-builder-section
+              .title=${section.title}
+              .desc=${section.desc ?? ""}
+              .fields=${section.fields}
+              .model=${this.draft}
+              .errors=${this.errors}
+              .cols=${2}
+              .onFieldChange=${this.handleFieldChange}
+            ></form-builder-section>
+          `
+        )}
+
+        <div class="col-span-2">
+          <form-builder-buttons
+            .mode=${this.mode}
+            @submit=${this.handleSubmit}
+            @cancel=${this.handleCancel}
+            @delete=${this.handleDelete}
+          ></form-builder-buttons>
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], FormEntitas.prototype, "mode", 2);
+    __decorateClass([
+      n4({ type: Object })
+    ], FormEntitas.prototype, "value", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], FormEntitas.prototype, "kind", 2);
+    __decorateClass([
+      r5()
+    ], FormEntitas.prototype, "draft", 2);
+    __decorateClass([
+      r5()
+    ], FormEntitas.prototype, "errors", 2);
+    FormEntitas = __decorateClass([
+      t3("form-entitas")
+    ], FormEntitas);
+  }
+});
+
+// src/pages/konfigurasi/entitas/entitas-container.ts
+var EntitasContainer;
+var init_entitas_container = __esm({
+  "src/pages/konfigurasi/entitas/entitas-container.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_plant_service();
+    init_aquatic_species_service();
+    init_livestock_service();
+    init_entitas_list();
+    init_form_entitas();
+    EntitasContainer = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.kind = "tanaman";
+        this.view = "list";
+        this.draft = {};
+        this.mode = "new";
+        this.plants = [];
+        this.fishes = [];
+        this.poultry = [];
+        this.handleAdd = (e8) => {
+          this.kind = e8.detail.kind;
+          this.draft = {};
+          this.mode = "new";
+          this.view = "form";
+          console.log("[ADD ENTITAS]", { kind: this.kind });
+        };
+        this.handleSubmit = (e8) => {
+          console.log("[SUBMIT ENTITAS]", { kind: this.kind, data: e8.detail });
+          this.view = "list";
+        };
+        this.handleDelete = (e8) => {
+          const { id, kind } = e8.detail ?? {};
+          if (!id || !kind) {
+            console.warn("[DELETE ENTITAS] Event detail tidak valid:", e8.detail);
+            return;
+          }
+          console.log("[DELETE ENTITAS]", { kind, id });
+          switch (kind) {
+            case "tanaman":
+              this.plants = this.plants.filter((item) => item.id !== id);
+              break;
+            case "ikan":
+              this.fishes = this.fishes.filter((item) => item.id !== id);
+              break;
+            case "ayam":
+              this.poultry = this.poultry.filter((item) => item.id !== id);
+              break;
+          }
+          this.view = "list";
+        };
+        this.handleEdit = (e8) => {
+          const { item, kind } = e8.detail;
+          this.kind = kind;
+          this.draft = { ...item };
+          this.mode = "edit";
+          this.view = "form";
+          console.log("[EDIT ENTITAS]", { kind: this.kind, draft: this.draft });
+        };
+        this.handleCancel = () => {
+          this.view = "list";
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        this.loadAll().catch(
+          (err) => console.error("\u274C Gagal memuat data spesies:", err)
+        );
+      }
+      async loadAll() {
+        console.log("[LOAD ENTITAS] Memulai fetch semua data entitas...");
+        try {
+          console.log("[LOAD ENTITAS] \u2192 Memuat data tanaman...");
+          this.plants = await fetchAllPlants();
+          console.log("[LOAD ENTITAS] \u2713 Data tanaman terload:", this.plants);
+        } catch (err) {
+          console.error("\u274C Gagal memuat tanaman:", err);
+        }
+        try {
+          console.log("[LOAD ENTITAS] \u2192 Memuat data ikan...");
+          this.fishes = await fetchAllAquaticSpecies();
+          console.log("[LOAD ENTITAS] \u2713 Data ikan terload:", this.fishes);
+        } catch (err) {
+          console.error("\u274C Gagal memuat ikan:", err);
+        }
+        try {
+          console.log("[LOAD ENTITAS] \u2192 Memuat data ayam...");
+          this.poultry = await fetchAllLivestock();
+          console.log("[LOAD ENTITAS] \u2713 Data ayam terload:", this.poultry);
+        } catch (err) {
+          console.error("\u274C Gagal memuat ayam:", err);
+        }
+        console.log("[LOAD ENTITAS] Proses fetch selesai.");
+      }
+      render() {
+        return x`
+      ${this.view === "list" ? x`
+            <entitas-list
+              .kind=${this.kind}
+              .plants=${this.plants}
+              .fishes=${this.fishes}
+              .poultry=${this.poultry}
+              @add-item=${this.handleAdd}
+              @edit-item=${this.handleEdit}
+            ></entitas-list>
+          ` : x`
+            <form-entitas
+              .kind=${this.kind}
+              .mode=${this.mode}
+              .value=${this.draft}
+              @submit=${this.handleSubmit}
+              @cancel=${this.handleCancel}
+              @delete=${this.handleDelete}
+            ></form-entitas>
+          `}
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], EntitasContainer.prototype, "kind", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "view", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "draft", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "mode", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "plants", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "fishes", 2);
+    __decorateClass([
+      r5()
+    ], EntitasContainer.prototype, "poultry", 2);
+    EntitasContainer = __decorateClass([
+      t3("entitas-container")
+    ], EntitasContainer);
+  }
+});
+
+// src/services/aquatic-batch.service.ts
+var repo6, fetchAllAquaticBatches;
+var init_aquatic_batch_service = __esm({
+  "src/services/aquatic-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo6 = getAquaticBatchRepository();
+    fetchAllAquaticBatches = () => repo6.getAll();
+  }
+});
+
+// src/services/hydroponic-batch.service.ts
+var repo7, fetchAllHydroponicBatches;
+var init_hydroponic_batch_service = __esm({
+  "src/services/hydroponic-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo7 = getHydroponicBatchRepository();
+    fetchAllHydroponicBatches = () => repo7.getAll();
+  }
+});
+
+// src/services/horti-batch.service.ts
+var repo8, fetchAllHortiBatches;
+var init_horti_batch_service = __esm({
+  "src/services/horti-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo8 = getHortiBatchRepository();
+    fetchAllHortiBatches = () => repo8.getAll();
+  }
+});
+
+// src/services/livestock-batch.service.ts
+var repo9, fetchAllLivestockBatches;
+var init_livestock_batch_service = __esm({
+  "src/services/livestock-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo9 = getLivestockBatchRepository();
+    fetchAllLivestockBatches = () => repo9.getAll();
+  }
+});
+
+// src/services/all-batch-services.ts
+var init_all_batch_services = __esm({
+  "src/services/all-batch-services.ts"() {
+    "use strict";
+    init_aquatic_batch_service();
+    init_hydroponic_batch_service();
+    init_horti_batch_service();
+    init_livestock_batch_service();
+  }
+});
+
+// src/pages/konfigurasi/schema/aquatic-batch-fields.ts
+var aquaticBatchFields;
+var init_aquatic_batch_fields = __esm({
+  "src/pages/konfigurasi/schema/aquatic-batch-fields.ts"() {
+    "use strict";
+    aquaticBatchFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "Id Kolam",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "location",
+            label: "Lokasi",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "description",
+            label: "Deskripsi",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "speciesId",
+            label: "ID Spesies",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Pengaturan Produksi",
+        fields: [
+          {
+            key: "initialPopulation",
+            label: "Populasi Awal",
+            type: "number",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "currentPopulation",
+            label: "Populasi Saat Ini",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "startDate",
+            label: "Tanggal Mulai",
+            type: "date",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "expectedHarvestDate",
+            label: "Estimasi Panen",
+            type: "date",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Dimensi Kolam",
+        fields: [
+          {
+            key: "length",
+            label: "Panjang Kolam (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "width",
+            label: "Lebar Kolam (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "height",
+            label: "Kedalaman Kolam (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "note",
+            label: "Catatan",
+            type: "textarea",
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/hydroponic-batch-fields.ts
+var hydroponicBatchFields;
+var init_hydroponic_batch_fields = __esm({
+  "src/pages/konfigurasi/schema/hydroponic-batch-fields.ts"() {
+    "use strict";
+    hydroponicBatchFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "Id Hidroponik",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "location",
+            label: "Lokasi",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "description",
+            label: "Deskripsi",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "plantId",
+            label: "ID Tanaman",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Pengaturan Produksi",
+        fields: [
+          {
+            key: "system",
+            label: "Sistem Hidroponik",
+            type: "select",
+            required: true,
+            options: ["NFT", "DFT", "DWC", "Aeroponik"]
+          },
+          {
+            key: "initialCount",
+            label: "Jumlah Awal Lubang",
+            type: "number",
+            required: true
+          },
+          {
+            key: "currentCount",
+            label: "Jumlah Bibit",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "startDate",
+            label: "Tanggal Mulai",
+            type: "date",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "expectedHarvestDate",
+            label: "Estimasi Panen",
+            type: "date",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Dimensi Hydroponic",
+        fields: [
+          {
+            key: "__sep2",
+            type: "separator",
+            label: "\u{1F527} Pengaturan Hidroponik",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "length",
+            label: "Panjang Hydroponic (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "width",
+            label: "Lebar Hydroponic (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "height",
+            label: "Kedalaman Hydroponic (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "note",
+            label: "Catatan",
+            type: "textarea",
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/horti-batch-fields.ts
+var hortiBatchFields;
+var init_horti_batch_fields = __esm({
+  "src/pages/konfigurasi/schema/horti-batch-fields.ts"() {
+    "use strict";
+    hortiBatchFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "Id Kebun",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "location",
+            label: "Lokasi",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "description",
+            label: "Deskripsi",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Pengaturan Produksi",
+        fields: [
+          {
+            key: "plantId",
+            label: "ID Tanaman",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "initialCount",
+            label: "Jumlah Awal",
+            type: "number",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "totalPlants",
+            label: "Jumlah Total",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "startDate",
+            label: "Tanggal Mulai",
+            type: "date",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "expectedHarvestDate",
+            label: "Estimasi Panen",
+            type: "date",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Dimensi Bedengan",
+        fields: [
+          {
+            key: "length",
+            label: "Panjang Bedengan (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "width",
+            label: "Lebar Bedengan (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "height",
+            label: "Kedalaman Bedengan (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "note",
+            label: "Catatan",
+            type: "textarea",
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/livestock-batch-fields.ts
+var livestockBatchFields;
+var init_livestock_batch_fields = __esm({
+  "src/pages/konfigurasi/schema/livestock-batch-fields.ts"() {
+    "use strict";
+    livestockBatchFields = [
+      {
+        title: "Informasi Umum",
+        fields: [
+          {
+            key: "id",
+            label: "Id Kandang",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "location",
+            label: "Lokasi",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "description",
+            label: "Deskripsi",
+            type: "text",
+            required: true,
+            widthClass: "w-full",
+            colSpan: 2
+          },
+          {
+            key: "livestockId",
+            label: "ID Ternak",
+            type: "text",
+            required: true,
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Pengaturan Produksi",
+        fields: [
+          {
+            key: "initialPopulation",
+            label: "Populasi Awal",
+            type: "number",
+            required: true
+          },
+          {
+            key: "currentPopulation",
+            label: "Populasi Saat Ini",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "startDate",
+            label: "Tanggal Mulai",
+            type: "date",
+            required: true,
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "expectedHarvestDate",
+            label: "Estimasi Panen",
+            type: "date",
+            widthClass: "w-full max-w-md"
+          }
+        ]
+      },
+      {
+        title: "\u{1F527} Pengaturan Kandang",
+        fields: [
+          {
+            key: "length",
+            label: "Panjang Kandang (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "width",
+            label: "Lebar Kandang (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "height",
+            label: "Kedalaman Kandang (cm)",
+            type: "number",
+            widthClass: "w-full max-w-md"
+          },
+          {
+            key: "note",
+            label: "Catatan",
+            type: "textarea",
+            widthClass: "w-full",
+            colSpan: 2
+          }
+        ]
+      }
+    ];
+  }
+});
+
+// src/pages/konfigurasi/schema/all-batch-fields.ts
+var init_all_batch_fields = __esm({
+  "src/pages/konfigurasi/schema/all-batch-fields.ts"() {
+    "use strict";
+    init_aquatic_batch_fields();
+    init_hydroponic_batch_fields();
+    init_horti_batch_fields();
+    init_livestock_batch_fields();
+  }
+});
+
+// src/pages/konfigurasi/batch/form-batch.ts
+var FormBatch;
+var init_form_batch = __esm({
+  "src/pages/konfigurasi/batch/form-batch.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_all_batch_fields();
+    init_form_builder_section();
+    init_form_builder_buttons();
+    FormBatch = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.mode = "new";
+        this.value = {};
+        this.draft = {};
+        this.errors = {};
+        this.handleFieldChange = (e8, key) => {
+          const target = e8.target;
+          const field = this.allFields.find((f3) => f3.key === key);
+          let v2 = target.value;
+          if (field?.type === "number") {
+            const n6 = parseFloat(v2);
+            v2 = Number.isNaN(n6) ? 0 : n6;
+          }
+          this.draft = { ...this.draft, [key]: v2 };
+          if (field?.required && (v2 === "" || v2 === null || v2 === void 0)) {
+            this.errors = {
+              ...this.errors,
+              [key]: `Field "${field.label}" wajib diisi.`
+            };
+          } else {
+            const { [key]: _2, ...rest } = this.errors;
+            this.errors = rest;
+          }
+        };
+        this.handleSubmit = (e8) => {
+          e8?.preventDefault();
+          e8?.stopPropagation();
+          const res = this.validate();
+          if (!res.valid) {
+            alert(res.message);
+            return;
+          }
+          this.dispatchEvent(
+            new CustomEvent("submit", {
+              detail: this.draft,
+              bubbles: true,
+              composed: true
+            })
+          );
+        };
+        this.handleCancel = () => {
+          this.dispatchEvent(new CustomEvent("cancel"));
+          this.draft = { ...this.value };
+        };
+        this.handleDelete = () => {
+          if (!confirm("Yakin ingin menghapus data ini?")) return;
+          this.dispatchEvent(
+            new CustomEvent("delete", {
+              detail: {
+                kind: this.kind,
+                id: this.value?.id ?? this.value?.code
+              },
+              bubbles: true,
+              composed: true
+            })
+          );
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      get formTitle() {
+        switch (this.kind) {
+          case "akuakultur":
+            return { icon: "\u{1F41F}", text: "Batch Akuakultur", color: "blue" };
+          case "hidroponik":
+            return { icon: "\u{1F4A7}", text: "Batch Hidroponik", color: "green" };
+          case "hortikultura":
+            return { icon: "\u{1F33F}", text: "Batch Hortikultura", color: "green" };
+          case "peternakan":
+            return { icon: "\u{1F414}", text: "Batch Peternakan", color: "yellow" };
+          default:
+            return { icon: "", text: "", color: "gray" };
+        }
+      }
+      get formSections() {
+        switch (this.kind) {
+          case "akuakultur":
+            return aquaticBatchFields;
+          case "hidroponik":
+            return hydroponicBatchFields;
+          case "hortikultura":
+            return hortiBatchFields;
+          case "peternakan":
+            return livestockBatchFields;
+          default:
+            return [];
+        }
+      }
+      get allFields() {
+        return this.formSections.flatMap((section) => section.fields);
+      }
+      updated(changed) {
+        if (changed.has("value")) {
+          this.draft = { ...this.value };
+        }
+      }
+      validate() {
+        for (const f3 of this.allFields) {
+          const val = this.draft[f3.key];
+          if (f3.required && (val === void 0 || val === null || val === "")) {
+            return { valid: false, message: `Field "${f3.label}" wajib diisi.` };
+          }
+        }
+        return { valid: true };
+      }
+      render() {
+        const { icon, text, color } = this.formTitle;
+        const bgMap = {
+          yellow: "border-yellow-300 bg-yellow-50",
+          blue: "border-blue-300 bg-blue-50",
+          green: "border-green-300 bg-green-50",
+          gray: "border-gray-300 bg-gray-50"
+        };
+        const textMap = {
+          yellow: "text-yellow-800",
+          blue: "text-blue-800",
+          green: "text-green-800",
+          gray: "text-gray-800"
+        };
+        return x`
+      <section class="border rounded-xl p-4 shadow-sm ${bgMap[color]}">
+        <h2
+          class="text-xl font-semibold mb-3 flex items-center gap-2 ${textMap[color]}"
+        >
+          ${icon} ${text}
+        </h2>
+
+        ${this.formSections.map(
+          (section) => x`
+            <form-builder-section
+              .title=${section.title}
+              .desc=${section.desc ?? ""}
+              .fields=${section.fields}
+              .model=${this.draft}
+              .errors=${this.errors}
+              .cols=${2}
+              .onFieldChange=${this.handleFieldChange}
+            ></form-builder-section>
+          `
+        )}
+
+        <div class="col-span-2">
+          <form-builder-buttons
+            .mode=${this.mode}
+            @submit=${this.handleSubmit}
+            @cancel=${this.handleCancel}
+            @delete=${this.handleDelete}
+          ></form-builder-buttons>
+        </div>
+      </section>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], FormBatch.prototype, "mode", 2);
+    __decorateClass([
+      n4({ type: Object })
+    ], FormBatch.prototype, "value", 2);
+    __decorateClass([
+      n4({ type: String })
+    ], FormBatch.prototype, "kind", 2);
+    __decorateClass([
+      r5()
+    ], FormBatch.prototype, "draft", 2);
+    __decorateClass([
+      r5()
+    ], FormBatch.prototype, "errors", 2);
+    FormBatch = __decorateClass([
+      t3("form-batch")
+    ], FormBatch);
+  }
+});
+
+// src/pages/konfigurasi/batch/batch-list.ts
+var BatchList;
+var init_batch_list = __esm({
+  "src/pages/konfigurasi/batch/batch-list.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    BatchList = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.kind = "akuakultur";
+        this.akuakultur = [];
+        this.hidroponik = [];
+        this.hortikultura = [];
+        this.peternakan = [];
+      }
+      createRenderRoot() {
+        return this;
+      }
+      emitAdd(kind) {
+        this.dispatchEvent(
+          new CustomEvent("add-item", {
+            detail: { kind },
+            bubbles: true,
+            composed: true
           })
         );
-        this.log("connectedCallback() CALLED | href=", location.href);
-        const list = await loadDevices();
-        this.tags = Array.from(new Set(list.map((d3) => d3.tagNumber))).filter(Boolean).sort();
-        this.log("step#1 loadDevices \u2192", { count: list.length, tags: this.tags });
-        const url = new URL(window.location.href);
-        const tabParam = url.searchParams.get("tab") || sessionStorage.getItem(this.TAB_KEY) || "general";
-        this.activeTab = ["general", "hw-comm", "loc-meta"].includes(
-          tabParam
-        ) ? tabParam : "general";
-        this.log("step#2 activeTab \u2192", this.activeTab);
-        const tagParam = url.searchParams.get("tag");
-        const picked = tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? "";
-        this.log(
-          "step#3 picked tag \u2192",
-          picked || "(none)",
-          "(from url:",
-          tagParam,
-          ")"
+      }
+      emitEdit(item, kind) {
+        this.dispatchEvent(
+          new CustomEvent("edit-item", {
+            detail: { item, kind },
+            bubbles: true,
+            composed: true
+          })
         );
-        const found = picked ? list.find((d3) => d3.tagNumber === picked) : void 0;
-        this.log(
-          "step#4 found? \u2192",
-          !!found,
-          found ? { tag: found.tagNumber, type: found.type } : null
-        );
-        if (found) {
-          this.mode = "edit";
-          this.device = structuredClone(found);
-          this.pristine = structuredClone(found);
-          url.searchParams.set("tag", picked);
-          history.replaceState({}, "", url.toString());
-          this.revalidate(false);
-          this.log("step#5 SET EDIT with", this.device.tagNumber);
-          return;
-        }
-        this.mode = "new";
-        this.device = this.newTemplate();
-        this.pristine = structuredClone(this.device);
-        this.revalidate(false);
-        this.log("step#5 SET NEW (no devices available)");
       }
-      disconnectedCallback() {
-        window.removeEventListener("beforeunload", this.beforeUnload);
-        super.disconnectedCallback();
-      }
-      /* ====== HELPERS ====== */
-      newTemplate() {
-        const now = (/* @__PURE__ */ new Date()).toISOString();
-        return {
-          tagNumber: "",
-          type: "sensor",
-          description: "",
-          unit: "",
-          ranges: { low: 0, high: 100 },
-          alarms: { low: null, high: null },
-          kind: null,
-          allowedStates: null,
-          defaultState: null,
-          writable: false,
-          io: { bus: "adc", pin: null, address: null, channel: 0 },
-          mqtt: { topic: "", readCmd: null, writeCmd: null },
-          sample: { periodMs: 1e3, deadband: 0 },
-          display: { precision: 0 },
-          location: { area: "", position: "" },
-          meta: { createdAt: now, updatedAt: now }
-        };
-      }
-      patch(obj, path, value) {
-        if (path === "allowedStatesCsv") return;
-        const keys = path.split(".");
-        let ref = obj;
-        for (let i6 = 0; i6 < keys.length - 1; i6++) {
-          const k2 = keys[i6];
-          ref[k2] = { ...ref[k2] ?? {} };
-          ref = ref[k2];
-        }
-        ref[keys[keys.length - 1]] = value;
-      }
-      revalidate(_strict) {
-        const errs = validateDevice(this.device, this.mode === "new");
-        this.errors = errs;
-        this.errorsMap = {};
-        for (const e8 of errs)
-          if (!this.errorsMap[e8.field]) this.errorsMap[e8.field] = e8.message;
-      }
-      fieldTab(path) {
-        if (path.startsWith("io.")) return "hw-comm";
-        if (path.startsWith("mqtt.")) return "mqtt";
-        if (path.startsWith("location.") || path.startsWith("meta."))
-          return "loc-meta";
-        return "general";
-      }
-      errorsByTab() {
-        const by = {
-          general: 0,
-          "hw-comm": 0,
-          "loc-meta": 0
-        };
-        for (const e8 of this.errors) {
-          const tab = this.fieldTab(e8.field);
-          by[tab] = (by[tab] ?? 0) + 1;
-        }
-        return by;
-      }
-      /** Kelas Tailwind untuk tombol segmented control */
-      btnCls(active) {
-        const base = "relative px-3 md:px-4 py-1.5 rounded-md text-sm font-medium transition-colors select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2";
-        const on = "bg-white text-slate-900 shadow ring-1 ring-slate-200";
-        const off = "text-slate-600 hover:text-slate-900 hover:bg-white/60";
-        return `${base} ${active ? on : off}`;
-      }
-      showToast(msg, error = false) {
-        const el2 = document.createElement("div");
-        el2.textContent = msg;
-        el2.className = `fixed z-50 bottom-4 right-4 px-3 py-2 rounded shadow ${error ? "bg-rose-600 text-white" : "bg-emerald-600 text-white"}`;
-        document.body.appendChild(el2);
-        setTimeout(() => el2.remove(), 1600);
-      }
-      /* ====== RENDER ====== */
-      render() {
-        if (!this.device) return null;
-        const badges = this.errorsByTab();
+      renderCard(title, emoji, kind, items) {
         return x`
-      <section class="max-w-6xl mx-auto">
-        ${this._debug ? x` <div
-              class="m-2 p-2 text-xs rounded border border-amber-300 bg-amber-50 text-amber-800"
-            >
-              <div>
-                <b>DBG</b> mode=<code>${this.mode}</code>,
-                tags=${this.tags.length}, current=<code
-                  >${this.device?.tagNumber ?? "-"}</code
-                >
-              </div>
-            </div>` : null}
-
-        <!-- Mode switch: segmented control -->
-        <div class="flex items-center justify-between px-2 py-3">
-          <div
-            class="inline-flex items-center gap-1 rounded-lg bg-slate-100/80 p-1 shadow-inner ring-1 ring-slate-200"
-            role="group"
-            aria-label="Switch form mode"
+      <div class="border border-gray-300 rounded-lg p-4 bg-white shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-semibold">${emoji} ${title}</h3>
+          <button
+            class="bg-blue-600 text-white text-sm px-3 py-1 rounded hover:bg-blue-700"
+            @click=${() => this.emitAdd(kind)}
           >
-            <button
-              class="${this.btnCls(this.mode === "edit")}"
-              aria-pressed="${this.mode === "edit"}"
-              title="Edit device yang sudah ada"
-              @click=${() => this.onChangeMode("edit")}
-            >
-              <span class="inline-flex items-center gap-2">
-                <span aria-hidden="true">✏️</span>
-                <span>Edit</span>
-              </span>
-              ${this.mode === "edit" ? x`
-                    <span
-                      class="absolute -bottom-1.5 left-2 right-2 h-0.5 rounded bg-indigo-500"
-                    ></span>
-                  ` : null}
-            </button>
-
-            <button
-              class="${this.btnCls(this.mode === "new")}"
-              aria-pressed="${this.mode === "new"}"
-              title="Buat device baru"
-              @click=${() => this.onChangeMode("new")}
-            >
-              <span class="inline-flex items-center gap-2">
-                <span aria-hidden="true">🆕</span>
-                <span>New</span>
-              </span>
-              ${this.mode === "new" ? x`
-                    <span
-                      class="absolute -bottom-1.5 left-2 right-2 h-0.5 rounded bg-indigo-500"
-                    ></span>
-                  ` : null}
-            </button>
-          </div>
-
-          <div class="hidden md:flex items-center gap-2 text-xs text-slate-500">
-            <span
-              class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 ring-1 ring-slate-200"
-            >
-              <span
-                class="w-1.5 h-1.5 rounded-full ${this.mode === "edit" ? "bg-emerald-500" : "bg-indigo-500"}"
-              ></span>
-              Mode: <code class="font-mono">${this.mode}</code>
-            </span>
-          </div>
+            ➕ Tambah
+          </button>
         </div>
 
+        ${!items?.length ? x`
+              <div class="text-gray-500 text-sm italic">Belum ada data.</div>
+            ` : x`
+              <ul class="space-y-2">
+                ${items.map(
+          (item) => x`
+                    <li
+                      class="p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
+                      @click=${() => this.emitEdit(item, kind)}
+                    >
+                      <div class="font-medium">${item?.id ?? "Tanpa Id"}</div>
+                      <div class="text-sm text-gray-500 flex gap-2">
+                        <span
+                          >${item?.speciesId ?? item?.plantId ?? item?.livestockId ?? "Tanpa nama"}</span
+                        >
+                        ${item?.startDate ? x`
+                              <span
+                                >• Mulai:
+                                ${new Date(
+            item.startDate
+          ).toLocaleDateString()}</span
+                              >
+                            ` : ""}
+                        ${item?.status ? x`<span>• ${item.status}</span>` : ""}
+                      </div>
+                    </li>
+                  `
+        )}
+              </ul>
+            `}
+      </div>
+    `;
+      }
+      render() {
+        return x`
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        ${this.renderCard("Akuakultur", "\u{1F41F}", "akuakultur", this.akuakultur)}
+        ${this.renderCard("Hidroponik", "\u{1F4A7}\u{1F33F}", "hidroponik", this.hidroponik)}
+        ${this.renderCard(
+          "Hortikultura",
+          "\u{1F96C}",
+          "hortikultura",
+          this.hortikultura
+        )}
+        ${this.renderCard("Peternakan", "\u{1F404}", "peternakan", this.peternakan)}
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], BatchList.prototype, "kind", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchList.prototype, "akuakultur", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchList.prototype, "hidroponik", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchList.prototype, "hortikultura", 2);
+    __decorateClass([
+      n4({ type: Array })
+    ], BatchList.prototype, "peternakan", 2);
+    BatchList = __decorateClass([
+      t3("batch-list")
+    ], BatchList);
+  }
+});
+
+// src/pages/konfigurasi/batch/batch-container.ts
+var BatchContainer;
+var init_batch_container = __esm({
+  "src/pages/konfigurasi/batch/batch-container.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_all_batch_services();
+    init_form_batch();
+    init_batch_list();
+    BatchContainer = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.kind = "akuakultur";
+        this.view = "list";
+        this.draft = {};
+        this.mode = "new";
+        this.aquatic = [];
+        this.hydroponic = [];
+        this.horti = [];
+        this.livestock = [];
+        this.handleAdd = (e8) => {
+          this.kind = e8.detail.kind;
+          this.draft = {};
+          this.mode = "new";
+          this.view = "form";
+          console.log("[ADD BATCH]", { kind: this.kind });
+        };
+        this.handleEdit = (e8) => {
+          this.kind = e8.detail.kind;
+          this.draft = { ...e8.detail.item };
+          this.mode = "edit";
+          this.view = "form";
+          console.log("[EDIT BATCH]", { kind: this.kind, draft: this.draft });
+        };
+        this.handleSubmit = (e8) => {
+          console.log("[SUBMIT BATCH]", { kind: this.kind, data: e8.detail });
+          this.view = "list";
+        };
+        this.handleDelete = (e8) => {
+          const { id, kind } = e8.detail ?? {};
+          if (!id || !kind) {
+            console.warn("[DELETE BATCH] Event detail tidak valid:", e8.detail);
+            return;
+          }
+          console.log("[DELETE BATCH]", { kind, id });
+          switch (kind) {
+            case "akuakultur":
+              this.aquatic = this.aquatic.filter((item) => item.id !== id);
+              break;
+            case "hidroponik":
+              this.hydroponic = this.hydroponic.filter((item) => item.id !== id);
+              break;
+            case "hortikultura":
+              this.horti = this.horti.filter((item) => item.id !== id);
+              break;
+            case "peternakan":
+              this.livestock = this.livestock.filter((item) => item.id !== id);
+              break;
+          }
+          this.view = "list";
+        };
+        this.handleCancel = () => {
+          this.view = "list";
+        };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        this.loadAll().catch(console.error);
+      }
+      async loadAll() {
+        console.log("[LOAD BATCH] Fetch semua data...");
+        try {
+          this.aquatic = await fetchAllAquaticBatches();
+          console.log("\u2713 Akuakultur loaded:", this.aquatic);
+        } catch (e8) {
+          console.error("\u274C Gagal memuat akuakultur:", e8);
+        }
+        try {
+          this.hydroponic = await fetchAllHydroponicBatches();
+          console.log("\u2713 Hidroponik loaded:", this.hydroponic);
+        } catch (e8) {
+          console.error("\u274C Gagal memuat hidroponik:", e8);
+        }
+        try {
+          this.horti = await fetchAllHortiBatches();
+          console.log("\u2713 Hortikultura loaded:", this.horti);
+        } catch (e8) {
+          console.error("\u274C Gagal memuat hortikultura:", e8);
+        }
+        try {
+          this.livestock = await fetchAllLivestockBatches();
+          console.log("\u2713 Peternakan loaded:", this.livestock);
+        } catch (e8) {
+          console.error("\u274C Gagal memuat peternakan:", e8);
+        }
+      }
+      render() {
+        return x`
+      ${this.view === "list" ? x`
+            <batch-list
+              .kind=${this.kind}
+              .akuakultur=${this.aquatic}
+              .hidroponik=${this.hydroponic}
+              .hortikultura=${this.horti}
+              .peternakan=${this.livestock}
+              @add-item=${this.handleAdd}
+              @edit-item=${this.handleEdit}
+            ></batch-list>
+          ` : x`
+            <form-batch
+              .kind=${this.kind}
+              .mode=${this.mode}
+              .value=${this.draft}
+              @submit=${this.handleSubmit}
+              @cancel=${this.handleCancel}
+              @delete=${this.handleDelete}
+            ></form-batch>
+          `}
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: String })
+    ], BatchContainer.prototype, "kind", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "view", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "draft", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "mode", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "aquatic", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "hydroponic", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "horti", 2);
+    __decorateClass([
+      r5()
+    ], BatchContainer.prototype, "livestock", 2);
+    BatchContainer = __decorateClass([
+      t3("batch-container")
+    ], BatchContainer);
+  }
+});
+
+// src/pages/config.ts
+var config_exports = {};
+__export(config_exports, {
+  PageDeviceConfig: () => PageDeviceConfig
+});
+var PageDeviceConfig;
+var init_config = __esm({
+  "src/pages/config.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_device_events();
+    init_ui_tabs();
+    init_event_table();
+    init_device_config();
+    init_dev_config_mqtt();
+    init_entitas_container();
+    init_batch_container();
+    PageDeviceConfig = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.activeTab = "devices";
+        this.mode = "edit";
+        this.tags = [];
+        this.TAB_KEY = "deviceConfig.activeTab";
+      }
+      createRenderRoot() {
+        return this;
+      }
+      async connectedCallback() {
+        super.connectedCallback();
+        const list = await DeviceEvents.loadAllDevices();
+        this.tags = list.map((d3) => d3.tagNumber).filter(Boolean).sort();
+        const tabParam = new URL(location.href).searchParams.get("tab");
+        this.activeTab = tabParam || sessionStorage.getItem(this.TAB_KEY) || "devices";
+      }
+      onTabChange(e8) {
+        this.activeTab = e8.detail.id;
+        sessionStorage.setItem(this.TAB_KEY, this.activeTab);
+      }
+      render() {
+        return x`
+      <section class="max-w-6xl mx-auto px-4 py-6">
         <ui-tabs
           .tabs=${[
-          { id: "general", label: "General", icon: "\u{1F9FE}" },
-          { id: "hw-comm", label: "H/W & Comm", icon: "\u{1F50C}" },
-          { id: "loc-meta", label: "Lokasi & Metadata", icon: "\u{1F4CD}" },
+          { id: "batch", label: "Batch", icon: "\u{1F3ED}" },
+          { id: "entitas", label: "Entitas", icon: "\u{1F9EC}" },
+          { id: "devices", label: "Devices", icon: "\u{1F9FE}" },
           { id: "mqtt", label: "MQTT", icon: "\u{1F4E1}" }
-          // ⬅️ Baru
         ]}
           .active=${this.activeTab}
-          .badges=${badges}
           @dev-tab-change=${this.onTabChange}
-        >
-        </ui-tabs>
+        ></ui-tabs>
 
-        <div class="bg-white border border-slate-200 rounded-b-md p-2 md:p-4">
-          ${this.activeTab === "general" ? x`
-                <dev-config-general
-                  .model=${this.device}
-                  .errors=${this.errorsMap}
-                  .mode=${this.mode}
-                  .tags=${this.tags}
-                  @dev-field-change=${this.onFieldChange}
-                  @dev-tag-picked=${this.onTagPicked}
-                >
-                </dev-config-general>
-              ` : this.activeTab === "hw-comm" ? x`
-                <dev-config-hw-comm
-                  .model=${this.device}
-                  .errors=${this.errorsMap}
-                  @dev-field-change=${this.onFieldChange}
-                >
-                </dev-config-hw-comm>
-              ` : this.activeTab === "mqtt" ? x`
-                <dev-config-mqtt
-                  .model=${{ tags: this.tags }}
-                  .deviceList=${this.tags.map((tag) => getByTag(tag)).filter(Boolean)}
-                ></dev-config-mqtt>
-              ` : x`
-                <dev-config-loc-meta
-                  .model=${this.device}
-                  @dev-field-change=${this.onFieldChange}
-                >
-                </dev-config-loc-meta>
-              `}
-        </div>
-
-        ${this.activeTab === "mqtt" ? null : x`
-              <div
-                class="sticky bottom-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 mt-4 p-3 flex gap-2 justify-end"
-              >
-                <button
-                  class="px-3 py-2 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click=${this.onBack}
-                  ?disabled=${this.saving || this.deleting}
-                >
-                  Kembali
-                </button>
-
-                <button
-                  class="px-3 py-2 rounded bg-amber-100 hover:bg-amber-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click=${this.onReset}
-                  ?disabled=${this.saving || this.deleting}
-                >
-                  Cancel
-                </button>
-
-                ${this.mode === "edit" ? x`
-                      <button
-                        class="relative px-3 py-2 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        @click=${this.onDelete}
-                        ?disabled=${this.saving || this.deleting}
-                        title="Hapus device ini"
-                      >
-                        ${this.deleting ? x` <span class="inline-flex items-center gap-2">
-                              <svg
-                                class="animate-spin h-4 w-4 text-white"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  class="opacity-30"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  stroke-width="4"
-                                  fill="none"
-                                ></circle>
-                                <path
-                                  class="opacity-90"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
-                                ></path>
-                              </svg>
-                              Deleting…
-                            </span>` : x`Delete`}
-                      </button>
-                    ` : null}
-
-                <button
-                  class="relative px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  @click=${this.onSave}
-                  ?disabled=${this.saving || this.deleting || this.errors.length > 0 || !this.dirty && this.mode === "edit"}
-                  title=${this.errors.length ? "Perbaiki error dulu" : this.saving ? "Saving..." : "Save"}
-                >
-                  ${this.saving ? x` <span class="inline-flex items-center gap-2">
-                        <svg
-                          class="animate-spin h-4 w-4 text-white"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            class="opacity-30"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            stroke-width="4"
-                            fill="none"
-                          ></circle>
-                          <path
-                            class="opacity-90"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 0 1 8-8v4A4 4 0 0 0 8 12H4z"
-                          ></path>
-                        </svg>
-                        Saving…
-                      </span>` : x`Save`}
-                </button>
-
-                ${this.dirty ? x`<span class="self-center text-xs text-amber-600"
-                      >unsaved changes…</span
-                    >` : null}
+        ${this.activeTab === "devices" ? x` <device-config></device-config> ` : this.activeTab === "batch" ? x`
+              <div class="mt-4">
+                <batch-container></batch-container>
               </div>
-            `}
+            ` : this.activeTab === "entitas" ? x`
+              <div class="font-semibold text-lg mt-4 mb-2 text-gray-700">
+                Konfigurasi - Entitas
+              </div>
+              <div class="mt-4">
+                <entitas-container></entitas-container>
+              </div>
+            ` : this.activeTab === "mqtt" ? x`<dev-config-mqtt></dev-config-mqtt>` : null}
       </section>
     `;
       }
@@ -16039,15 +19762,6 @@ var init_device_config = __esm({
     ], PageDeviceConfig.prototype, "device", 2);
     __decorateClass([
       r5()
-    ], PageDeviceConfig.prototype, "pristine", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "errors", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "errorsMap", 2);
-    __decorateClass([
-      r5()
     ], PageDeviceConfig.prototype, "activeTab", 2);
     __decorateClass([
       r5()
@@ -16055,20 +19769,8 @@ var init_device_config = __esm({
     __decorateClass([
       r5()
     ], PageDeviceConfig.prototype, "tags", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "dirty", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "_debug", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "saving", 2);
-    __decorateClass([
-      r5()
-    ], PageDeviceConfig.prototype, "deleting", 2);
     PageDeviceConfig = __decorateClass([
-      t3("page-device-config")
+      t3("page-config")
     ], PageDeviceConfig);
   }
 });
@@ -16430,375 +20132,6 @@ var init_not_authorized = __esm({
   }
 });
 
-// src/utils/format.ts
-function formatDate(value) {
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (isNaN(date.getTime())) return value.toString();
-  return date.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  });
-}
-var init_format = __esm({
-  "src/utils/format.ts"() {
-    "use strict";
-  }
-});
-
-// src/components/plant-detail-dialog.ts
-var PlantDetailDialog;
-var init_plant_detail_dialog = __esm({
-  "src/components/plant-detail-dialog.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_format();
-    PlantDetailDialog = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.visible = false;
-      }
-      createRenderRoot() {
-        return this;
-      }
-      show() {
-        this.visible = true;
-      }
-      close() {
-        this.visible = false;
-      }
-      render() {
-        if (!this.visible) return x``;
-        return x`
-      <div
-        class="fixed inset-0 backdrop-blur-sm bg-black/10 flex justify-center items-center z-50"
-        @click=${() => this.close()}
-      >
-        <div
-          class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-xl"
-          @click=${(e8) => e8.stopPropagation()}
-        >
-          <div class="flex justify-between items-center mb-4">
-            <div class="text-lg font-bold">Detail Tanaman</div>
-            <button
-              @click=${() => this.close()}
-              class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-              title="Tutup"
-            >
-              ✕
-            </button>
-          </div>
-
-          <table class="w-full text-sm">
-            <tbody>
-              ${Object.entries(this.plant || {}).map(
-          ([key, value]) => x`
-                  <tr class="border-b">
-                    <td class="py-1 px-2 font-medium text-gray-600 w-1/3">
-                      ${this.formatKey(key)}
-                    </td>
-                    <td class="py-1 px-2">${this.renderValue(value)}</td>
-                  </tr>
-                `
-        )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-      }
-      formatKey(key) {
-        return key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/\b\w/g, (l3) => l3.toUpperCase());
-      }
-      renderValue(value) {
-        if (value === null || value === void 0) return "-";
-        if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) {
-          return formatDate(value);
-        }
-        if (value instanceof Date) {
-          return formatDate(value);
-        }
-        if (typeof value === "object") {
-          return x`<pre class="text-xs bg-gray-100 p-2 rounded">
-${JSON.stringify(value, null, 2)}</pre
-      >`;
-        }
-        return value.toString();
-      }
-    };
-    __decorateClass([
-      n4({ type: Object })
-    ], PlantDetailDialog.prototype, "plant", 2);
-    __decorateClass([
-      n4({ type: Boolean })
-    ], PlantDetailDialog.prototype, "visible", 2);
-    PlantDetailDialog = __decorateClass([
-      t3("plant-detail-dialog")
-    ], PlantDetailDialog);
-  }
-});
-
-// src/pages/produksi/hidroponik.ts
-var hidroponik_exports = {};
-__export(hidroponik_exports, {
-  PageProduksiHidroponik: () => PageProduksiHidroponik
-});
-var PageProduksiHidroponik;
-var init_hidroponik = __esm({
-  "src/pages/produksi/hidroponik.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_plant_detail_dialog();
-    PageProduksiHidroponik = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.plants = [];
-        this.batches = [];
-        this.harvests = [];
-        this.selectedPlant = null;
-        this.showDialog = false;
-      }
-      createRenderRoot() {
-        return this;
-      }
-      showPlantDetail(plant) {
-        console.log("[showPlantDetail] Trigger global dialog");
-        const dialogEl = document.querySelector("plant-detail-dialog");
-        if (dialogEl) {
-          dialogEl.plant = plant;
-          dialogEl.show();
-        }
-      }
-      async connectedCallback() {
-        super.connectedCallback();
-        this.plants = await (await fetch("/assets/mock/plants.json")).json();
-        this.batches = await (await fetch("/assets/mock/batches.json")).json();
-        this.harvests = await (await fetch("/assets/mock/harvests.json")).json();
-      }
-      render() {
-        return x`
-      <section class="p-4 space-y-6">
-        <h1 class="text-2xl font-bold mb-2">🌱 Produksi Hidroponik</h1>
-
-        <!-- Daftar Batch -->
-        <div>
-          <h2 class="text-xl font-semibold mb-2">Batch Aktif</h2>
-          <table
-            class="table-auto border-collapse border border-gray-300 w-full text-sm"
-          >
-            <thead class="bg-green-100">
-              <tr>
-                <th class="border px-2 py-1">Kode</th>
-                <th class="border px-2 py-1">Tanaman</th>
-                <th class="border px-2 py-1">Mulai</th>
-                <th class="border px-2 py-1">Estimasi Panen</th>
-                <th class="border px-2 py-1">Total Tanaman</th>
-                <th class="border px-2 py-1">Lokasi</th>
-                <th class="border px-2 py-1">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.batches.map((b3) => {
-          const plant = this.plants.find((p3) => p3.id === b3.plantId);
-          return x`
-                  <tr>
-                    <td class="border px-2 py-1">${b3.code}</td>
-                    <td
-                      class="border px-2 py-1 cursor-pointer text-blue-600 hover:underline"
-                      @click=${() => {
-            console.log("[PLANT CLICKED]", plant);
-            this.showPlantDetail(plant);
-          }}
-                    >
-                      ${plant?.name || b3.plantId}
-                    </td>
-
-                    <td class="border px-2 py-1">
-                      ${this.formatDate(b3.startDate)}
-                    </td>
-                    <td class="border px-2 py-1">
-                      ${this.formatDate(b3.expectedHarvestDate)}
-                    </td>
-                    <td class="border px-2 py-1 text-center">
-                      ${b3.totalPlants}
-                    </td>
-                    <td class="border px-2 py-1">${b3.location}</td>
-                    <td class="border px-2 py-1">${b3.status}</td>
-                  </tr>
-                `;
-        })}
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Hasil Panen -->
-        <div>
-          <h2 class="text-xl font-semibold mb-2">Hasil Panen</h2>
-          <table
-            class="table-auto border-collapse border border-gray-300 w-full text-sm"
-          >
-            <thead class="bg-green-100">
-              <tr>
-                <th class="border px-2 py-1">Batch</th>
-                <th class="border px-2 py-1">Tanggal Panen</th>
-                <th class="border px-2 py-1">Berat Total (g)</th>
-                <th class="border px-2 py-1">Pendapatan (Rp)</th>
-                <th class="border px-2 py-1">Laba (Rp)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.harvests.map((h3) => {
-          const batch = this.batches.find((b3) => b3.id === h3.batchId);
-          return x`
-                  <tr>
-                    <td class="border px-2 py-1">
-                      ${batch?.code || h3.batchId}
-                    </td>
-                    <td class="border px-2 py-1">
-                      ${this.formatDate(h3.harvestDate)}
-                    </td>
-                    <td class="border px-2 py-1 text-right">
-                      ${h3.totalWeightG}
-                    </td>
-                    <td class="border px-2 py-1 text-right">
-                      ${h3.revenue.toLocaleString()}
-                    </td>
-                    <td class="border px-2 py-1 text-right">
-                      ${h3.netProfit.toLocaleString()}
-                    </td>
-                  </tr>
-                `;
-        })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    `;
-      }
-      formatDate(dateStr) {
-        if (!dateStr) return "";
-        const d3 = new Date(dateStr);
-        return new Intl.DateTimeFormat("id-ID", {
-          day: "2-digit",
-          month: "short",
-          // atau 'long' untuk nama bulan lengkap
-          year: "numeric"
-        }).format(d3);
-      }
-    };
-    __decorateClass([
-      r5()
-    ], PageProduksiHidroponik.prototype, "plants", 2);
-    __decorateClass([
-      r5()
-    ], PageProduksiHidroponik.prototype, "batches", 2);
-    __decorateClass([
-      r5()
-    ], PageProduksiHidroponik.prototype, "harvests", 2);
-    __decorateClass([
-      r5()
-    ], PageProduksiHidroponik.prototype, "selectedPlant", 2);
-    __decorateClass([
-      r5()
-    ], PageProduksiHidroponik.prototype, "showDialog", 2);
-    PageProduksiHidroponik = __decorateClass([
-      t3("hidroponik-page")
-    ], PageProduksiHidroponik);
-  }
-});
-
-// src/pages/produksi/hortikultura.ts
-var hortikultura_exports = {};
-__export(hortikultura_exports, {
-  HortikulturaPage: () => HortikulturaPage
-});
-var HortikulturaPage;
-var init_hortikultura = __esm({
-  "src/pages/produksi/hortikultura.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    HortikulturaPage = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <section class="p-4">
-        <h1 class="text-xl font-bold">🥬 Hortikultura</h1>
-        <p>Modul produksi hortikultura (belum aktif).</p>
-      </section>
-    `;
-      }
-    };
-    HortikulturaPage = __decorateClass([
-      t3("hortikultura-page")
-    ], HortikulturaPage);
-  }
-});
-
-// src/pages/produksi/perikanan.ts
-var perikanan_exports = {};
-__export(perikanan_exports, {
-  PerikananPage: () => PerikananPage
-});
-var PerikananPage;
-var init_perikanan = __esm({
-  "src/pages/produksi/perikanan.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    PerikananPage = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <section class="p-4">
-        <h1 class="text-xl font-bold">🐟 Perikanan</h1>
-        <p>Modul produksi perikanan (belum aktif).</p>
-      </section>
-    `;
-      }
-    };
-    PerikananPage = __decorateClass([
-      t3("perikanan-page")
-    ], PerikananPage);
-  }
-});
-
-// src/pages/produksi/peternakan.ts
-var peternakan_exports = {};
-__export(peternakan_exports, {
-  PeternakanPage: () => PeternakanPage
-});
-var PeternakanPage;
-var init_peternakan = __esm({
-  "src/pages/produksi/peternakan.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    PeternakanPage = class extends i4 {
-      createRenderRoot() {
-        return this;
-      }
-      render() {
-        return x`
-      <section class="p-4">
-        <h1 class="text-xl font-bold">🐄 Peternakan</h1>
-        <p>Modul produksi peternakan (belum aktif).</p>
-      </section>
-    `;
-      }
-    };
-    PeternakanPage = __decorateClass([
-      t3("peternakan-page")
-    ], PeternakanPage);
-  }
-});
-
 // src/pages/not-found.ts
 var not_found_exports = {};
 __export(not_found_exports, {
@@ -16824,17 +20157,17 @@ var init_not_found = __esm({
   }
 });
 
-// src/components/app-shell.ts
+// src/components/layout/app-shell.ts
 init_lit();
 init_decorators();
 init_context();
 
-// src/components/app-header.ts
+// src/components/layout/app-header.ts
 init_lit();
 init_decorators();
 init_context();
 
-// src/components/app-nav.ts
+// src/components/layout/app-nav.ts
 init_lit();
 init_decorators();
 var AppNav = class extends i4 {
@@ -16924,55 +20257,11 @@ var AppNav = class extends i4 {
         >📊 Dashboard</a
       >
       <a
-        href="/histori"
-        @click=${this._navigate}
-        class=${this.isActive("histori")}
-        >📈 Histori</a
-      >
-      <a
         href="/config"
         @click=${this._navigate}
         class=${this.isActive("config")}
         >⚙️ Konfigurasi</a
       >
-
-      <!-- Produksi Dropdown -->
-      <div>
-        <button
-          @click=${() => this.produksiOpen = !this.produksiOpen}
-          class="hover:bg-green-200 rounded px-2 py-1 w-full text-left"
-        >
-          📦 Produksi ${this.produksiOpen ? "\u25BE" : "\u25B8"}
-        </button>
-        ${this.produksiOpen ? x`
-              <div class="ml-4 flex flex-col gap-1">
-                <a
-                  href="/produksi/hidroponik"
-                  @click=${this._navigate}
-                  class=${this.isActive("hidroponik")}
-                  >🌱 Hidroponik</a
-                >
-                <a
-                  href="/produksi/hortikultura"
-                  @click=${this._navigate}
-                  class=${this.isActive("hortikultura")}
-                  >🥬 Hortikultura</a
-                >
-                <a
-                  href="/produksi/perikanan"
-                  @click=${this._navigate}
-                  class=${this.isActive("perikanan")}
-                  >🐟 Perikanan</a
-                >
-                <a
-                  href="/produksi/peternakan"
-                  @click=${this._navigate}
-                  class=${this.isActive("peternakan")}
-                  >🐄 Peternakan</a
-                >
-              </div>
-            ` : ""}
-      </div>
     `;
   }
 };
@@ -17139,7 +20428,7 @@ UserInfo = __decorateClass([
 init_context();
 var themeContext = n5(Symbol("theme"));
 
-// src/components/app-header.ts
+// src/components/layout/app-header.ts
 var AppHeader = class extends i4 {
   constructor() {
     super(...arguments);
@@ -17229,7 +20518,7 @@ AppHeader = __decorateClass([
   t3("app-header")
 ], AppHeader);
 
-// src/components/app-footer.ts
+// src/components/layout/app-footer.ts
 init_lit();
 init_decorators();
 var AppFooter = class extends i4 {
@@ -17258,7 +20547,7 @@ AppFooter = __decorateClass([
   t3("app-footer")
 ], AppFooter);
 
-// src/components/app-main.ts
+// src/components/layout/app-main.ts
 init_lit();
 init_decorators();
 
@@ -19149,14 +22438,14 @@ onNavigationEvent_fn = function(event) {
   }
 };
 
-// src/components/app-main.ts
+// src/components/layout/app-main.ts
 init_auth_service();
 
 // src/pages/home.ts
 init_lit();
 init_decorators();
 
-// src/components/feature-card.ts
+// src/components/cards/feature-card.ts
 init_lit();
 init_decorators();
 var FeatureCard = class extends i4 {
@@ -19256,7 +22545,7 @@ PageHome = __decorateClass([
   t3("page-home")
 ], PageHome);
 
-// src/components/app-main.ts
+// src/components/layout/app-main.ts
 var AppMain = class extends i4 {
   constructor() {
     super(...arguments);
@@ -19322,24 +22611,14 @@ var AppMain = class extends i4 {
         component: "page-dashboard"
       },
       {
-        path: "/histori",
-        // operator+ bisa
-        action: async (ctx, commands) => {
-          const g2 = requireRoleAtLeast("operator")(ctx, commands);
-          if (g2) return g2;
-          await Promise.resolve().then(() => (init_histori(), histori_exports));
-        },
-        component: "page-histori"
-      },
-      {
         path: "/config",
         // minimal engineer (admin juga boleh)
         action: async (ctx, commands) => {
           const g2 = requireRoleAtLeast("engineer")(ctx, commands);
           if (g2) return g2;
-          await Promise.resolve().then(() => (init_device_config(), device_config_exports));
+          await Promise.resolve().then(() => (init_config(), config_exports));
         },
-        component: "page-device-config"
+        component: "page-config"
       },
       // {
       //   path: '/control', // perlu permission spesifik operate equipment
@@ -19384,13 +22663,13 @@ var AppMain = class extends i4 {
         component: "hortikultura-page"
       },
       {
-        path: "/produksi/perikanan",
+        path: "/produksi/akuakultur",
         action: async (ctx, commands) => {
           const g2 = requireRoleAtLeast("operator")(ctx, commands);
           if (g2) return g2;
-          await Promise.resolve().then(() => (init_perikanan(), perikanan_exports));
+          await Promise.resolve().then(() => (init_akuakultur(), akuakultur_exports));
         },
-        component: "perikanan-page"
+        component: "akuakultur-page"
       },
       {
         path: "/produksi/peternakan",
@@ -19438,7 +22717,7 @@ AppMain = __decorateClass([
   t3("app-main")
 ], AppMain);
 
-// src/components/app-shell.ts
+// src/components/layout/app-shell.ts
 init_auth_service();
 init_mqtt_context();
 var AppShell = class extends i4 {

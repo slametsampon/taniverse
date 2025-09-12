@@ -1,0 +1,13 @@
+[
+  {
+    "id": "harvest1",
+    "batchId": "batch3",
+    "harvestDate": "2025-08-20",
+    "totalWeightG": 240000,
+    "pricePerKg": 35000,
+    "holesUsed": 0,
+    "totalCost": 1800000,
+    "revenue": 8400000,
+    "netProfit": 6600000
+  }
+]

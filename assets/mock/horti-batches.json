@@ -1,0 +1,62 @@
+[
+  {
+    "id": "BEDENGAN-01",
+    "plantId": "PC01",
+    "startDate": "2025-08-01",
+    "expectedHarvestDate": "2025-08-26",
+    "initialCount": 30,
+    "totalPlants": 30,
+    "location": "Rak A1",
+    "status": "Planted",
+    "note": "Tanam pagi, suhu 25°C",
+    "description": "Batch tanaman PC01 di Rak A1, tanam pagi dengan suhu optimal."
+  },
+  {
+    "id": "BEDENGAN-02",
+    "plantId": "KT01",
+    "startDate": "2025-08-10",
+    "expectedHarvestDate": "2025-08-20",
+    "initialCount": 40,
+    "totalPlants": 40,
+    "location": "Rak B2",
+    "status": "Harvested",
+    "note": "Hujan lebat saat tanam",
+    "description": "Batch tanaman KT01, kondisi awal hujan lebat saat penanaman."
+  },
+  {
+    "id": "BEDENGAN-03",
+    "plantId": "TM01",
+    "startDate": "2025-07-15",
+    "expectedHarvestDate": "2025-09-30",
+    "initialCount": 50,
+    "totalPlants": 50,
+    "location": "Lahan Blok C",
+    "status": "Planted",
+    "note": "Tanam saat cuaca panas, siram pagi dan sore",
+    "description": "Batch TM01 ditanam saat cuaca panas, memerlukan penyiraman ekstra."
+  },
+  {
+    "id": "BEDENGAN-04",
+    "plantId": "CBEDENGAN-1",
+    "startDate": "2025-06-01",
+    "expectedHarvestDate": "2025-08-20",
+    "initialCount": 60,
+    "totalPlants": 60,
+    "location": "Bedeng Selatan",
+    "status": "Harvested",
+    "note": "Pemangkasan daun dilakukan rutin",
+    "description": "Batch CBEDENGAN-1 dengan perawatan pemangkasan daun rutin."
+  },
+  {
+    "id": "BEDENGAN-05",
+    "plantId": "TR01",
+    "startDate": "2025-08-05",
+    "expectedHarvestDate": "2025-10-15",
+    "initialCount": 25,
+    "totalPlants": 25,
+    "location": "Kebun Belakang",
+    "status": "Planted",
+    "note": "Pertumbuhan cepat, mulai berbunga hari ke-20",
+    "description": "Batch TR01 menunjukkan pertumbuhan cepat dan mulai berbunga awal."
+  }
+]

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "H001",
+    "batchId": "B002",
+    "harvestDate": "2025-08-20",
+    "totalWeightG": 2600,
+    "pricePerKg": 12000,
+    "holesUsed": 40,
+    "totalCost": 20000,
+    "revenue": 31200,
+    "netProfit": 11200
+  },
+  {
+    "id": "H002",
+    "batchId": "B004",
+    "harvestDate": "2025-08-21",
+    "totalWeightG": 4800,
+    "pricePerKg": 25000,
+    "holesUsed": 60,
+    "totalCost": 50000,
+    "revenue": 120000,
+    "netProfit": 70000
+  },
+  {
+    "id": "H003",
+    "batchId": "B003",
+    "harvestDate": "2025-09-29",
+    "totalWeightG": 7500,
+    "pricePerKg": 13000,
+    "holesUsed": 50,
+    "totalCost": 60000,
+    "revenue": 97500,
+    "netProfit": 37500
+  },
+  {
+    "id": "H004",
+    "batchId": "B001",
+    "harvestDate": "2025-08-26",
+    "totalWeightG": 5400,
+    "pricePerKg": 15000,
+    "holesUsed": 30,
+    "totalCost": 30000,
+    "revenue": 81000,
+    "netProfit": 51000
+  },
+  {
+    "id": "H005",
+    "batchId": "B005",
+    "harvestDate": "2025-10-16",
+    "totalWeightG": 7500,
+    "pricePerKg": 14000,
+    "holesUsed": 25,
+    "totalCost": 35000,
+    "revenue": 105000,
+    "netProfit": 70000
+  }
+]
