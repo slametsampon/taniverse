@@ -996,773 +996,6 @@ var init_context = __esm({
   }
 });
 
-// src/components/roles.ts
-function roleGte(a3, b3) {
-  return ROLE_ORDER.indexOf(a3) >= ROLE_ORDER.indexOf(b3);
-}
-var ROLE_ORDER, PERMS, ROLE_PERMS;
-var init_roles = __esm({
-  "src/components/roles.ts"() {
-    "use strict";
-    ROLE_ORDER = ["guest", "operator", "engineer", "admin"];
-    PERMS = {
-      VIEW_DASHBOARD: "view_dashboard",
-      VIEW_HISTORY: "view_history",
-      OPERATE_EQUIPMENT: "operate_equipment",
-      // nyalakan/matikan peralatan
-      CONFIGURE: "configure",
-      // akses halaman konfigurasi
-      MANAGE_DEVICES: "manage_devices"
-      // tambah/hapus device/sensor
-    };
-    ROLE_PERMS = {
-      guest: [PERMS.VIEW_DASHBOARD],
-      operator: [PERMS.VIEW_DASHBOARD, PERMS.VIEW_HISTORY, PERMS.OPERATE_EQUIPMENT],
-      engineer: [
-        PERMS.VIEW_DASHBOARD,
-        PERMS.VIEW_HISTORY,
-        PERMS.OPERATE_EQUIPMENT,
-        PERMS.CONFIGURE,
-        PERMS.MANAGE_DEVICES
-      ],
-      admin: Object.values(PERMS)
-      // semua
-    };
-  }
-});
-
-// src/config/api-base.ts
-var API_BASE;
-var init_api_base = __esm({
-  "src/config/api-base.ts"() {
-    "use strict";
-    API_BASE = window.__API_BASE__ || "http://127.0.0.1:8080";
-  }
-});
-
-// src/services/auth-service.ts
-var USER_MOCK, AuthService;
-var init_auth_service = __esm({
-  "src/services/auth-service.ts"() {
-    "use strict";
-    init_roles();
-    init_api_base();
-    USER_MOCK = false;
-    AuthService = class {
-      static async login(username, password) {
-        if (USER_MOCK) {
-          const list = await this._readMockUsers();
-          const found = list.find(
-            (u3) => String(u3.username).toLowerCase() === username.toLowerCase() && String(u3.password) === String(password)
-          );
-          await new Promise((r6) => setTimeout(r6, 300));
-          if (!found)
-            throw new Error("Login gagal (MOCK): username/password salah.");
-          const token2 = `mock-${found.username}-${Date.now()}`;
-          const role2 = (found.role ?? "guest").toString().toLowerCase();
-          const user2 = {
-            username: found.username,
-            avatarUrl: found.avatarUrl ?? "",
-            role: role2
-          };
-          localStorage.setItem(this.KEY, token2);
-          localStorage.setItem(this.USER, JSON.stringify(user2));
-          const fullUser = { ...user2, token: token2 };
-          window.dispatchEvent(new Event("auth:changed"));
-          return fullUser;
-        }
-        const res = await fetch(`${API_BASE}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-        if (!res.ok) {
-          let msg = "Login gagal. Periksa kredensial Anda.";
-          try {
-            const j2 = await res.json();
-            if (j2?.message) msg = j2.message;
-          } catch {
-          }
-          throw new Error(msg);
-        }
-        const data = await res.json();
-        const role = data.role ?? "guest";
-        const token = `session-${data.username}-${Date.now()}`;
-        const user = {
-          username: data.username,
-          avatarUrl: data.avatarUrl ?? "",
-          role,
-          token
-        };
-        localStorage.setItem(this.KEY, token);
-        localStorage.setItem(
-          this.USER,
-          JSON.stringify({
-            username: user.username,
-            avatarUrl: user.avatarUrl,
-            role: user.role
-          })
-        );
-        window.dispatchEvent(new Event("auth:changed"));
-        return user;
-      }
-      static logout() {
-        localStorage.removeItem(this.KEY);
-        localStorage.removeItem(this.USER);
-        window.dispatchEvent(new Event("auth:changed"));
-      }
-      static getToken() {
-        return localStorage.getItem(this.KEY);
-      }
-      static getUser() {
-        const raw = localStorage.getItem(this.USER);
-        if (!raw) return null;
-        try {
-          const j2 = JSON.parse(raw);
-          const role = j2.role ? String(j2.role).toLowerCase() : void 0;
-          return {
-            username: j2.username ?? "Guest",
-            avatarUrl: j2.avatarUrl ?? "",
-            role
-          };
-        } catch {
-          return null;
-        }
-      }
-      /**
-       * Mengembalikan user lengkap beserta token untuk context
-       */
-      static getUserWithToken() {
-        const user = this.getUser();
-        const token = this.getToken();
-        return user && token ? { ...user, token } : null;
-      }
-      static isLoggedIn() {
-        return !!this.getToken();
-      }
-      // === RBAC helpers ===
-      static hasRole(role) {
-        const u3 = this.getUser();
-        return !!u3?.role && u3.role === role;
-      }
-      static hasRoleAtLeast(minRole) {
-        const u3 = this.getUser();
-        if (!u3?.role) return false;
-        return roleGte(u3.role, minRole);
-      }
-      static can(perm) {
-        const u3 = this.getUser();
-        if (!u3?.role) return false;
-        if (u3.role === "admin") return true;
-        return ROLE_PERMS[u3.role].includes(perm);
-      }
-      // ===== helpers =====
-      static async _readMockUsers() {
-        const ENV = "pre-release";
-        const BASE = ENV === "pre-release" ? "/taniverse/" : ENV === "production" ? "" : "/";
-        const candidates = [
-          `${BASE}assets/mock/users.json`,
-          `${BASE}src/assets/mock/users.json`,
-          `${BASE}assets/mock/user.json`,
-          `${BASE}src/assets/mock/user.json`
-        ];
-        for (const url of candidates) {
-          try {
-            const res = await fetch(url, { cache: "no-cache" });
-            if (!res.ok) continue;
-            const data = await res.json();
-            const list = Array.isArray(data) ? data : Array.isArray(data?.users) ? data.users : [];
-            if (Array.isArray(list)) return list;
-          } catch {
-          }
-        }
-        console.warn(
-          "[AuthService] users.json tidak ditemukan, pakai data embedded."
-        );
-        return [
-          {
-            username: "admin",
-            password: "admin123",
-            role: "admin",
-            avatarUrl: "https://i.pravatar.cc/100?img=1"
-          },
-          {
-            username: "engineer",
-            password: "engineer123",
-            role: "engineer",
-            avatarUrl: "https://i.pravatar.cc/100?img=3"
-          },
-          {
-            username: "operator",
-            password: "operator123",
-            role: "operator",
-            avatarUrl: "https://i.pravatar.cc/100?img=2"
-          },
-          {
-            username: "guest",
-            password: "guest123",
-            role: "guest",
-            avatarUrl: "https://i.pravatar.cc/100?img=4"
-          }
-        ];
-      }
-    };
-    AuthService.KEY = "auth_token_v1";
-    AuthService.USER = "auth_user_v1";
-  }
-});
-
-// src/pages/login.ts
-var login_exports = {};
-__export(login_exports, {
-  PageLogin: () => PageLogin
-});
-var PageLogin;
-var init_login = __esm({
-  "src/pages/login.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    init_auth_service();
-    init_api_base();
-    PageLogin = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.username = "";
-        this.password = "";
-        this.loading = false;
-        this.error = "";
-        this.showPwd = false;
-        this.remember = true;
-        this.showRegister = false;
-        this.regUsername = "";
-        this.regPwd1 = "";
-        this.regPwd2 = "";
-        this.regRole = "guest";
-        this.regError = "";
-        this.togglePwd = () => this.showPwd = !this.showPwd;
-      }
-      createRenderRoot() {
-        return this;
-      }
-      firstUpdated() {
-        this.username = "admin";
-        this.password = "admin123";
-      }
-      async onSubmit(e8) {
-        e8.preventDefault();
-        if (this.loading) return;
-        this.error = "";
-        this.loading = true;
-        try {
-          await AuthService.login(this.username.trim(), this.password);
-          const next = sessionStorage.getItem("next_path") || "/";
-          if (this.remember) {
-            localStorage.setItem("last_username", this.username.trim());
-          } else {
-            localStorage.removeItem("last_username");
-          }
-          sessionStorage.removeItem("next_path");
-          this.dispatchEvent(
-            new CustomEvent("navigate-to", {
-              detail: { path: next },
-              bubbles: true,
-              composed: true
-            })
-          );
-        } catch (err) {
-          this.error = err?.message ?? "Login gagal.";
-        } finally {
-          this.loading = false;
-        }
-      }
-      async registerUser() {
-        this.regError = "";
-        if (!this.regUsername || !this.regPwd1 || !this.regPwd2) {
-          this.regError = "Semua field harus diisi.";
-          return;
-        }
-        if (this.regPwd1 !== this.regPwd2) {
-          this.regError = "Password tidak cocok.";
-          return;
-        }
-        const payload = {
-          username: this.regUsername.trim(),
-          password: this.regPwd1,
-          role: this.regRole,
-          avatarUrl: `https://i.pravatar.cc/100?u=${this.regUsername.trim()}`
-        };
-        try {
-          const res = await fetch(`${API_BASE}/api/users`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          if (res.status === 201) {
-            this.showRegister = false;
-            this.username = this.regUsername;
-            this.password = this.regPwd1;
-          } else {
-            const body = await res.text();
-            throw new Error(`Registrasi gagal. Status: ${res.status}
-${body}`);
-          }
-        } catch (err) {
-          this.regError = err.message;
-        }
-      }
-      cancelRegister() {
-        this.showRegister = false;
-        this.regUsername = "";
-        this.regPwd1 = "";
-        this.regPwd2 = "";
-        this.regRole = "guest";
-        this.regError = "";
-      }
-      render() {
-        return x`
-      <!-- Background -->
-      <section
-        class="relative min-h-[90vh] flex items-center justify-center overflow-hidden
-               bg-gradient-to-br from-emerald-50 via-white to-sky-50
-               dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
-      >
-        <!-- dekorasi blob -->
-        <div
-          class="pointer-events-none absolute -top-10 -left-10 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl"
-        ></div>
-        <div
-          class="pointer-events-none absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-sky-300/30 blur-3xl"
-        ></div>
-
-        <!-- Card -->
-        <div
-          class="relative z-10 w-full max-w-md mx-4
-                 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl
-                 shadow-[0_10px_40px_-10px_rgba(16,185,129,0.35)]
-                 dark:bg-white/10 dark:border-white/10"
-        >
-          <!-- Header -->
-          <div class="px-8 pt-8 text-center">
-            <div
-              class="mx-auto mb-4 grid place-items-center h-16 w-16 rounded-2xl
-                     bg-gradient-to-br from-emerald-500 to-sky-500 text-white shadow-lg shadow-emerald-500/30"
-            >
-              <!-- user icon -->
-              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="white" stroke-width="2" />
-                <path
-                  d="M4 19c1.8-3 5-5 8-5s6.2 2 8 5"
-                  stroke="white"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
-            </div>
-            <h1
-              class="text-2xl md:text-3xl font-extrabold
-                       bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent
-                       dark:from-emerald-400 dark:to-sky-400"
-            >
-              Selamat Datang Kembali 👋
-            </h1>
-            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-              Masuk untuk lanjut. Make it vibes, stay productive ✨
-            </p>
-          </div>
-
-          <!-- Form -->
-          <form class="px-8 pt-6 pb-8" @submit=${this.onSubmit} novalidate>
-            ${this.error ? x`
-                  <div
-                    class="mb-4 text-sm text-red-700 bg-red-50/90 border border-red-200 rounded-xl px-4 py-3
-                       dark:bg-red-400/10 dark:border-red-300/20 dark:text-red-200"
-                  >
-                    ${this.error}
-                  </div>
-                ` : null}
-
-            <!-- Username -->
-            <label
-              class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200"
-              >Username</label
-            >
-            <div class="relative mb-4">
-              <input
-                class="w-full px-3 py-2.5 pr-10 rounded-xl border border-slate-200/80 bg-white/80
-                       focus:outline-none focus:ring-2 focus:ring-emerald-400
-                       dark:bg-white/10 dark:border-white/10 dark:text-slate-100"
-                placeholder="yourname"
-                autocomplete="username"
-                .value=${this.username}
-                @input=${(e8) => this.username = e8.target.value}
-              />
-              <span
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-              >
-                <!-- at icon -->
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 4a8 8 0 108 8"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                  />
-                  <path
-                    d="M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  />
-                </svg>
-              </span>
-            </div>
-
-            <!-- Password -->
-            <label
-              class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200"
-              >Password</label
-            >
-            <div class="relative mb-2">
-              <input
-                class="w-full px-3 py-2.5 pr-12 rounded-xl border border-slate-200/80 bg-white/80
-                       focus:outline-none focus:ring-2 focus:ring-emerald-400
-                       dark:bg-white/10 dark:border-white/10 dark:text-slate-100"
-                placeholder="••••••••"
-                .type=${this.showPwd ? "text" : "password"}
-                autocomplete="current-password"
-                .value=${this.password}
-                @input=${(e8) => this.password = e8.target.value}
-              />
-              <button
-                type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-slate-600
-                       dark:hover:text-slate-200"
-                @click=${this.togglePwd}
-                aria-label="Toggle password"
-                tabindex="-1"
-              >
-                ${this.showPwd ? x`
-                      <!-- eye-off -->
-                      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M3 3l18 18"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                        <path
-                          d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-1.24"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                        <path
-                          d="M9.88 5.09A9.76 9.76 0 0112 5c5 0 9 4 10 7-0.37 1.04-1.06 2.19-2.07 3.25M6.64 6.64C4.16 8.1 2.61 10.1 2 12c0.37 1.04 1.06 2.19 2.07 3.25A13.1 13.1 0 0012 19c1.14 0 2.25-.16 3.31-.47"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          fill="none"
-                        />
-                      </svg>
-                    ` : x`
-                      <!-- eye -->
-                      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          fill="none"
-                        />
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="3"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        />
-                      </svg>
-                    `}
-              </button>
-            </div>
-
-            <!-- Row: remember & forgot -->
-            <div class="mb-5 flex items-center justify-between text-sm">
-              <label
-                class="inline-flex items-center gap-2 select-none text-slate-600 dark:text-slate-300"
-              >
-                <input
-                  type="checkbox"
-                  class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-400"
-                  .checked=${this.remember}
-                  @change=${(e8) => this.remember = !!e8.target.checked}
-                />
-                Ingat saya
-              </label>
-              <a
-                class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
-                href="#"
-                @click=${(e8) => e8.preventDefault()}
-              >
-                Lupa password?
-              </a>
-            </div>
-
-            <!-- Submit -->
-            <button
-              class="w-full inline-flex items-center justify-center gap-2
-                     py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700
-                     disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]
-                     transition"
-              ?disabled=${this.loading || !this.username || !this.password}
-              type="submit"
-            >
-              ${this.loading ? x`
-                    <svg
-                      class="w-5 h-5 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="white"
-                        stroke-width="4"
-                      ></circle>
-                      <path
-                        class="opacity-75"
-                        fill="white"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                      ></path>
-                    </svg>
-                    <span>Memproses…</span>
-                  ` : x`<span>Masuk</span>`}
-            </button>
-
-            <!-- Divider -->
-            <div class="flex items-center gap-3 my-6">
-              <div class="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
-              <span class="text-[11px] uppercase tracking-wider text-slate-400"
-                >atau</span
-              >
-              <div class="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
-            </div>
-
-            <!-- Register button -->
-            <button
-              type="button"
-              class="w-full inline-flex items-center justify-center gap-2
-                     py-2.5 rounded-xl border border-blue-600 bg-white hover:bg-slate-100
-                     text-slate-700 dark:text-slate-100 dark:bg-transparent dark:border-white/20"
-              @click=${() => this.showRegister = true}
-            >
-              🧪 Belum punya akun? Daftar di sini
-            </button>
-          </form>
-
-          <!-- Footer -->
-          <div class="px-8 pb-8">
-            <p
-              class="text-[11px] text-center text-slate-500 dark:text-slate-400"
-            >
-              Dengan masuk, kamu setuju pada ketentuan & privasi kami.
-            </p>
-          </div>
-        </div>
-        ${this.showRegister ? x`
-              <div
-                class="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
-              >
-                <div
-                  class="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700"
-                >
-                  <h2
-                    class="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100"
-                  >
-                    Registrasi Pengguna
-                  </h2>
-
-                  ${this.regError ? x`<div class="text-sm text-red-500 mb-2">
-                        ${this.regError}
-                      </div>` : null}
-
-                  <div class="space-y-4">
-                    <input
-                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                      placeholder="Username"
-                      .value=${this.regUsername}
-                      @input=${(e8) => this.regUsername = e8.target.value}
-                    />
-                    <input
-                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                      type="password"
-                      placeholder="Password"
-                      .value=${this.regPwd1}
-                      @input=${(e8) => this.regPwd1 = e8.target.value}
-                    />
-                    <input
-                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                      type="password"
-                      placeholder="Ulangi Password"
-                      .value=${this.regPwd2}
-                      @input=${(e8) => this.regPwd2 = e8.target.value}
-                    />
-                    <select
-                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                      .value=${this.regRole}
-                      @change=${(e8) => this.regRole = e8.target.value}
-                    >
-                      <option value="guest">Guest</option>
-                      <option value="operator">Operator</option>
-                      <option value="engineer">Engineer</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-
-                  <div class="mt-6 flex justify-end gap-3">
-                    <button
-                      @click=${this.cancelRegister}
-                      class="px-4 py-2 rounded border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      @click=${this.registerUser}
-                      class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700"
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ` : null}
-      </section>
-    `;
-      }
-    };
-    PageLogin.styles = i`
-    :host {
-      display: block;
-    }
-  `;
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "username", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "password", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "loading", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "error", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "showPwd", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "remember", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "showRegister", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "regUsername", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "regPwd1", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "regPwd2", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "regRole", 2);
-    __decorateClass([
-      r5()
-    ], PageLogin.prototype, "regError", 2);
-    PageLogin = __decorateClass([
-      t3("page-login")
-    ], PageLogin);
-  }
-});
-
-// src/components/ui/ui-tabs.ts
-var UiTabs;
-var init_ui_tabs = __esm({
-  "src/components/ui/ui-tabs.ts"() {
-    "use strict";
-    init_lit();
-    init_decorators();
-    UiTabs = class extends i4 {
-      constructor() {
-        super(...arguments);
-        this.tabs = [];
-        this.active = "";
-        this.badges = {};
-      }
-      createRenderRoot() {
-        return this;
-      }
-      onClick(id) {
-        this.dispatchEvent(
-          new CustomEvent("dev-tab-change", {
-            detail: { id },
-            bubbles: true,
-            composed: true
-          })
-        );
-      }
-      render() {
-        return x`
-      <nav class="border-b border-slate-200 bg-white rounded-t-md">
-        <ul class="flex flex-row items-center gap-2 -mb-px px-2 list-none">
-          ${this.tabs.map((t5) => {
-          const isActive = t5.id === this.active;
-          const badge = this.badges[t5.id] ?? 0;
-          return x`
-              <li>
-                <button
-                  class="${[
-            "px-4 py-2 text-sm rounded-t-md border transition",
-            "inline-flex items-center gap-2",
-            isActive ? "bg-slate-100 text-slate-900 border-slate-300 border-b-white" : "border-transparent text-slate-500 hover:bg-slate-50"
-          ].join(" ")}"
-                  @click=${() => this.onClick(t5.id)}
-                >
-                  ${t5.icon ? x`<span>${t5.icon}</span>` : null}
-                  <span>${t5.label}</span>
-                  ${badge > 0 ? x`
-                        <span
-                          class="ml-1 grid place-items-center w-5 h-5 rounded-full bg-red-500 text-white text-xs"
-                          >${badge}</span
-                        >
-                      ` : null}
-                </button>
-              </li>
-            `;
-        })}
-        </ul>
-      </nav>
-    `;
-      }
-    };
-    __decorateClass([
-      n4({ type: Array })
-    ], UiTabs.prototype, "tabs", 2);
-    __decorateClass([
-      n4({ attribute: false })
-    ], UiTabs.prototype, "active", 2);
-    __decorateClass([
-      n4({ attribute: false })
-    ], UiTabs.prototype, "badges", 2);
-    UiTabs = __decorateClass([
-      t3("ui-tabs")
-    ], UiTabs);
-  }
-});
-
 // src/services/mode.ts
 function hasCapability(capability) {
   const mode = getMode();
@@ -2390,6 +1623,103 @@ var init_ApiHydroponicBatchRepository = __esm({
   }
 });
 
+// src/repositories/api/ApiUserRepository.ts
+var ApiUserRepository;
+var init_ApiUserRepository = __esm({
+  "src/repositories/api/ApiUserRepository.ts"() {
+    "use strict";
+    ApiUserRepository = class {
+      constructor() {
+        this.baseUrl = "/api/users";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch users");
+        return await res.json();
+      }
+      async getById(username) {
+        const res = await fetch(`${this.baseUrl}/${username}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(user) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user)
+        });
+        if (!res.ok) throw new Error("Failed to create user");
+      }
+      async update(username, user) {
+        const res = await fetch(`${this.baseUrl}/${username}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user)
+        });
+        if (!res.ok) throw new Error("Failed to update user");
+      }
+      async delete(username) {
+        const res = await fetch(`${this.baseUrl}/${username}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete user");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockUserRepository.ts
+var MockUserRepository;
+var init_MockUserRepository = __esm({
+  "src/repositories/mock/MockUserRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockUserRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          const raw = await fetchMockData("users.json");
+          this.cache = Array.isArray(raw) ? raw : raw.users ?? [];
+        }
+        console.log("[MockUserRepository] Loaded users:", this.cache);
+        return this.cache;
+      }
+      async getById(username) {
+        const all = await this.getAll();
+        return all.find((user) => user.username === username);
+      }
+      async create(user) {
+        const all = await this.getAll();
+        const newRecord = {
+          ...user,
+          passwordHash: user.password ?? "",
+          // ⚠️ biasanya hash di backend
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        };
+        all.push(newRecord);
+      }
+      async update(username, user) {
+        const all = await this.getAll();
+        const index = all.findIndex((u3) => u3.username === username);
+        if (index !== -1) {
+          all[index] = {
+            ...all[index],
+            ...user,
+            updatedAt: Date.now()
+          };
+        }
+      }
+      async delete(username) {
+        const all = await this.getAll();
+        this.cache = all.filter((u3) => u3.username !== username);
+      }
+    };
+  }
+});
+
 // src/repositories/repository-factory.ts
 function getDeviceRepository() {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
@@ -2418,6 +1748,9 @@ function getHortiBatchRepository() {
 function getHydroponicBatchRepository() {
   return isMockMode() ? new MockHydroponicBatchRepository() : new ApiHydroponicBatchRepository();
 }
+function getUserRepository() {
+  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
+}
 var init_repository_factory = __esm({
   "src/repositories/repository-factory.ts"() {
     "use strict";
@@ -2440,17 +1773,746 @@ var init_repository_factory = __esm({
     init_ApiHortiBatchRepository();
     init_MockHydroponicBatchRepository();
     init_ApiHydroponicBatchRepository();
+    init_ApiUserRepository();
+    init_MockUserRepository();
+  }
+});
+
+// src/services/user.service.ts
+var repo, fetchUserByUsername, createUser;
+var init_user_service = __esm({
+  "src/services/user.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo = getUserRepository();
+    fetchUserByUsername = (username) => repo.getById(username);
+    createUser = (user) => repo.create(user);
+  }
+});
+
+// src/config/api-base.ts
+var API_BASE;
+var init_api_base = __esm({
+  "src/config/api-base.ts"() {
+    "use strict";
+    API_BASE = window.__API_BASE__ || "http://127.0.0.1:8080";
+  }
+});
+
+// src/components/roles.ts
+function roleGte(a3, b3) {
+  return ROLE_ORDER.indexOf(a3) >= ROLE_ORDER.indexOf(b3);
+}
+var ROLE_ORDER, PERMS, ROLE_PERMS;
+var init_roles = __esm({
+  "src/components/roles.ts"() {
+    "use strict";
+    ROLE_ORDER = ["guest", "operator", "engineer", "admin"];
+    PERMS = {
+      VIEW_DASHBOARD: "view_dashboard",
+      VIEW_HISTORY: "view_history",
+      OPERATE_EQUIPMENT: "operate_equipment",
+      // nyalakan/matikan peralatan
+      CONFIGURE: "configure",
+      // akses halaman konfigurasi
+      MANAGE_DEVICES: "manage_devices"
+      // tambah/hapus device/sensor
+    };
+    ROLE_PERMS = {
+      guest: [PERMS.VIEW_DASHBOARD],
+      operator: [PERMS.VIEW_DASHBOARD, PERMS.VIEW_HISTORY, PERMS.OPERATE_EQUIPMENT],
+      engineer: [
+        PERMS.VIEW_DASHBOARD,
+        PERMS.VIEW_HISTORY,
+        PERMS.OPERATE_EQUIPMENT,
+        PERMS.CONFIGURE,
+        PERMS.MANAGE_DEVICES
+      ],
+      admin: Object.values(PERMS)
+      // semua
+    };
+  }
+});
+
+// src/services/auth-service.ts
+var AuthService;
+var init_auth_service = __esm({
+  "src/services/auth-service.ts"() {
+    "use strict";
+    init_user_service();
+    init_mode();
+    init_api_base();
+    init_roles();
+    AuthService = class {
+      /**
+       * Login user → mock mode pakai UserRepository,
+       * live mode pakai API /api/auth/login
+       */
+      static async login(username, password) {
+        if (isMockMode()) {
+          const user = await fetchUserByUsername(username);
+          if (!user || user.passwordHash !== password) {
+            throw new Error("Login gagal (MOCK): username/password salah.");
+          }
+          const token2 = `mock-${user.username}-${Date.now()}`;
+          const role2 = (user.role ?? "guest").toLowerCase();
+          const authUser2 = {
+            username: user.username,
+            avatarUrl: user.avatarUrl ?? "",
+            role: role2,
+            token: token2
+          };
+          localStorage.setItem(this.KEY, token2);
+          localStorage.setItem(this.USER, JSON.stringify(authUser2));
+          window.dispatchEvent(new Event("auth:changed"));
+          return authUser2;
+        }
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        if (!res.ok) {
+          let msg = "Login gagal. Periksa kredensial Anda.";
+          try {
+            const j2 = await res.json();
+            if (j2?.message) msg = j2.message;
+          } catch {
+          }
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        const token = `session-${data.username}-${Date.now()}`;
+        const role = data.role ?? "guest";
+        const authUser = {
+          username: data.username,
+          avatarUrl: data.avatarUrl ?? "",
+          role,
+          token
+        };
+        localStorage.setItem(this.KEY, token);
+        localStorage.setItem(
+          this.USER,
+          JSON.stringify({
+            username: authUser.username,
+            avatarUrl: authUser.avatarUrl,
+            role: authUser.role
+          })
+        );
+        window.dispatchEvent(new Event("auth:changed"));
+        return authUser;
+      }
+      /**
+       * Registrasi user baru → konsisten lewat UserService
+       */
+      static async register(user) {
+        await createUser({
+          username: user.username,
+          password: user.password,
+          role: user.role ?? "guest",
+          avatarUrl: user.avatarUrl
+        });
+      }
+      static logout() {
+        localStorage.removeItem(this.KEY);
+        localStorage.removeItem(this.USER);
+        window.dispatchEvent(new Event("auth:changed"));
+      }
+      static getToken() {
+        return localStorage.getItem(this.KEY);
+      }
+      static getUser() {
+        const raw = localStorage.getItem(this.USER);
+        if (!raw) return null;
+        try {
+          const j2 = JSON.parse(raw);
+          const role = j2.role ? String(j2.role).toLowerCase() : void 0;
+          return {
+            username: j2.username ?? "Guest",
+            avatarUrl: j2.avatarUrl ?? "",
+            role
+          };
+        } catch {
+          return null;
+        }
+      }
+      static getUserWithToken() {
+        const user = this.getUser();
+        const token = this.getToken();
+        return user && token ? { ...user, token } : null;
+      }
+      static isLoggedIn() {
+        return !!this.getToken();
+      }
+      // === RBAC helpers ===
+      static hasRole(role) {
+        const u3 = this.getUser();
+        return !!u3?.role && u3.role === role;
+      }
+      static hasRoleAtLeast(minRole) {
+        const u3 = this.getUser();
+        if (!u3?.role) return false;
+        return roleGte(u3.role, minRole);
+      }
+      static can(perm) {
+        const u3 = this.getUser();
+        if (!u3?.role) return false;
+        if (u3.role === "admin") return true;
+        return ROLE_PERMS[u3.role].includes(perm);
+      }
+    };
+    AuthService.KEY = "auth_token_v1";
+    AuthService.USER = "auth_user_v1";
+  }
+});
+
+// src/pages/login.ts
+var login_exports = {};
+__export(login_exports, {
+  PageLogin: () => PageLogin
+});
+var PageLogin;
+var init_login = __esm({
+  "src/pages/login.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    init_auth_service();
+    PageLogin = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.username = "";
+        this.password = "";
+        this.loading = false;
+        this.error = "";
+        this.showPwd = false;
+        this.remember = true;
+        this.showRegister = false;
+        this.regUsername = "";
+        this.regPwd1 = "";
+        this.regPwd2 = "";
+        this.regRole = "guest";
+        this.regError = "";
+        this.togglePwd = () => this.showPwd = !this.showPwd;
+      }
+      createRenderRoot() {
+        return this;
+      }
+      firstUpdated() {
+        this.username = "admin";
+        this.password = "admin123";
+      }
+      async onSubmit(e8) {
+        e8.preventDefault();
+        if (this.loading) return;
+        this.error = "";
+        this.loading = true;
+        try {
+          await AuthService.login(this.username.trim(), this.password);
+          const next = sessionStorage.getItem("next_path") || "/";
+          if (this.remember) {
+            localStorage.setItem("last_username", this.username.trim());
+          } else {
+            localStorage.removeItem("last_username");
+          }
+          sessionStorage.removeItem("next_path");
+          this.dispatchEvent(
+            new CustomEvent("navigate-to", {
+              detail: { path: next },
+              bubbles: true,
+              composed: true
+            })
+          );
+        } catch (err) {
+          this.error = err?.message ?? "Login gagal.";
+        } finally {
+          this.loading = false;
+        }
+      }
+      async registerUser() {
+        this.regError = "";
+        if (!this.regUsername || !this.regPwd1 || !this.regPwd2) {
+          this.regError = "Semua field harus diisi.";
+          return;
+        }
+        if (this.regPwd1 !== this.regPwd2) {
+          this.regError = "Password tidak cocok.";
+          return;
+        }
+        try {
+          await AuthService.register({
+            username: this.regUsername.trim(),
+            password: this.regPwd1,
+            role: this.regRole,
+            avatarUrl: `https://i.pravatar.cc/100?u=${this.regUsername.trim()}`
+          });
+          this.showRegister = false;
+          this.username = this.regUsername;
+          this.password = this.regPwd1;
+        } catch (err) {
+          this.regError = err.message;
+        }
+      }
+      cancelRegister() {
+        this.showRegister = false;
+        this.regUsername = "";
+        this.regPwd1 = "";
+        this.regPwd2 = "";
+        this.regRole = "guest";
+        this.regError = "";
+      }
+      render() {
+        return x`
+      <!-- Background -->
+      <section
+        class="relative min-h-[90vh] flex items-center justify-center overflow-hidden
+               bg-gradient-to-br from-emerald-50 via-white to-sky-50
+               dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
+      >
+        <!-- dekorasi blob -->
+        <div
+          class="pointer-events-none absolute -top-10 -left-10 h-72 w-72 rounded-full bg-emerald-300/30 blur-3xl"
+        ></div>
+        <div
+          class="pointer-events-none absolute -bottom-16 -right-16 h-80 w-80 rounded-full bg-sky-300/30 blur-3xl"
+        ></div>
+
+        <!-- Card -->
+        <div
+          class="relative z-10 w-full max-w-md mx-4
+                 rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl
+                 shadow-[0_10px_40px_-10px_rgba(16,185,129,0.35)]
+                 dark:bg-white/10 dark:border-white/10"
+        >
+          <!-- Header -->
+          <div class="px-8 pt-8 text-center">
+            <div
+              class="mx-auto mb-4 grid place-items-center h-16 w-16 rounded-2xl
+                     bg-gradient-to-br from-emerald-500 to-sky-500 text-white shadow-lg shadow-emerald-500/30"
+            >
+              <!-- user icon -->
+              <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="white" stroke-width="2" />
+                <path
+                  d="M4 19c1.8-3 5-5 8-5s6.2 2 8 5"
+                  stroke="white"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <h1
+              class="text-2xl md:text-3xl font-extrabold
+                       bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent
+                       dark:from-emerald-400 dark:to-sky-400"
+            >
+              Selamat Datang Kembali 👋
+            </h1>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">
+              Masuk untuk lanjut. Make it vibes, stay productive ✨
+            </p>
+          </div>
+
+          <!-- Form -->
+          <form class="px-8 pt-6 pb-8" @submit=${this.onSubmit} novalidate>
+            ${this.error ? x`
+                  <div
+                    class="mb-4 text-sm text-red-700 bg-red-50/90 border border-red-200 rounded-xl px-4 py-3
+                       dark:bg-red-400/10 dark:border-red-300/20 dark:text-red-200"
+                  >
+                    ${this.error}
+                  </div>
+                ` : null}
+
+            <!-- Username -->
+            <label
+              class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+              >Username</label
+            >
+            <div class="relative mb-4">
+              <input
+                class="w-full px-3 py-2.5 pr-10 rounded-xl border border-slate-200/80 bg-white/80
+                       focus:outline-none focus:ring-2 focus:ring-emerald-400
+                       dark:bg-white/10 dark:border-white/10 dark:text-slate-100"
+                placeholder="yourname"
+                autocomplete="username"
+                .value=${this.username}
+                @input=${(e8) => this.username = e8.target.value}
+              />
+              <span
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+              >
+                <!-- at icon -->
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 4a8 8 0 108 8"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <path
+                    d="M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                </svg>
+              </span>
+            </div>
+
+            <!-- Password -->
+            <label
+              class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200"
+              >Password</label
+            >
+            <div class="relative mb-2">
+              <input
+                class="w-full px-3 py-2.5 pr-12 rounded-xl border border-slate-200/80 bg-white/80
+                       focus:outline-none focus:ring-2 focus:ring-emerald-400
+                       dark:bg-white/10 dark:border-white/10 dark:text-slate-100"
+                placeholder="••••••••"
+                .type=${this.showPwd ? "text" : "password"}
+                autocomplete="current-password"
+                .value=${this.password}
+                @input=${(e8) => this.password = e8.target.value}
+              />
+              <button
+                type="button"
+                class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-slate-600
+                       dark:hover:text-slate-200"
+                @click=${this.togglePwd}
+                aria-label="Toggle password"
+                tabindex="-1"
+              >
+                ${this.showPwd ? x`
+                      <!-- eye-off -->
+                      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M3 3l18 18"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M10.58 10.58A3 3 0 0012 15a3 3 0 002.42-1.24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M9.88 5.09A9.76 9.76 0 0112 5c5 0 9 4 10 7-0.37 1.04-1.06 2.19-2.07 3.25M6.64 6.64C4.16 8.1 2.61 10.1 2 12c0.37 1.04 1.06 2.19 2.07 3.25A13.1 13.1 0 0012 19c1.14 0 2.25-.16 3.31-.47"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          fill="none"
+                        />
+                      </svg>
+                    ` : x`
+                      <!-- eye -->
+                      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          fill="none"
+                        />
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="3"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        />
+                      </svg>
+                    `}
+              </button>
+            </div>
+
+            <!-- Row: remember & forgot -->
+            <div class="mb-5 flex items-center justify-between text-sm">
+              <label
+                class="inline-flex items-center gap-2 select-none text-slate-600 dark:text-slate-300"
+              >
+                <input
+                  type="checkbox"
+                  class="rounded-md border-slate-300 text-emerald-600 focus:ring-emerald-400"
+                  .checked=${this.remember}
+                  @change=${(e8) => this.remember = !!e8.target.checked}
+                />
+                Ingat saya
+              </label>
+              <a
+                class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                href="#"
+                @click=${(e8) => e8.preventDefault()}
+              >
+                Lupa password?
+              </a>
+            </div>
+
+            <!-- Submit -->
+            <button
+              class="w-full inline-flex items-center justify-center gap-2
+                     py-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700
+                     disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.99]
+                     transition"
+              ?disabled=${this.loading || !this.username || !this.password}
+              type="submit"
+            >
+              ${this.loading ? x`
+                    <svg
+                      class="w-5 h-5 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="white"
+                        stroke-width="4"
+                      ></circle>
+                      <path
+                        class="opacity-75"
+                        fill="white"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                    <span>Memproses…</span>
+                  ` : x`<span>Masuk</span>`}
+            </button>
+
+            <!-- Divider -->
+            <div class="flex items-center gap-3 my-6">
+              <div class="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
+              <span class="text-[11px] uppercase tracking-wider text-slate-400"
+                >atau</span
+              >
+              <div class="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
+            </div>
+
+            <!-- Register button -->
+            <button
+              type="button"
+              class="w-full inline-flex items-center justify-center gap-2
+                     py-2.5 rounded-xl border border-blue-600 bg-white hover:bg-slate-100
+                     text-slate-700 dark:text-slate-100 dark:bg-transparent dark:border-white/20"
+              @click=${() => this.showRegister = true}
+            >
+              🧪 Belum punya akun? Daftar di sini
+            </button>
+          </form>
+
+          <!-- Footer -->
+          <div class="px-8 pb-8">
+            <p
+              class="text-[11px] text-center text-slate-500 dark:text-slate-400"
+            >
+              Dengan masuk, kamu setuju pada ketentuan & privasi kami.
+            </p>
+          </div>
+        </div>
+        ${this.showRegister ? x`
+              <div
+                class="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+              >
+                <div
+                  class="bg-white dark:bg-slate-800 p-6 rounded-2xl w-full max-w-md shadow-xl border border-slate-200 dark:border-slate-700"
+                >
+                  <h2
+                    class="text-lg font-semibold mb-4 text-slate-800 dark:text-slate-100"
+                  >
+                    Registrasi Pengguna
+                  </h2>
+
+                  ${this.regError ? x`<div class="text-sm text-red-500 mb-2">
+                        ${this.regError}
+                      </div>` : null}
+
+                  <div class="space-y-4">
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      placeholder="Username"
+                      .value=${this.regUsername}
+                      @input=${(e8) => this.regUsername = e8.target.value}
+                    />
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      type="password"
+                      placeholder="Password"
+                      .value=${this.regPwd1}
+                      @input=${(e8) => this.regPwd1 = e8.target.value}
+                    />
+                    <input
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      type="password"
+                      placeholder="Ulangi Password"
+                      .value=${this.regPwd2}
+                      @input=${(e8) => this.regPwd2 = e8.target.value}
+                    />
+                    <select
+                      class="w-full p-2 rounded border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      .value=${this.regRole}
+                      @change=${(e8) => this.regRole = e8.target.value}
+                    >
+                      <option value="guest">Guest</option>
+                      <option value="operator">Operator</option>
+                      <option value="engineer">Engineer</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+
+                  <div class="mt-6 flex justify-end gap-3">
+                    <button
+                      @click=${this.cancelRegister}
+                      class="px-4 py-2 rounded border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      @click=${this.registerUser}
+                      class="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700"
+                    >
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ` : null}
+      </section>
+    `;
+      }
+    };
+    PageLogin.styles = i`
+    :host {
+      display: block;
+    }
+  `;
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "username", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "password", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "loading", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "error", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "showPwd", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "remember", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "showRegister", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "regUsername", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "regPwd1", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "regPwd2", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "regRole", 2);
+    __decorateClass([
+      r5()
+    ], PageLogin.prototype, "regError", 2);
+    PageLogin = __decorateClass([
+      t3("page-login")
+    ], PageLogin);
+  }
+});
+
+// src/components/ui/ui-tabs.ts
+var UiTabs;
+var init_ui_tabs = __esm({
+  "src/components/ui/ui-tabs.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
+    UiTabs = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.tabs = [];
+        this.active = "";
+        this.badges = {};
+      }
+      createRenderRoot() {
+        return this;
+      }
+      onClick(id) {
+        this.dispatchEvent(
+          new CustomEvent("dev-tab-change", {
+            detail: { id },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      render() {
+        return x`
+      <nav class="border-b border-slate-200 bg-white rounded-t-md">
+        <ul class="flex flex-row items-center gap-2 -mb-px px-2 list-none">
+          ${this.tabs.map((t5) => {
+          const isActive = t5.id === this.active;
+          const badge = this.badges[t5.id] ?? 0;
+          return x`
+              <li>
+                <button
+                  class="${[
+            "px-4 py-2 text-sm rounded-t-md border transition",
+            "inline-flex items-center gap-2",
+            isActive ? "bg-slate-100 text-slate-900 border-slate-300 border-b-white" : "border-transparent text-slate-500 hover:bg-slate-50"
+          ].join(" ")}"
+                  @click=${() => this.onClick(t5.id)}
+                >
+                  ${t5.icon ? x`<span>${t5.icon}</span>` : null}
+                  <span>${t5.label}</span>
+                  ${badge > 0 ? x`
+                        <span
+                          class="ml-1 grid place-items-center w-5 h-5 rounded-full bg-red-500 text-white text-xs"
+                          >${badge}</span
+                        >
+                      ` : null}
+                </button>
+              </li>
+            `;
+        })}
+        </ul>
+      </nav>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Array })
+    ], UiTabs.prototype, "tabs", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "active", 2);
+    __decorateClass([
+      n4({ attribute: false })
+    ], UiTabs.prototype, "badges", 2);
+    UiTabs = __decorateClass([
+      t3("ui-tabs")
+    ], UiTabs);
   }
 });
 
 // src/services/device.service.ts
-var repo, fetchAllDevices;
+var repo2, fetchAllDevices;
 var init_device_service = __esm({
   "src/services/device.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo = getDeviceRepository();
-    fetchAllDevices = () => repo.getAll();
+    repo2 = getDeviceRepository();
+    fetchAllDevices = () => repo2.getAll();
   }
 });
 
@@ -15094,24 +15156,24 @@ var init_hidroponik_devices = __esm({
 });
 
 // src/services/plant.service.ts
-var repo2, fetchAllPlants;
+var repo3, fetchAllPlants;
 var init_plant_service = __esm({
   "src/services/plant.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo2 = getPlantRepository();
-    fetchAllPlants = () => repo2.getAll();
+    repo3 = getPlantRepository();
+    fetchAllPlants = () => repo3.getAll();
   }
 });
 
 // src/services/hydroponic-batch.service.ts
-var repo3, fetchAllHydroponicBatches;
+var repo4, fetchAllHydroponicBatches;
 var init_hydroponic_batch_service = __esm({
   "src/services/hydroponic-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo3 = getHydroponicBatchRepository();
-    fetchAllHydroponicBatches = () => repo3.getAll();
+    repo4 = getHydroponicBatchRepository();
+    fetchAllHydroponicBatches = () => repo4.getAll();
   }
 });
 
@@ -15482,13 +15544,13 @@ var init_plant_batch = __esm({
 });
 
 // src/services/horti-batch.service.ts
-var repo4, fetchAllHortiBatches;
+var repo5, fetchAllHortiBatches;
 var init_horti_batch_service = __esm({
   "src/services/horti-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo4 = getHortiBatchRepository();
-    fetchAllHortiBatches = () => repo4.getAll();
+    repo5 = getHortiBatchRepository();
+    fetchAllHortiBatches = () => repo5.getAll();
   }
 });
 
@@ -15642,24 +15704,24 @@ var init_fromAquaticBatch = __esm({
 });
 
 // src/services/aquatic-batch.service.ts
-var repo5, fetchAllAquaticBatches;
+var repo6, fetchAllAquaticBatches;
 var init_aquatic_batch_service = __esm({
   "src/services/aquatic-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo5 = getAquaticBatchRepository();
-    fetchAllAquaticBatches = () => repo5.getAll();
+    repo6 = getAquaticBatchRepository();
+    fetchAllAquaticBatches = () => repo6.getAll();
   }
 });
 
 // src/services/aquatic-species.service.ts
-var repo6, fetchAllAquaticSpecies;
+var repo7, fetchAllAquaticSpecies;
 var init_aquatic_species_service = __esm({
   "src/services/aquatic-species.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo6 = getAquaticSpeciesRepository();
-    fetchAllAquaticSpecies = () => repo6.getAll();
+    repo7 = getAquaticSpeciesRepository();
+    fetchAllAquaticSpecies = () => repo7.getAll();
   }
 });
 
@@ -16207,24 +16269,24 @@ var init_peternakan_devices = __esm({
 });
 
 // src/services/livestock.service.ts
-var repo7, fetchAllLivestock;
+var repo8, fetchAllLivestock;
 var init_livestock_service = __esm({
   "src/services/livestock.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo7 = getLivestockRepository();
-    fetchAllLivestock = () => repo7.getAll();
+    repo8 = getLivestockRepository();
+    fetchAllLivestock = () => repo8.getAll();
   }
 });
 
 // src/services/livestock-batch.service.ts
-var repo8, fetchAllLivestockBatches;
+var repo9, fetchAllLivestockBatches;
 var init_livestock_batch_service = __esm({
   "src/services/livestock-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo8 = getLivestockBatchRepository();
-    fetchAllLivestockBatches = () => repo8.getAll();
+    repo9 = getLivestockBatchRepository();
+    fetchAllLivestockBatches = () => repo9.getAll();
   }
 });
 
@@ -16389,13 +16451,13 @@ var init_color_utils = __esm({
 });
 
 // src/services/event.service.ts
-var repo9, fetchAllEvents;
+var repo10, fetchAllEvents;
 var init_event_service = __esm({
   "src/services/event.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo9 = getEventRepository();
-    fetchAllEvents = () => repo9.getAll();
+    repo10 = getEventRepository();
+    fetchAllEvents = () => repo10.getAll();
   }
 });
 
@@ -20538,7 +20600,7 @@ var AppFooter = class extends i4 {
       <footer>
         <div class="container">
           <div>
-            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.1"}. All
+            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.2"}. All
             rights reserved.
           </div>
           <div>
