@@ -1977,7 +1977,7 @@ var init_MockAquaticSpeciesRepository = __esm({
     "use strict";
     MockAquaticSpeciesRepository = class {
       async getAll() {
-        const res = await fetch("/assets/mock/species.json");
+        const res = await fetch("./assets/mock/species.json");
         if (!res.ok) throw new Error("Gagal load species mock");
         return await res.json();
       }
@@ -15093,6 +15093,28 @@ var init_hidroponik_devices = __esm({
   }
 });
 
+// src/services/plant.service.ts
+var repo2, fetchAllPlants;
+var init_plant_service = __esm({
+  "src/services/plant.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo2 = getPlantRepository();
+    fetchAllPlants = () => repo2.getAll();
+  }
+});
+
+// src/services/hydroponic-batch.service.ts
+var repo3, fetchAllHydroponicBatches;
+var init_hydroponic_batch_service = __esm({
+  "src/services/hydroponic-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo3 = getHydroponicBatchRepository();
+    fetchAllHydroponicBatches = () => repo3.getAll();
+  }
+});
+
 // src/pages/produksi/hidroponik.ts
 var hidroponik_exports = {};
 __export(hidroponik_exports, {
@@ -15110,6 +15132,8 @@ var init_hidroponik = __esm({
     init_device_dialog();
     init_batch_result();
     init_hidroponik_devices();
+    init_plant_service();
+    init_hydroponic_batch_service();
     PageProduksiHidroponik = class extends i4 {
       constructor() {
         super(...arguments);
@@ -15157,11 +15181,11 @@ var init_hidroponik = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        const plants = await (await fetch("/assets/mock/plants.json")).json();
-        const raw = await (await fetch("/assets/mock/hydro-batches.json")).json();
+        const plants = await fetchAllPlants();
+        const raw = await fetchAllHydroponicBatches();
         this.plants = plants;
         this.batches = raw.map(fromHydroponicBatch);
-        this.harvests = await (await fetch("/assets/mock/harvests.json")).json();
+        this.harvests = await (await fetch("./assets/mock/harvests.json")).json();
         console.groupCollapsed("[Hidroponik] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -15457,6 +15481,17 @@ var init_plant_batch = __esm({
   }
 });
 
+// src/services/horti-batch.service.ts
+var repo4, fetchAllHortiBatches;
+var init_horti_batch_service = __esm({
+  "src/services/horti-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo4 = getHortiBatchRepository();
+    fetchAllHortiBatches = () => repo4.getAll();
+  }
+});
+
 // src/pages/produksi/hortikultura.ts
 var hortikultura_exports = {};
 __export(hortikultura_exports, {
@@ -15472,6 +15507,8 @@ var init_hortikultura = __esm({
     init_hortikultura_devices();
     init_plant_batch();
     init_entity_detail_dialog();
+    init_plant_service();
+    init_horti_batch_service();
     PageProduksiHortikultura = class extends i4 {
       constructor() {
         super(...arguments);
@@ -15521,11 +15558,11 @@ var init_hortikultura = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        const plants = await (await fetch("/assets/mock/plants.json")).json();
-        const rawBatches = await (await fetch("/assets/mock/horti-batches.json")).json();
+        const plants = await fetchAllPlants();
+        const rawBatches = await fetchAllHortiBatches();
         this.plants = plants;
         this.batches = rawBatches.map(fromPlantingBatch);
-        this.harvests = await (await fetch("/assets/mock/horti-harvests.json")).json();
+        this.harvests = await (await fetch("./assets/mock/horti-harvests.json")).json();
         console.groupCollapsed("[Horti] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -15601,6 +15638,28 @@ function fromAquaticBatch(batch) {
 var init_fromAquaticBatch = __esm({
   "src/mappers/fromAquaticBatch.ts"() {
     "use strict";
+  }
+});
+
+// src/services/aquatic-batch.service.ts
+var repo5, fetchAllAquaticBatches;
+var init_aquatic_batch_service = __esm({
+  "src/services/aquatic-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo5 = getAquaticBatchRepository();
+    fetchAllAquaticBatches = () => repo5.getAll();
+  }
+});
+
+// src/services/aquatic-species.service.ts
+var repo6, fetchAllAquaticSpecies;
+var init_aquatic_species_service = __esm({
+  "src/services/aquatic-species.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo6 = getAquaticSpeciesRepository();
+    fetchAllAquaticSpecies = () => repo6.getAll();
   }
 });
 
@@ -15819,6 +15878,8 @@ var init_akuakultur = __esm({
     init_lit();
     init_decorators();
     init_fromAquaticBatch();
+    init_aquatic_batch_service();
+    init_aquatic_species_service();
     init_aquaculture_batch();
     init_entity_detail_dialog();
     init_aquakultur_devices();
@@ -15870,20 +15931,11 @@ var init_akuakultur = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        const species = await (await fetch("/assets/mock/species.json")).json();
-        const raw = await (await fetch("/assets/mock/aquatic-batches.json")).json();
-        this.harvests = await (await fetch("/assets/mock/aqua-harvests.json")).json();
+        const raw = await fetchAllAquaticBatches();
+        const species = await fetchAllAquaticSpecies();
+        this.harvests = await (await fetch("./assets/mock/aqua-harvests.json")).json();
         this.species = species;
         this.batches = raw.map(fromAquaticBatch);
-        console.groupCollapsed("[Akuakultur] mapped GenericBatch");
-        console.table(
-          this.batches.map((b3) => ({
-            id: b3.id,
-            itemId: b3.itemId,
-            location: b3.location
-          }))
-        );
-        console.groupEnd();
       }
       render() {
         const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
@@ -16154,6 +16206,28 @@ var init_peternakan_devices = __esm({
   }
 });
 
+// src/services/livestock.service.ts
+var repo7, fetchAllLivestock;
+var init_livestock_service = __esm({
+  "src/services/livestock.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo7 = getLivestockRepository();
+    fetchAllLivestock = () => repo7.getAll();
+  }
+});
+
+// src/services/livestock-batch.service.ts
+var repo8, fetchAllLivestockBatches;
+var init_livestock_batch_service = __esm({
+  "src/services/livestock-batch.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo8 = getLivestockBatchRepository();
+    fetchAllLivestockBatches = () => repo8.getAll();
+  }
+});
+
 // src/pages/produksi/peternakan.ts
 var peternakan_exports = {};
 __export(peternakan_exports, {
@@ -16171,6 +16245,8 @@ var init_peternakan = __esm({
     init_livestock_batch();
     init_batch_result();
     init_peternakan_devices();
+    init_livestock_service();
+    init_livestock_batch_service();
     PeternakanPage = class extends i4 {
       constructor() {
         super(...arguments);
@@ -16221,11 +16297,11 @@ var init_peternakan = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        const animals = await (await fetch("/assets/mock/livestock.json")).json();
-        const raw = await (await fetch("/assets/mock/livestock-batches.json")).json();
+        const animals = await fetchAllLivestock();
+        const raw = await fetchAllLivestockBatches();
         this.animals = animals;
         this.batches = raw.map(fromLivestockBatch);
-        this.harvests = await (await fetch("/assets/mock/livestock-harvests.json")).json();
+        this.harvests = await (await fetch("./assets/mock/livestock-harvests.json")).json();
         console.groupCollapsed("[Peternakan] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -16313,13 +16389,13 @@ var init_color_utils = __esm({
 });
 
 // src/services/event.service.ts
-var repo2, fetchAllEvents;
+var repo9, fetchAllEvents;
 var init_event_service = __esm({
   "src/services/event.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo2 = getEventRepository();
-    fetchAllEvents = () => repo2.getAll();
+    repo9 = getEventRepository();
+    fetchAllEvents = () => repo9.getAll();
   }
 });
 
@@ -17939,39 +18015,6 @@ var init_dev_config_mqtt = __esm({
   }
 });
 
-// src/services/plant.service.ts
-var repo3, fetchAllPlants;
-var init_plant_service = __esm({
-  "src/services/plant.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo3 = getPlantRepository();
-    fetchAllPlants = () => repo3.getAll();
-  }
-});
-
-// src/services/aquatic-species.service.ts
-var repo4, fetchAllAquaticSpecies;
-var init_aquatic_species_service = __esm({
-  "src/services/aquatic-species.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo4 = getAquaticSpeciesRepository();
-    fetchAllAquaticSpecies = () => repo4.getAll();
-  }
-});
-
-// src/services/livestock.service.ts
-var repo5, fetchAllLivestock;
-var init_livestock_service = __esm({
-  "src/services/livestock.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo5 = getLivestockRepository();
-    fetchAllLivestock = () => repo5.getAll();
-  }
-});
-
 // src/pages/konfigurasi/entitas/entitas-list.ts
 var EntitasList;
 var init_entitas_list = __esm({
@@ -18734,50 +18777,6 @@ var init_entitas_container = __esm({
     EntitasContainer = __decorateClass([
       t3("entitas-container")
     ], EntitasContainer);
-  }
-});
-
-// src/services/aquatic-batch.service.ts
-var repo6, fetchAllAquaticBatches;
-var init_aquatic_batch_service = __esm({
-  "src/services/aquatic-batch.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo6 = getAquaticBatchRepository();
-    fetchAllAquaticBatches = () => repo6.getAll();
-  }
-});
-
-// src/services/hydroponic-batch.service.ts
-var repo7, fetchAllHydroponicBatches;
-var init_hydroponic_batch_service = __esm({
-  "src/services/hydroponic-batch.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo7 = getHydroponicBatchRepository();
-    fetchAllHydroponicBatches = () => repo7.getAll();
-  }
-});
-
-// src/services/horti-batch.service.ts
-var repo8, fetchAllHortiBatches;
-var init_horti_batch_service = __esm({
-  "src/services/horti-batch.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo8 = getHortiBatchRepository();
-    fetchAllHortiBatches = () => repo8.getAll();
-  }
-});
-
-// src/services/livestock-batch.service.ts
-var repo9, fetchAllLivestockBatches;
-var init_livestock_batch_service = __esm({
-  "src/services/livestock-batch.service.ts"() {
-    "use strict";
-    init_repository_factory();
-    repo9 = getLivestockBatchRepository();
-    fetchAllLivestockBatches = () => repo9.getAll();
   }
 });
 
