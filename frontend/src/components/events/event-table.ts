@@ -1,11 +1,12 @@
-// frontend/src/components/event-table.ts
+// frontend/src/components/events/event-table.ts
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import type { EventHistory, SourceType, EventType } from '@models/event.model';
 import { fetchAllEvents } from 'src/services/event.service';
 import { getRowColor } from 'src/utils/color.utils';
 import { eventColumns } from 'src/schema/event-columns';
-import './event-filter';
+import { onEvent, getBufferedEvents } from 'src/services/event-buffer.service';
+import '../event-filter';
 
 @customElement('event-table')
 export class EventTable extends LitElement {
@@ -19,10 +20,23 @@ export class EventTable extends LitElement {
   @state() private filterStartTime = '';
   @state() private filterEndTime = '';
   @state() private highlightedKey = '';
+  private unsubscribe?: () => void;
 
   async connectedCallback() {
     super.connectedCallback();
     await this.loadEvents();
+
+    // Subscribe to live events
+    this.unsubscribe = onEvent((newEvent) => {
+      this.events = [newEvent, ...this.events];
+      this.highlightedKey = this.getKey(newEvent);
+      setTimeout(() => (this.highlightedKey = ''), 3000);
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.unsubscribe?.();
   }
 
   async loadEvents() {

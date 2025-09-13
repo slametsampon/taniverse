@@ -13,9 +13,17 @@ import { livestockFormFields } from '../schema/livestock-fields';
 import { aquaticFormFields } from '../schema/aquatic-fields';
 import { plantFormFields } from '../schema/plant-fields';
 
+import { DeviceUI } from 'src/components/device-ui'; // ✅ untuk showToast
 import 'src/components/form-builder-section';
 import 'src/components/form-builder-buttons';
 import { FieldConfig } from 'src/schema/field-config';
+
+import { pushEvent } from 'src/services/event-buffer.service';
+import {
+  createEntityEvent,
+  updateEntityEvents,
+  deleteEntityEvent,
+} from 'src/components/events/entity-events';
 
 type KindType = 'ayam' | 'ikan' | 'tanaman';
 type EntityModel = Partial<Livestock | AquaticSpecies | Plant>;
@@ -38,6 +46,7 @@ export class FormEntitas extends LitElement {
 
   @state() private draft: Record<string, any> = {};
   @state() private errors: Record<string, string> = {};
+  @state() private originalData: EntityModel = {};
 
   protected get formTitle(): {
     icon: string;
@@ -81,6 +90,7 @@ export class FormEntitas extends LitElement {
   updated(changed: Map<string, unknown>) {
     if (changed.has('value')) {
       this.draft = { ...this.value };
+      this.originalData = structuredClone(this.value); // 🆕 snapshot baseline
     }
   }
 
@@ -130,6 +140,28 @@ export class FormEntitas extends LitElement {
       return;
     }
 
+    const entityId = this.draft.id || this.draft.name || 'UNKNOWN';
+
+    if (this.mode === 'new') {
+      const ev = createEntityEvent({
+        kind: this.kind ?? 'unknown',
+        entityId,
+        newValue: this.draft,
+        triggeredBy: 'currentUser',
+      });
+      pushEvent(ev);
+    } else {
+      const events = updateEntityEvents({
+        kind: this.kind ?? 'unknown',
+        entityId,
+        prevValue: this.originalData,
+        newValue: this.draft,
+        triggeredBy: 'currentUser',
+      });
+      events.forEach(pushEvent);
+      this.originalData = structuredClone(this.draft); // reset baseline
+    }
+
     this.dispatchEvent(
       new CustomEvent<EntityModel>('submit', {
         detail: this.draft,
@@ -137,6 +169,9 @@ export class FormEntitas extends LitElement {
         composed: true,
       })
     );
+
+    // ✅ Tambahkan notifikasi
+    DeviceUI.showToast('Saved ✅');
   };
 
   private handleCancel = () => {
@@ -146,12 +181,20 @@ export class FormEntitas extends LitElement {
 
   private handleDelete = () => {
     if (!confirm('Yakin ingin menghapus data ini?')) return;
+
+    const entityId = this.value?.id ?? this.value?.name ?? 'UNKNOWN';
+
+    const ev = deleteEntityEvent({
+      kind: this.kind ?? 'unknown',
+      entityId,
+      prevValue: this.originalData,
+      triggeredBy: 'currentUser',
+    });
+    pushEvent(ev);
+
     this.dispatchEvent(
       new CustomEvent('delete', {
-        detail: {
-          kind: this.kind,
-          id: this.value?.id ?? this.value?.name,
-        },
+        detail: { kind: this.kind, id: entityId },
         bubbles: true,
         composed: true,
       })

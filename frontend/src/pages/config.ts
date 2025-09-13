@@ -7,7 +7,7 @@ import type { DeviceStateModel } from './konfigurasi/state/device-state';
 import { DeviceEvents } from '../components/device-events';
 
 import 'src/components/ui/ui-tabs';
-import 'src/components/event-table';
+import 'src/components/events/event-table';
 import './konfigurasi/devices/device-config';
 import './konfigurasi/devices/dev-config-mqtt';
 import './konfigurasi/entitas/entitas-container';

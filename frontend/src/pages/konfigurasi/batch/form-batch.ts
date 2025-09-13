@@ -7,6 +7,12 @@ import type { AquaticBatch } from '@models/aquatic-batch.model';
 import type { HydroponicBatch } from '@models/hidroponic-batch.model';
 import type { HortiBatch } from '@models/horti-batch.model';
 import type { LivestockBatch } from '@models/livestock-batch.model';
+import { pushEvent } from 'src/services/event-buffer.service';
+import {
+  createBatchEvent,
+  updateBatchEvents,
+  deleteBatchEvent,
+} from 'src/components/events/batch-events';
 
 import {
   aquaticBatchFields,
@@ -134,8 +140,29 @@ export class FormBatch extends LitElement {
       return;
     }
 
+    const batchId = this.draft.id || this.draft.code || 'UNKNOWN';
+
+    if (this.mode === 'edit') {
+      // ✅ Gunakan precise diff
+      const events = updateBatchEvents({
+        batchId,
+        prevValue: this.value,
+        newValue: this.draft,
+        triggeredBy: 'currentUser',
+      });
+      events.forEach(pushEvent);
+    } else if (this.mode === 'new') {
+      // ✅ Batch baru
+      const ev = createBatchEvent({
+        batchId,
+        newValue: this.draft,
+        triggeredBy: 'currentUser',
+      });
+      pushEvent(ev);
+    }
+
     this.dispatchEvent(
-      new CustomEvent<BatchModel>('submit', {
+      new CustomEvent('submit', {
         detail: this.draft,
         bubbles: true,
         composed: true,
@@ -151,11 +178,19 @@ export class FormBatch extends LitElement {
   private handleDelete = () => {
     if (!confirm('Yakin ingin menghapus data ini?')) return;
 
+    const batchId = this.value?.id || this.value?.code || 'UNKNOWN';
+    const ev = deleteBatchEvent({
+      batchId,
+      prevValue: this.value,
+      triggeredBy: 'currentUser',
+    });
+    pushEvent(ev);
+
     this.dispatchEvent(
       new CustomEvent('delete', {
         detail: {
           kind: this.kind,
-          id: this.value?.id ?? this.value?.code,
+          id: batchId,
         },
         bubbles: true,
         composed: true,

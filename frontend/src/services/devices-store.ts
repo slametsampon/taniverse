@@ -7,6 +7,7 @@ import type { DeviceRepository } from '../repositories/interfaces/DeviceReposito
 import type { DeviceModel, DeviceStatus } from '@models/device.model';
 import { checkDeviceAlarm } from 'src/components/events/device-events';
 import { pushEvent } from 'src/services/event-buffer.service';
+import { createEvent } from 'src/components/events/event-logger';
 // Tambahkan ini di awal file:
 
 type Device = DeviceModel & {
@@ -25,6 +26,7 @@ class DevicesStore {
   private repo: DeviceRepository = getDeviceRepository();
   private lastStatus = new Map<string, DeviceStatus['valueStatus']>();
   private lastValues = new Map<string, number>();
+  private lastMode: string | null = null;
 
   // ===== INIT =====
   async init(force = false) {
@@ -34,6 +36,22 @@ class DevicesStore {
     this.stopSimulation();
 
     const mode = getMode();
+
+    // 🆕 generate event jika mode berubah
+    if (this.lastMode && this.lastMode !== mode) {
+      const ev = createEvent({
+        sourceType: 'device',
+        sourceId: 'DevicesStore',
+        eventType: 'connection',
+        field: 'mode',
+        prevValue: this.lastMode,
+        newValue: mode,
+        triggeredBy: 'system',
+        description: `Perpindahan mode: ${this.lastMode.toUpperCase()} → ${mode.toUpperCase()}`,
+      });
+      pushEvent(ev);
+    }
+    this.lastMode = mode; // update baseline
 
     await this.loadFromRepository();
 
@@ -99,7 +117,7 @@ class DevicesStore {
           const low = dev.alarms_low ?? dev.ranges_low;
           const high = dev.alarms_high ?? dev.ranges_high;
           const mid = (low + high) / 2;
-          const deviation = 0.25 * mid;
+          const deviation = 0.165 * mid;
           const r = Math.random() * 2 - 1;
           const simulated = mid + r * deviation;
 

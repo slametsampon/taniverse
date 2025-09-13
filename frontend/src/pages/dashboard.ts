@@ -13,7 +13,7 @@ import './produksi/akuakultur.ts';
 import './produksi/peternakan.ts';
 
 // ✨ Tab baru: Event
-import 'src/components/event-table';
+import 'src/components/events/event-table.js';
 
 @customElement('page-dashboard')
 export class PageDashboard extends LitElement {

@@ -13,6 +13,14 @@ import { deviceConfigFields } from '../schema/device-config-fields';
 import { DeviceStateHandler } from 'src/components/device-state-handler';
 import { DeviceEvents } from '../../../components/device-events';
 
+// 🆕 Event generator
+import { pushEvent } from 'src/services/event-buffer.service';
+import {
+  createDeviceEvent,
+  updateDeviceEvents,
+  deleteDeviceEvent,
+} from 'src/components/events/device-events';
+
 function setNestedValue(obj: any, path: string, value: any): void {
   const keys = path.split('.');
   let current = obj;
@@ -26,36 +34,20 @@ function setNestedValue(obj: any, path: string, value: any): void {
 @customElement('device-config')
 export class DeviceConfig extends LitElement {
   createRenderRoot() {
-    return this; // ✅ Light DOM
+    return this;
   }
 
   @state() private model: any = {};
+  @state() private original: any = {}; // 🆕 snapshot sebelum edit
   @state() private errors: Record<string, string> = {};
   @state() private tags: string[] = [];
   @state() private dirty = false;
   @state() private mode: 'new' | 'edit' = 'edit';
+  @state() private originalData: any = {}; // immutable snapshot sebelum edit
 
   async connectedCallback() {
     super.connectedCallback();
     await this.loadDevicesAndInit();
-
-    const list = await DeviceEvents.loadAllDevices();
-    this.tags = list
-      .map((d) => d.tagNumber)
-      .filter(Boolean)
-      .sort();
-
-    const tagParam = new URL(location.href).searchParams.get('tag');
-    const picked =
-      tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? '';
-    const found = picked ? list.find((d) => d.tagNumber === picked) : undefined;
-
-    if (found) {
-      this.setDevice(found, 'edit');
-    } else {
-      const fresh = DeviceStateHandler.newTemplate();
-      this.setDevice(fresh, 'new');
-    }
   }
 
   private async loadDevicesAndInit() {
@@ -80,7 +72,8 @@ export class DeviceConfig extends LitElement {
   }
 
   private setDevice(device: any, mode: 'new' | 'edit') {
-    this.model = structuredClone(device);
+    this.model = structuredClone(device); // editable
+    this.originalData = structuredClone(device); // snapshot baseline
     this.mode = mode;
     this.revalidate();
     this.dirty = false;
@@ -102,7 +95,7 @@ export class DeviceConfig extends LitElement {
     const raw = target.value;
     const value = target.type === 'number' && raw !== '' ? Number(raw) : raw;
 
-    setNestedValue(this.model, key, value);
+    setNestedValue(this.model, key, value); // ✅ hanya ubah model
     this.dirty = true;
     this.revalidate();
   };
@@ -122,6 +115,8 @@ export class DeviceConfig extends LitElement {
     this.revalidate();
     if (Object.keys(this.errors).length) return;
 
+    const prevSnapshot = structuredClone(this.originalData); // ✅ freeze sebelum edit
+
     const success = await DeviceEvents.handleSave(
       this.model,
       this.mode,
@@ -129,8 +124,32 @@ export class DeviceConfig extends LitElement {
       (saved, updatedTags, mode) => {
         this.tags = updatedTags;
         this.setDevice(saved, mode);
+
+        const deviceId = saved.tagNumber || 'UNKNOWN';
+
+        if (this.mode === 'new') {
+          const ev = createDeviceEvent({
+            deviceId,
+            newValue: saved,
+            triggeredBy: 'currentUser',
+          });
+          pushEvent(ev);
+        } else {
+          // ✅ diff originalData vs updatedData
+          const events = updateDeviceEvents({
+            deviceId,
+            prevValue: prevSnapshot,
+            newValue: structuredClone(saved),
+            triggeredBy: 'currentUser',
+          });
+          events.forEach(pushEvent);
+
+          // ✅ reset baseline
+          this.originalData = structuredClone(saved);
+        }
       }
     );
+
     if (success) DeviceUI.showToast('Saved ✅');
   };
 
@@ -149,7 +168,17 @@ export class DeviceConfig extends LitElement {
         }
       }
     );
-    if (success) DeviceUI.showToast('Deleted 🗑️');
+    if (success) {
+      // 🔔 Generate delete event
+      const ev = deleteDeviceEvent({
+        deviceId: this.model.tagNumber,
+        prevValue: this.original,
+        triggeredBy: 'currentUser',
+      });
+      pushEvent(ev);
+
+      DeviceUI.showToast('Deleted 🗑️');
+    }
   };
 
   private handleCancel = () => {
