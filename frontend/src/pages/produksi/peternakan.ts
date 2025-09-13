@@ -16,6 +16,7 @@ import 'src/components/batch-result';
 import 'src/pages/produksi/views/peternakan-devices';
 import { fetchAllLivestock } from 'src/services/livestock.service';
 import { fetchAllLivestockBatches } from 'src/services/livestock-batch.service';
+import { fetchAllLivestockHarvestResults } from 'src/services/livestock-harvest-result.service';
 
 @customElement('peternakan-page')
 export class PeternakanPage extends LitElement {
@@ -34,9 +35,7 @@ export class PeternakanPage extends LitElement {
     const raw = (await fetchAllLivestockBatches()) as LivestockBatch[];
     this.animals = animals;
     this.batches = raw.map(fromLivestockBatch);
-    this.harvests = await (
-      await fetch('./assets/mock/livestock-harvests.json')
-    ).json();
+    this.harvests = await fetchAllLivestockHarvestResults();
 
     // (opsional) verifikasi
     console.groupCollapsed('[Peternakan] mapped GenericBatch');
@@ -105,7 +104,7 @@ export class PeternakanPage extends LitElement {
     const cardStyle = 'display:block;margin-top:1.5rem;margin-bottom:1.5rem;';
     return html`
       <section class="p-4 space-y-4">
-        <h1 class="text-2xl font-bold">🐄 Produksi Peternakan</h1>
+        <h1 class="text-2xl font-bold">🐔 Produksi Peternakan</h1>
 
         <livestock-batch
           .batches=${this.batches}

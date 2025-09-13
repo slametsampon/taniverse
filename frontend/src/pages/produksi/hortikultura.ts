@@ -8,11 +8,12 @@ import type { GenericBatch } from '@models/generic-batch.model';
 import { fromPlantingBatch } from 'src/mappers/fromPlantingBatch';
 import 'src/pages/produksi/views/hortikultura-devices';
 
-import '../../components/plant-batch';
-import '../../components/dialogs/entity-detail-dialog';
+import 'src/components/plant-batch';
+import 'src/components/dialogs/entity-detail-dialog';
 import type { HarvestResult } from '@models/harvest-result.model';
 import { fetchAllPlants } from 'src/services/plant.service';
 import { fetchAllHortiBatches } from 'src/services/horti-batch.service';
+import { fetchAllHortiHarvestResults } from 'src/services/horti-harvest-result.service';
 
 @customElement('hortikultura-page')
 export class PageProduksiHortikultura extends LitElement {
@@ -27,15 +28,11 @@ export class PageProduksiHortikultura extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
 
-    const plants = (await fetchAllPlants()) as Plant[];
     const rawBatches = (await fetchAllHortiBatches()) as PlantingBatch[];
-
-    this.plants = plants;
     this.batches = rawBatches.map(fromPlantingBatch);
 
-    this.harvests = await (
-      await fetch('./assets/mock/horti-harvests.json')
-    ).json();
+    this.plants = await fetchAllPlants();
+    this.harvests = await fetchAllHortiHarvestResults();
 
     // (opsional) verifikasi cepat
     console.groupCollapsed('[Horti] mapped GenericBatch');

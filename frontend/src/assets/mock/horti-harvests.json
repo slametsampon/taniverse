@@ -1,7 +1,6 @@
 [
   {
-    "id": "H001",
-    "batchId": "B002",
+    "id": "BEDENGAN-01",
     "harvestDate": "2025-08-20",
     "totalWeightG": 2600,
     "pricePerKg": 12000,
@@ -11,8 +10,7 @@
     "netProfit": 11200
   },
   {
-    "id": "H002",
-    "batchId": "B004",
+    "id": "BEDENGAN-02",
     "harvestDate": "2025-08-21",
     "totalWeightG": 4800,
     "pricePerKg": 25000,
@@ -22,8 +20,7 @@
     "netProfit": 70000
   },
   {
-    "id": "H003",
-    "batchId": "B003",
+    "id": "BEDENGAN-03",
     "harvestDate": "2025-09-29",
     "totalWeightG": 7500,
     "pricePerKg": 13000,
@@ -33,8 +30,7 @@
     "netProfit": 37500
   },
   {
-    "id": "H004",
-    "batchId": "B001",
+    "id": "BEDENGAN-04",
     "harvestDate": "2025-08-26",
     "totalWeightG": 5400,
     "pricePerKg": 15000,
@@ -44,8 +40,7 @@
     "netProfit": 51000
   },
   {
-    "id": "H005",
-    "batchId": "B005",
+    "id": "BEDENGAN-05",
     "harvestDate": "2025-10-16",
     "totalWeightG": 7500,
     "pricePerKg": 14000,

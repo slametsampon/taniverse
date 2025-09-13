@@ -1,6 +1,6 @@
 {
   "name": "taniverse",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Platform for building and running agro apps",
   "main": "index.js",
   "scripts": {

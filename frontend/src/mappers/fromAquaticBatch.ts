@@ -8,7 +8,7 @@ export function fromAquaticBatch(batch: AquaticBatch): GenericBatch {
     id: batch.id,
     itemId: batch.speciesId,
     domain: 'akuakultur',
-    location: batch.pond,
+    location: batch.location,
     startDate: batch.startDate,
     expectedHarvestDate: batch.expectedHarvestDate,
     initialCount: batch.initialPopulation,

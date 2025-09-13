@@ -39,8 +39,8 @@ export class PageDashboard extends LitElement {
 
   private renderProduksiContent() {
     return html`
-      <div class="mb-4">
-        <label class="block mb-2 text-sm font-medium text-gray-700">
+      <div class="mt-4 mb-4">
+        <label class="block mb-2 text-lg font-medium text-gray-700">
           Pilih Domain Produksi:
         </label>
         <select

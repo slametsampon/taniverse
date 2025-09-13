@@ -9,8 +9,9 @@ import { fromAquaticBatch } from 'src/mappers/fromAquaticBatch';
 import type { HarvestResult } from '@models/harvest-result.model';
 import { fetchAllAquaticBatches } from 'src/services/aquatic-batch.service';
 import { fetchAllAquaticSpecies } from 'src/services/aquatic-species.service';
+import { fetchAllAquaHarvestResults } from 'src/services/aqua-harvest-result.service';
 
-import 'src/components/aquaculture-batch';
+import 'src/components/aquatic-batch';
 import 'src/components/dialogs/entity-detail-dialog';
 import 'src/pages/produksi/views/aquakultur-devices';
 
@@ -28,9 +29,7 @@ export class PageProduksiAkuakultur extends LitElement {
     super.connectedCallback();
     const raw = (await fetchAllAquaticBatches()) as AquaticBatch[];
     const species = (await fetchAllAquaticSpecies()) as AquaticSpecies[];
-    this.harvests = await (
-      await fetch('./assets/mock/aqua-harvests.json')
-    ).json();
+    this.harvests = (await fetchAllAquaHarvestResults()) as HarvestResult[];
 
     this.species = species;
     this.batches = raw.map(fromAquaticBatch);

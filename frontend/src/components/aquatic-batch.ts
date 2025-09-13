@@ -1,3 +1,5 @@
+// frontend/src/components/aquatic-batch.ts
+
 // frontend/src/components/aquaculture-batch.ts
 
 import { html, LitElement } from 'lit';

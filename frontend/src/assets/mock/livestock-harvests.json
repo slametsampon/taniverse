@@ -1,7 +1,6 @@
 [
   {
-    "id": "harvest1",
-    "batchId": "batch3",
+    "id": "KANDANG-001",
     "harvestDate": "2025-08-20",
     "totalWeightG": 240000,
     "pricePerKg": 35000,
@@ -9,5 +8,25 @@
     "totalCost": 1800000,
     "revenue": 8400000,
     "netProfit": 6600000
+  },
+  {
+    "id": "KANDANG-002",
+    "harvestDate": "2025-08-25",
+    "totalWeightG": 175000,
+    "pricePerKg": 32000,
+    "holesUsed": 0,
+    "totalCost": 1200000,
+    "revenue": 5600000,
+    "netProfit": 4400000
+  },
+  {
+    "id": "KANDANG-004",
+    "harvestDate": "2025-08-02",
+    "totalWeightG": 0,
+    "pricePerKg": 0,
+    "holesUsed": 0,
+    "totalCost": 900000,
+    "revenue": 0,
+    "netProfit": -900000
   }
 ]

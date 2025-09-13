@@ -30,6 +30,7 @@ export interface DeviceStatus {
 }
 
 export interface DeviceModel {
+  // Identitas dasar
   tagNumber: string;
   type: DeviceType;
   description: string;
@@ -37,35 +38,40 @@ export interface DeviceModel {
   writable: boolean;
   location: string;
 
-  // ✅ Flattened ranges
+  // Flattened ranges
   ranges_low: number | null;
   ranges_high: number | null;
 
-  // ✅ Flattened alarms
+  // Flattened alarms
   alarms_low: number | null;
   alarms_high: number | null;
 
-  // ✅ Flattened IO
+  // Flattened IO
   io_bus: BusType;
   io_pin?: number | null;
   io_address?: string | null;
   io_channel?: number | null;
 
-  // ✅ Flattened sampling
+  // Flattened sampling
   sample_periodMs: number;
   sample_deadband: number;
 
-  // ✅ Flattened display
+  // Flattened display
   display_precision: number;
 
-  // Actuator control
-  allowedStates?: string[];
-  defaultState?: string;
+  // Control (actuator)
+  allowedStates?: string[]; // e.g., ['ON', 'OFF']
+  defaultState?: string; // e.g., 'OFF'
 
-  // Runtime
+  // Runtime (tidak disimpan tetap di DB, bisa nullable)
   value?: number;
   state?: string;
   status?: DeviceStatus;
+
+  // Informasi tambahan (JSON string di DB)
+  meta_json?: string; // JSON string
+  mqtt_json?: string; // JSON string
+  extra_json?: string; // Optional tambahan lainnya
 }
 
 export const defaultDeviceModel: DeviceModel = {
@@ -98,4 +104,8 @@ export const defaultDeviceModel: DeviceModel = {
   value: undefined,
   state: undefined,
   status: undefined,
+
+  meta_json: '{}',
+  mqtt_json: '{}',
+  extra_json: '{}',
 };

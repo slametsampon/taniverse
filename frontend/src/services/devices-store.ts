@@ -4,10 +4,10 @@ import { mqttService, TOPIC_PREFIX } from './mqtt-service';
 import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
 import { getDeviceRepository } from '../repositories/repository-factory';
 import type { DeviceRepository } from '../repositories/interfaces/DeviceRepository';
-import type { DeviceConfig, DeviceStatus } from '@models/device.model';
+import type { DeviceModel, DeviceStatus } from '@models/device.model';
 // Tambahkan ini di awal file:
 
-type Device = DeviceConfig & {
+type Device = DeviceModel & {
   status?: DeviceStatus;
 };
 
@@ -92,10 +92,10 @@ class DevicesStore {
     this.simulationInterval = window.setInterval(() => {
       this.devices.forEach((dev) => {
         if (dev.type === 'sensor') {
-          const low = dev.ranges?.low ?? 20;
-          const high = dev.ranges?.high ?? 100;
+          const low = dev.alarms_low ?? dev.ranges_low;
+          const high = dev.alarms_high ?? dev.ranges_high;
           const mid = (low + high) / 2;
-          const deviation = 0.05 * mid;
+          const deviation = 0.25 * mid;
           const r = Math.random() * 2 - 1;
           const simulated = mid + r * deviation;
 
@@ -120,8 +120,8 @@ class DevicesStore {
 
     if (dev.type === 'sensor') {
       const val = dev.value;
-      const lo = dev.alarms?.low ?? null;
-      const hi = dev.alarms?.high ?? null;
+      const lo = dev.alarms_low ?? null;
+      const hi = dev.alarms_high ?? null;
 
       const valueStatus: DeviceStatus['valueStatus'] =
         val === null || val === undefined

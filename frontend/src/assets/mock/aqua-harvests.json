@@ -1,7 +1,6 @@
 [
   {
-    "id": "harvest1",
-    "batchId": "batch2",
+    "id": "KOLAM-001",
     "harvestDate": "2025-08-12",
     "totalWeightG": 450000,
     "pricePerKg": 23000,
@@ -9,5 +8,25 @@
     "totalCost": 700000,
     "revenue": 1035000,
     "netProfit": 335000
+  },
+  {
+    "id": "KOLAM-002",
+    "harvestDate": "2025-08-10",
+    "totalWeightG": 390000,
+    "pricePerKg": 27000,
+    "holesUsed": 0,
+    "totalCost": 650000,
+    "revenue": 1053000,
+    "netProfit": 403000
+  },
+  {
+    "id": "KOLAM-004",
+    "harvestDate": "2025-08-30",
+    "totalWeightG": 120000,
+    "pricePerKg": 25000,
+    "holesUsed": 0,
+    "totalCost": 600000,
+    "revenue": 300000,
+    "netProfit": -300000
   }
 ]

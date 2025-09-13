@@ -1,15 +1,11 @@
+// backend/src/services/device.service.ts
+
 import { SQLite } from '../db/sqlite';
-import type { DeviceConfig } from '@models/device.model';
+import type { DeviceModel } from '@models/device.model';
 
 /** Helper konversi boolean ke int */
 const boolToInt = (b: boolean) => (b ? 1 : 0);
 const intToBool = (i: number) => i === 1;
-
-/** Serialize nested object -> JSON string (null/undefined aman) */
-function toJSON(v: unknown): string | null {
-  if (v === undefined || v === null) return null;
-  return JSON.stringify(v);
-}
 
 /** Parse JSON string -> object (null aman) */
 function fromJSON<T>(s: unknown): T | undefined {
@@ -23,13 +19,13 @@ function fromJSON<T>(s: unknown): T | undefined {
 
 export class DeviceService {
   /** Ambil semua device */
-  static getAll(): DeviceConfig[] {
+  static getAll(): DeviceModel[] {
     const rows = SQLite.db.prepare(`SELECT * FROM devices`).all();
     return rows.map(this.rowToDevice);
   }
 
   /** Ambil 1 device by tagNumber */
-  static get(tagNumber: string): DeviceConfig | null {
+  static get(tagNumber: string): DeviceModel | null {
     const row = SQLite.db
       .prepare(`SELECT * FROM devices WHERE tagNumber = ?`)
       .get(tagNumber);
@@ -37,19 +33,28 @@ export class DeviceService {
   }
 
   /** Insert/Update (UPSERT) 1 device */
-  static upsert(dev: DeviceConfig): DeviceConfig {
-    // siapkan payload untuk kolom
+  static upsert(dev: DeviceModel): DeviceModel {
     const stmt = SQLite.db.prepare(`
       INSERT INTO devices (
         tagNumber, type, description, unit,
         kind, writable, defaultState, state, value,
-        ranges, alarms, allowedStates, io, mqtt, sample, display,
-        location, meta
+        ranges_low, ranges_high,
+        alarms_low, alarms_high,
+        allowedStates,
+        io_bus, io_pin, io_address, io_channel,
+        sample_periodMs, sample_deadband,
+        display_precision,
+        location, mqtt, meta
       ) VALUES (
         @tagNumber, @type, @description, @unit,
         @kind, @writable, @defaultState, @state, @value,
-        @ranges, @alarms, @allowedStates, @io, @mqtt, @sample, @display,
-        @location, @meta
+        @ranges_low, @ranges_high,
+        @alarms_low, @alarms_high,
+        @allowedStates,
+        @io_bus, @io_pin, @io_address, @io_channel,
+        @sample_periodMs, @sample_deadband,
+        @display_precision,
+        @location, @mqtt, @meta
       )
       ON CONFLICT(tagNumber) DO UPDATE SET
         type = excluded.type,
@@ -60,41 +65,30 @@ export class DeviceService {
         defaultState = excluded.defaultState,
         state = excluded.state,
         value = excluded.value,
-        ranges = excluded.ranges,
-        alarms = excluded.alarms,
+        ranges_low = excluded.ranges_low,
+        ranges_high = excluded.ranges_high,
+        alarms_low = excluded.alarms_low,
+        alarms_high = excluded.alarms_high,
         allowedStates = excluded.allowedStates,
-        io = excluded.io,
-        mqtt = excluded.mqtt,
-        sample = excluded.sample,
-        display = excluded.display,
+        io_bus = excluded.io_bus,
+        io_pin = excluded.io_pin,
+        io_address = excluded.io_address,
+        io_channel = excluded.io_channel,
+        sample_periodMs = excluded.sample_periodMs,
+        sample_deadband = excluded.sample_deadband,
+        display_precision = excluded.display_precision,
         location = excluded.location,
+        mqtt = excluded.mqtt,
         meta = excluded.meta
     `);
 
-    // serialize nested fields ke JSON TEXT
     const payload = {
-      tagNumber: dev.tagNumber,
-      type: dev.type,
-      description: dev.description,
-      unit: dev.unit ?? null,
-
-      kind: dev.kind ?? null,
+      ...dev,
       writable: boolToInt(dev.writable),
-      defaultState: dev.defaultState ?? null,
-
-      // runtime opsional
-      state: dev.state ?? null,
-      value: dev.value ?? null,
-
-      ranges: JSON.stringify(dev.ranges),
-      alarms: JSON.stringify(dev.alarms),
-      allowedStates: toJSON(dev.allowedStates),
-      io: JSON.stringify(dev.io),
-      mqtt: JSON.stringify(dev.mqtt),
-      sample: toJSON(dev.sample),
-      display: toJSON(dev.display),
-      location: JSON.stringify(dev.location),
-      meta: JSON.stringify(dev.meta),
+      allowedStates: JSON.stringify(dev.allowedStates ?? []),
+      mqtt: JSON.stringify(dev.mqtt_json ?? {}),
+      meta: JSON.stringify(dev.meta_json ?? {}),
+      location: JSON.stringify(dev.location ?? {}),
     };
 
     stmt.run(payload);
@@ -102,8 +96,8 @@ export class DeviceService {
   }
 
   /** Bulk upsert */
-  static bulkUpsert(devices: DeviceConfig[]): number {
-    const tx = SQLite.db.transaction((list: DeviceConfig[]) => {
+  static bulkUpsert(devices: DeviceModel[]): number {
+    const tx = SQLite.db.transaction((list: DeviceModel[]) => {
       for (const d of list) this.upsert(d);
     });
     tx(devices);
@@ -118,37 +112,43 @@ export class DeviceService {
     return info.changes > 0;
   }
 
-  /** Map row DB -> DeviceConfig */
-  private static rowToDevice(row: any): DeviceConfig {
+  /** Map row DB -> DeviceModel */
+  private static rowToDevice(row: any): DeviceModel {
     return {
       tagNumber: row.tagNumber,
       type: row.type,
       description: row.description,
       unit: row.unit ?? null,
-
-      ranges: JSON.parse(row.ranges),
-      alarms: JSON.parse(row.alarms),
-
       kind: row.kind ?? null,
-      allowedStates: fromJSON<string[]>(row.allowedStates) ?? null,
-      defaultState: row.defaultState ?? null,
       writable: intToBool(row.writable),
-
-      io: JSON.parse(row.io),
-      mqtt: JSON.parse(row.mqtt),
-
-      sample: fromJSON(row.sample),
-      display: fromJSON(row.display),
-
-      location: JSON.parse(row.location),
-      meta: JSON.parse(row.meta),
-
-      // runtime (opsional)
+      defaultState: row.defaultState ?? '',
+      state: row.state ?? undefined,
       value:
         row.value !== null && row.value !== undefined
           ? Number(row.value)
           : undefined,
-      state: row.state ?? undefined,
+
+      ranges_low: row.ranges_low ?? null,
+      ranges_high: row.ranges_high ?? null,
+
+      alarms_low: row.alarms_low ?? null,
+      alarms_high: row.alarms_high ?? null,
+
+      allowedStates: fromJSON<string[]>(row.allowedStates) ?? [],
+
+      io_bus: row.io_bus ?? 'adc',
+      io_pin: row.io_pin ?? null,
+      io_address: row.io_address ?? null,
+      io_channel: row.io_channel ?? null,
+
+      sample_periodMs: row.sample_periodMs ?? 1000,
+      sample_deadband: row.sample_deadband ?? 0,
+
+      display_precision: row.display_precision ?? 1,
+
+      location: fromJSON(row.location) ?? {},
+      mqtt: fromJSON(row.mqtt) ?? {},
+      meta: fromJSON(row.meta) ?? {},
     };
   }
 }

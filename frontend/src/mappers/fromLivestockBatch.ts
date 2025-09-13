@@ -1,4 +1,4 @@
-// frontend/src/mapper/fromLivestockBatch.ts
+// frontend/src/mappers/fromLivestockBatch.ts
 
 import type { LivestockBatch } from '@models/livestock-plant-batch.model';
 import type { GenericBatch } from '@models/generic-batch.model';
@@ -8,11 +8,11 @@ export function fromLivestockBatch(batch: LivestockBatch): GenericBatch {
     id: batch.id,
     itemId: batch.livestockId,
     domain: 'peternakan',
-    location: batch.pen,
+    location: batch.location,
     startDate: batch.startDate,
     expectedHarvestDate: batch.expectedHarvestDate,
-    initialCount: batch.initialCount,
-    currentCount: batch.currentCount,
+    initialCount: batch.initialPopulation,
+    currentCount: batch.currentPopulation,
     status: batch.status === 'Growing' ? 'Active' : batch.status,
     note: batch.note ?? '-',
   };

@@ -42,6 +42,23 @@ import { ApiUserRepository } from './api/ApiUserRepository';
 import { UserRepository } from './interfaces/UserRepository';
 import { MockUserRepository } from './mock/MockUserRepository';
 
+import { HarvestResultRepository } from './interfaces/HarvestResultRepository';
+import { MockHydroHarvestResultRepository } from './mock/MockHydroHarvestResultRepository';
+import { ApiHydroHarvestResultRepository } from './api/ApiHydroHarvestResultRepository';
+
+import { MockHortiHarvestResultRepository } from './mock/MockHortiHarvestResultRepository';
+import { ApiHortiHarvestResultRepository } from './api/ApiHortiHarvestResultRepository';
+
+import { MockAquaHarvestResultRepository } from './mock/MockAquaHarvestResultRepository';
+import { ApiAquaHarvestResultRepository } from './api/ApiAquaHarvestResultRepository';
+
+import { MockLivestockHarvestResultRepository } from './mock/MockLivestockHarvestResultRepository';
+import { ApiLivestockHarvestResultRepository } from './api/ApiLivestockHarvestResultRepository';
+
+export function getUserRepository(): UserRepository {
+  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
+}
+
 export function getDeviceRepository(): DeviceRepository {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
 }
@@ -91,6 +108,26 @@ export function getHydroponicBatchRepository(): HydroponicBatchRepository {
     : new ApiHydroponicBatchRepository();
 }
 
-export function getUserRepository(): UserRepository {
-  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
+export function getHortiHarvestResultRepository(): HarvestResultRepository {
+  return isMockMode()
+    ? new MockHortiHarvestResultRepository()
+    : new ApiHortiHarvestResultRepository();
+}
+
+export function getAquaHarvestResultRepository(): HarvestResultRepository {
+  return isMockMode()
+    ? new MockAquaHarvestResultRepository()
+    : new ApiAquaHarvestResultRepository();
+}
+
+export function getLivestockHarvestResultRepository(): HarvestResultRepository {
+  return isMockMode()
+    ? new MockLivestockHarvestResultRepository()
+    : new ApiLivestockHarvestResultRepository();
+}
+
+export function getHydroHarvestResultRepository(): HarvestResultRepository {
+  return isMockMode()
+    ? new MockHydroHarvestResultRepository()
+    : new ApiHydroHarvestResultRepository();
 }

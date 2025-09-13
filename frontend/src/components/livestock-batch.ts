@@ -62,8 +62,8 @@ export class LivestockBatchTable extends LitElement {
         <table class="table-auto border-collapse w-full text-sm text-left">
           <thead class="bg-amber-100 text-amber-900 text-sm font-semibold">
             <tr>
-              <th class="px-4 py-2">🐄 Batch</th>
-              <th class="px-4 py-2">🐮 Ternak</th>
+              <th class="px-4 py-2">🐔 Batch</th>
+              <th class="px-4 py-2">🐔 Ternak</th>
               <th class="px-4 py-2">📅 Mulai</th>
               <th class="px-4 py-2">🧺 Estimasi Panen</th>
               <th class="px-4 py-2 text-center">👥 Populasi</th>

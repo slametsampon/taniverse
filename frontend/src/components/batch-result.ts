@@ -60,7 +60,7 @@ export class BatchResultTable extends LitElement {
           </thead>
           <tbody>
             ${this.harvests.map((h) => {
-              const batch = batchMap[h.batchId];
+              const batch = batchMap[h.id];
               return html`
                 <tr class="hover:bg-gray-50 transition">
                   <td class="px-4 py-2">
@@ -70,7 +70,7 @@ export class BatchResultTable extends LitElement {
                       @click=${() => this.emitBatchClick(h.batchId, batch)}
                       title="Lihat detail batch"
                     >
-                      ${batch?.id ?? h.batchId}
+                      ${batch?.id ?? h.id}
                     </button>
                   </td>
                   <td class="px-4 py-2">${formatDate(h.harvestDate)}</td>

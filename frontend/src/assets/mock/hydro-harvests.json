@@ -1,0 +1,32 @@
+[
+  {
+    "id": "HYDRO-01",
+    "harvestDate": "2025-08-20",
+    "totalWeightG": 2600,
+    "pricePerKg": 12000,
+    "holesUsed": 40,
+    "totalCost": 20000,
+    "revenue": 31200,
+    "netProfit": 11200
+  },
+  {
+    "id": "HYDRO-02",
+    "harvestDate": "2025-08-28",
+    "totalWeightG": 3200,
+    "pricePerKg": 11000,
+    "holesUsed": 40,
+    "totalCost": 22000,
+    "revenue": 35200,
+    "netProfit": 13200
+  },
+  {
+    "id": "HYDRO-05",
+    "harvestDate": "2025-10-20",
+    "totalWeightG": 2800,
+    "pricePerKg": 15000,
+    "holesUsed": 15,
+    "totalCost": 18000,
+    "revenue": 42000,
+    "netProfit": 24000
+  }
+]

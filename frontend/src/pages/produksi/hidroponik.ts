@@ -15,6 +15,7 @@ import 'src/components/batch-result';
 import 'src/pages/produksi/views/hidroponik-devices';
 import { fetchAllPlants } from 'src/services/plant.service';
 import { fetchAllHydroponicBatches } from 'src/services/hydroponic-batch.service';
+import { fetchAllHydroHarvestResults } from 'src/services/hydro-harvest-result.service';
 
 @customElement('hidroponik-page')
 export class PageProduksiHidroponik extends LitElement {
@@ -32,7 +33,7 @@ export class PageProduksiHidroponik extends LitElement {
     const raw = (await fetchAllHydroponicBatches()) as HydroponicBatch[];
     this.plants = plants;
     this.batches = raw.map(fromHydroponicBatch);
-    this.harvests = await (await fetch('./assets/mock/harvests.json')).json();
+    this.harvests = await fetchAllHydroHarvestResults();
 
     console.groupCollapsed('[Hidroponik] mapped GenericBatch');
     console.table(
