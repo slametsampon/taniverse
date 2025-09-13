@@ -1720,7 +1720,348 @@ var init_MockUserRepository = __esm({
   }
 });
 
+// src/repositories/mock/MockHydroHarvestResultRepository.ts
+var MockHydroHarvestResultRepository;
+var init_MockHydroHarvestResultRepository = __esm({
+  "src/repositories/mock/MockHydroHarvestResultRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockHydroHarvestResultRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("hydro-harvests.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((result) => result.id === id);
+      }
+      async create(result) {
+        const all = await this.getAll();
+        all.push(result);
+      }
+      async update(id, result) {
+        const all = await this.getAll();
+        const index = all.findIndex((r6) => r6.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...result };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((r6) => r6.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiHydroHarvestResultRepository.ts
+var ApiHydroHarvestResultRepository;
+var init_ApiHydroHarvestResultRepository = __esm({
+  "src/repositories/api/ApiHydroHarvestResultRepository.ts"() {
+    "use strict";
+    ApiHydroHarvestResultRepository = class {
+      constructor() {
+        this.baseUrl = "/api/hydro-harvest-results";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch harvest results");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(result) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to create harvest result");
+      }
+      async update(id, result) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to update harvest result");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete harvest result");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockHortiHarvestResultRepository.ts
+var MockHortiHarvestResultRepository;
+var init_MockHortiHarvestResultRepository = __esm({
+  "src/repositories/mock/MockHortiHarvestResultRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockHortiHarvestResultRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("horti-harvests.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((result) => result.id === id);
+      }
+      async create(result) {
+        const all = await this.getAll();
+        all.push(result);
+      }
+      async update(id, result) {
+        const all = await this.getAll();
+        const index = all.findIndex((r6) => r6.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...result };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((r6) => r6.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiHortiHarvestResultRepository.ts
+var ApiHortiHarvestResultRepository;
+var init_ApiHortiHarvestResultRepository = __esm({
+  "src/repositories/api/ApiHortiHarvestResultRepository.ts"() {
+    "use strict";
+    ApiHortiHarvestResultRepository = class {
+      constructor() {
+        this.baseUrl = "/api/horti-harvest-results";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch harvest results");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(result) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to create harvest result");
+      }
+      async update(id, result) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to update harvest result");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete harvest result");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockAquaHarvestResultRepository.ts
+var MockAquaHarvestResultRepository;
+var init_MockAquaHarvestResultRepository = __esm({
+  "src/repositories/mock/MockAquaHarvestResultRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockAquaHarvestResultRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData("aqua-harvests.json");
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((result) => result.id === id);
+      }
+      async create(result) {
+        const all = await this.getAll();
+        all.push(result);
+      }
+      async update(id, result) {
+        const all = await this.getAll();
+        const index = all.findIndex((r6) => r6.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...result };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((r6) => r6.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiAquaHarvestResultRepository.ts
+var ApiAquaHarvestResultRepository;
+var init_ApiAquaHarvestResultRepository = __esm({
+  "src/repositories/api/ApiAquaHarvestResultRepository.ts"() {
+    "use strict";
+    ApiAquaHarvestResultRepository = class {
+      constructor() {
+        this.baseUrl = "/api/aqua-harvest-results";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch harvest results");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(result) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to create harvest result");
+      }
+      async update(id, result) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to update harvest result");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete harvest result");
+      }
+    };
+  }
+});
+
+// src/repositories/mock/MockLivestockHarvestResultRepository.ts
+var MockLivestockHarvestResultRepository;
+var init_MockLivestockHarvestResultRepository = __esm({
+  "src/repositories/mock/MockLivestockHarvestResultRepository.ts"() {
+    "use strict";
+    init_mock_data_service();
+    MockLivestockHarvestResultRepository = class {
+      constructor() {
+        this.cache = null;
+      }
+      async getAll() {
+        if (!this.cache) {
+          this.cache = await fetchMockData(
+            "livestock-harvests.json"
+          );
+        }
+        return this.cache;
+      }
+      async getById(id) {
+        const all = await this.getAll();
+        return all.find((result) => result.id === id);
+      }
+      async create(result) {
+        const all = await this.getAll();
+        all.push(result);
+      }
+      async update(id, result) {
+        const all = await this.getAll();
+        const index = all.findIndex((r6) => r6.id === id);
+        if (index !== -1) {
+          all[index] = { ...all[index], ...result };
+        }
+      }
+      async delete(id) {
+        const all = await this.getAll();
+        this.cache = all.filter((r6) => r6.id !== id);
+      }
+    };
+  }
+});
+
+// src/repositories/api/ApiLivestockHarvestResultRepository.ts
+var ApiLivestockHarvestResultRepository;
+var init_ApiLivestockHarvestResultRepository = __esm({
+  "src/repositories/api/ApiLivestockHarvestResultRepository.ts"() {
+    "use strict";
+    ApiLivestockHarvestResultRepository = class {
+      constructor() {
+        this.baseUrl = "/api/livestock-harvest-results";
+      }
+      async getAll() {
+        const res = await fetch(this.baseUrl);
+        if (!res.ok) throw new Error("Failed to fetch harvest results");
+        return await res.json();
+      }
+      async getById(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`);
+        if (!res.ok) return void 0;
+        return await res.json();
+      }
+      async create(result) {
+        const res = await fetch(this.baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to create harvest result");
+      }
+      async update(id, result) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(result)
+        });
+        if (!res.ok) throw new Error("Failed to update harvest result");
+      }
+      async delete(id) {
+        const res = await fetch(`${this.baseUrl}/${id}`, {
+          method: "DELETE"
+        });
+        if (!res.ok) throw new Error("Failed to delete harvest result");
+      }
+    };
+  }
+});
+
 // src/repositories/repository-factory.ts
+function getUserRepository() {
+  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
+}
 function getDeviceRepository() {
   return isMockMode() ? new MockDeviceRepository() : new ApiDeviceRepository();
 }
@@ -1748,8 +2089,17 @@ function getHortiBatchRepository() {
 function getHydroponicBatchRepository() {
   return isMockMode() ? new MockHydroponicBatchRepository() : new ApiHydroponicBatchRepository();
 }
-function getUserRepository() {
-  return isMockMode() ? new MockUserRepository() : new ApiUserRepository();
+function getHortiHarvestResultRepository() {
+  return isMockMode() ? new MockHortiHarvestResultRepository() : new ApiHortiHarvestResultRepository();
+}
+function getAquaHarvestResultRepository() {
+  return isMockMode() ? new MockAquaHarvestResultRepository() : new ApiAquaHarvestResultRepository();
+}
+function getLivestockHarvestResultRepository() {
+  return isMockMode() ? new MockLivestockHarvestResultRepository() : new ApiLivestockHarvestResultRepository();
+}
+function getHydroHarvestResultRepository() {
+  return isMockMode() ? new MockHydroHarvestResultRepository() : new ApiHydroHarvestResultRepository();
 }
 var init_repository_factory = __esm({
   "src/repositories/repository-factory.ts"() {
@@ -1775,6 +2125,14 @@ var init_repository_factory = __esm({
     init_ApiHydroponicBatchRepository();
     init_ApiUserRepository();
     init_MockUserRepository();
+    init_MockHydroHarvestResultRepository();
+    init_ApiHydroHarvestResultRepository();
+    init_MockHortiHarvestResultRepository();
+    init_ApiHortiHarvestResultRepository();
+    init_MockAquaHarvestResultRepository();
+    init_ApiAquaHarvestResultRepository();
+    init_MockLivestockHarvestResultRepository();
+    init_ApiLivestockHarvestResultRepository();
   }
 });
 
@@ -14025,10 +14383,10 @@ var init_devices_store = __esm({
         this.simulationInterval = window.setInterval(() => {
           this.devices.forEach((dev) => {
             if (dev.type === "sensor") {
-              const low = dev.ranges?.low ?? 20;
-              const high = dev.ranges?.high ?? 100;
+              const low = dev.alarms_low ?? dev.ranges_low;
+              const high = dev.alarms_high ?? dev.ranges_high;
               const mid = (low + high) / 2;
-              const deviation = 0.05 * mid;
+              const deviation = 0.25 * mid;
               const r6 = Math.random() * 2 - 1;
               const simulated = mid + r6 * deviation;
               dev.value = Number(simulated.toFixed(2));
@@ -14049,8 +14407,8 @@ var init_devices_store = __esm({
         const now = (/* @__PURE__ */ new Date()).toISOString();
         if (dev.type === "sensor") {
           const val = dev.value;
-          const lo = dev.alarms?.low ?? null;
-          const hi = dev.alarms?.high ?? null;
+          const lo = dev.alarms_low ?? null;
+          const hi = dev.alarms_high ?? null;
           const valueStatus = val === null || val === void 0 ? "sensor-fail" : lo !== null && val < lo ? "low-alarm" : hi !== null && val > hi ? "high-alarm" : "normal";
           dev.status = {
             mqtt: this.mqttClient ? "connected" : "disconnected",
@@ -14942,7 +15300,7 @@ var init_batch_result = __esm({
           </thead>
           <tbody>
             ${this.harvests.map((h3) => {
-          const batch = batchMap[h3.batchId];
+          const batch = batchMap[h3.id];
           return x`
                 <tr class="hover:bg-gray-50 transition">
                   <td class="px-4 py-2">
@@ -14952,7 +15310,7 @@ var init_batch_result = __esm({
                       @click=${() => this.emitBatchClick(h3.batchId, batch)}
                       title="Lihat detail batch"
                     >
-                      ${batch?.id ?? h3.batchId}
+                      ${batch?.id ?? h3.id}
                     </button>
                   </td>
                   <td class="px-4 py-2">${formatDate(h3.harvestDate)}</td>
@@ -15177,6 +15535,17 @@ var init_hydroponic_batch_service = __esm({
   }
 });
 
+// src/services/hydro-harvest-result.service.ts
+var repo5, fetchAllHydroHarvestResults;
+var init_hydro_harvest_result_service = __esm({
+  "src/services/hydro-harvest-result.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo5 = getHydroHarvestResultRepository();
+    fetchAllHydroHarvestResults = () => repo5.getAll();
+  }
+});
+
 // src/pages/produksi/hidroponik.ts
 var hidroponik_exports = {};
 __export(hidroponik_exports, {
@@ -15196,6 +15565,7 @@ var init_hidroponik = __esm({
     init_hidroponik_devices();
     init_plant_service();
     init_hydroponic_batch_service();
+    init_hydro_harvest_result_service();
     PageProduksiHidroponik = class extends i4 {
       constructor() {
         super(...arguments);
@@ -15247,7 +15617,7 @@ var init_hidroponik = __esm({
         const raw = await fetchAllHydroponicBatches();
         this.plants = plants;
         this.batches = raw.map(fromHydroponicBatch);
-        this.harvests = await (await fetch("./assets/mock/harvests.json")).json();
+        this.harvests = await fetchAllHydroHarvestResults();
         console.groupCollapsed("[Hidroponik] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -15544,13 +15914,24 @@ var init_plant_batch = __esm({
 });
 
 // src/services/horti-batch.service.ts
-var repo5, fetchAllHortiBatches;
+var repo6, fetchAllHortiBatches;
 var init_horti_batch_service = __esm({
   "src/services/horti-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo5 = getHortiBatchRepository();
-    fetchAllHortiBatches = () => repo5.getAll();
+    repo6 = getHortiBatchRepository();
+    fetchAllHortiBatches = () => repo6.getAll();
+  }
+});
+
+// src/services/horti-harvest-result.service.ts
+var repo7, fetchAllHortiHarvestResults;
+var init_horti_harvest_result_service = __esm({
+  "src/services/horti-harvest-result.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo7 = getHortiHarvestResultRepository();
+    fetchAllHortiHarvestResults = () => repo7.getAll();
   }
 });
 
@@ -15571,6 +15952,7 @@ var init_hortikultura = __esm({
     init_entity_detail_dialog();
     init_plant_service();
     init_horti_batch_service();
+    init_horti_harvest_result_service();
     PageProduksiHortikultura = class extends i4 {
       constructor() {
         super(...arguments);
@@ -15620,11 +16002,10 @@ var init_hortikultura = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        const plants = await fetchAllPlants();
         const rawBatches = await fetchAllHortiBatches();
-        this.plants = plants;
         this.batches = rawBatches.map(fromPlantingBatch);
-        this.harvests = await (await fetch("./assets/mock/horti-harvests.json")).json();
+        this.plants = await fetchAllPlants();
+        this.harvests = await fetchAllHortiHarvestResults();
         console.groupCollapsed("[Horti] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -15688,7 +16069,7 @@ function fromAquaticBatch(batch) {
     id: batch.id,
     itemId: batch.speciesId,
     domain: "akuakultur",
-    location: batch.pond,
+    location: batch.location,
     startDate: batch.startDate,
     expectedHarvestDate: batch.expectedHarvestDate,
     initialCount: batch.initialPopulation,
@@ -15704,31 +16085,42 @@ var init_fromAquaticBatch = __esm({
 });
 
 // src/services/aquatic-batch.service.ts
-var repo6, fetchAllAquaticBatches;
+var repo8, fetchAllAquaticBatches;
 var init_aquatic_batch_service = __esm({
   "src/services/aquatic-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo6 = getAquaticBatchRepository();
-    fetchAllAquaticBatches = () => repo6.getAll();
+    repo8 = getAquaticBatchRepository();
+    fetchAllAquaticBatches = () => repo8.getAll();
   }
 });
 
 // src/services/aquatic-species.service.ts
-var repo7, fetchAllAquaticSpecies;
+var repo9, fetchAllAquaticSpecies;
 var init_aquatic_species_service = __esm({
   "src/services/aquatic-species.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo7 = getAquaticSpeciesRepository();
-    fetchAllAquaticSpecies = () => repo7.getAll();
+    repo9 = getAquaticSpeciesRepository();
+    fetchAllAquaticSpecies = () => repo9.getAll();
   }
 });
 
-// src/components/aquaculture-batch.ts
+// src/services/aqua-harvest-result.service.ts
+var repo10, fetchAllAquaHarvestResults;
+var init_aqua_harvest_result_service = __esm({
+  "src/services/aqua-harvest-result.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo10 = getAquaHarvestResultRepository();
+    fetchAllAquaHarvestResults = () => repo10.getAll();
+  }
+});
+
+// src/components/aquatic-batch.ts
 var AquaticBatchTable;
-var init_aquaculture_batch = __esm({
-  "src/components/aquaculture-batch.ts"() {
+var init_aquatic_batch = __esm({
+  "src/components/aquatic-batch.ts"() {
     "use strict";
     init_lit();
     init_decorators();
@@ -15942,7 +16334,8 @@ var init_akuakultur = __esm({
     init_fromAquaticBatch();
     init_aquatic_batch_service();
     init_aquatic_species_service();
-    init_aquaculture_batch();
+    init_aqua_harvest_result_service();
+    init_aquatic_batch();
     init_entity_detail_dialog();
     init_aquakultur_devices();
     PageProduksiAkuakultur = class extends i4 {
@@ -15995,7 +16388,7 @@ var init_akuakultur = __esm({
         super.connectedCallback();
         const raw = await fetchAllAquaticBatches();
         const species = await fetchAllAquaticSpecies();
-        this.harvests = await (await fetch("./assets/mock/aqua-harvests.json")).json();
+        this.harvests = await fetchAllAquaHarvestResults();
         this.species = species;
         this.batches = raw.map(fromAquaticBatch);
       }
@@ -16049,11 +16442,11 @@ function fromLivestockBatch(batch) {
     id: batch.id,
     itemId: batch.livestockId,
     domain: "peternakan",
-    location: batch.pen,
+    location: batch.location,
     startDate: batch.startDate,
     expectedHarvestDate: batch.expectedHarvestDate,
-    initialCount: batch.initialCount,
-    currentCount: batch.currentCount,
+    initialCount: batch.initialPopulation,
+    currentCount: batch.currentPopulation,
     status: batch.status === "Growing" ? "Active" : batch.status,
     note: batch.note ?? "-"
   };
@@ -16124,8 +16517,8 @@ var init_livestock_batch = __esm({
         <table class="table-auto border-collapse w-full text-sm text-left">
           <thead class="bg-amber-100 text-amber-900 text-sm font-semibold">
             <tr>
-              <th class="px-4 py-2">🐄 Batch</th>
-              <th class="px-4 py-2">🐮 Ternak</th>
+              <th class="px-4 py-2">🐔 Batch</th>
+              <th class="px-4 py-2">🐔 Ternak</th>
               <th class="px-4 py-2">📅 Mulai</th>
               <th class="px-4 py-2">🧺 Estimasi Panen</th>
               <th class="px-4 py-2 text-center">👥 Populasi</th>
@@ -16269,24 +16662,35 @@ var init_peternakan_devices = __esm({
 });
 
 // src/services/livestock.service.ts
-var repo8, fetchAllLivestock;
+var repo11, fetchAllLivestock;
 var init_livestock_service = __esm({
   "src/services/livestock.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo8 = getLivestockRepository();
-    fetchAllLivestock = () => repo8.getAll();
+    repo11 = getLivestockRepository();
+    fetchAllLivestock = () => repo11.getAll();
   }
 });
 
 // src/services/livestock-batch.service.ts
-var repo9, fetchAllLivestockBatches;
+var repo12, fetchAllLivestockBatches;
 var init_livestock_batch_service = __esm({
   "src/services/livestock-batch.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo9 = getLivestockBatchRepository();
-    fetchAllLivestockBatches = () => repo9.getAll();
+    repo12 = getLivestockBatchRepository();
+    fetchAllLivestockBatches = () => repo12.getAll();
+  }
+});
+
+// src/services/livestock-harvest-result.service.ts
+var repo13, fetchAllLivestockHarvestResults;
+var init_livestock_harvest_result_service = __esm({
+  "src/services/livestock-harvest-result.service.ts"() {
+    "use strict";
+    init_repository_factory();
+    repo13 = getLivestockHarvestResultRepository();
+    fetchAllLivestockHarvestResults = () => repo13.getAll();
   }
 });
 
@@ -16309,6 +16713,7 @@ var init_peternakan = __esm({
     init_peternakan_devices();
     init_livestock_service();
     init_livestock_batch_service();
+    init_livestock_harvest_result_service();
     PeternakanPage = class extends i4 {
       constructor() {
         super(...arguments);
@@ -16363,7 +16768,7 @@ var init_peternakan = __esm({
         const raw = await fetchAllLivestockBatches();
         this.animals = animals;
         this.batches = raw.map(fromLivestockBatch);
-        this.harvests = await (await fetch("./assets/mock/livestock-harvests.json")).json();
+        this.harvests = await fetchAllLivestockHarvestResults();
         console.groupCollapsed("[Peternakan] mapped GenericBatch");
         console.table(
           this.batches.map((b3) => ({
@@ -16380,7 +16785,7 @@ var init_peternakan = __esm({
         const cardStyle = "display:block;margin-top:1.5rem;margin-bottom:1.5rem;";
         return x`
       <section class="p-4 space-y-4">
-        <h1 class="text-2xl font-bold">🐄 Produksi Peternakan</h1>
+        <h1 class="text-2xl font-bold">🐔 Produksi Peternakan</h1>
 
         <livestock-batch
           .batches=${this.batches}
@@ -16451,13 +16856,13 @@ var init_color_utils = __esm({
 });
 
 // src/services/event.service.ts
-var repo10, fetchAllEvents;
+var repo14, fetchAllEvents;
 var init_event_service = __esm({
   "src/services/event.service.ts"() {
     "use strict";
     init_repository_factory();
-    repo10 = getEventRepository();
-    fetchAllEvents = () => repo10.getAll();
+    repo14 = getEventRepository();
+    fetchAllEvents = () => repo14.getAll();
   }
 });
 
@@ -16713,8 +17118,8 @@ var init_dashboard = __esm({
       }
       renderProduksiContent() {
         return x`
-      <div class="mb-4">
-        <label class="block mb-2 text-sm font-medium text-gray-700">
+      <div class="mt-4 mb-4">
+        <label class="block mb-2 text-lg font-medium text-gray-700">
           Pilih Domain Produksi:
         </label>
         <select
@@ -20600,7 +21005,7 @@ var AppFooter = class extends i4 {
       <footer>
         <div class="container">
           <div>
-            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.2"}. All
+            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.3"}. All
             rights reserved.
           </div>
           <div>
