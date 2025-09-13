@@ -1,6 +1,9 @@
+var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
 };
@@ -8,10 +11,29 @@ var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { en
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
+var __commonJS = (cb2, mod) => function __require() {
+  return mod || (0, cb2[__getOwnPropNames(cb2)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
 var __export = (target, all) => {
   for (var name2 in all)
     __defProp(target, name2, { get: all[name2], enumerable: true });
 };
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __decorateClass = (decorators, target, key, kind) => {
   var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc(target, key) : target;
   for (var i6 = decorators.length - 1, decorator; i6 >= 0; i6--)
@@ -1165,15 +1187,40 @@ var init_ApiPlantRepository = __esm({
   }
 });
 
+// src/services/event-buffer.service.ts
+function pushEvent(e8) {
+  buffer.unshift(e8);
+  if (buffer.length > 1e3) buffer.pop();
+  listeners.forEach((cb2) => cb2(e8));
+}
+function getBufferedEvents() {
+  return [...buffer];
+}
+function onEvent(cb2) {
+  listeners.add(cb2);
+  return () => listeners.delete(cb2);
+}
+var buffer, listeners;
+var init_event_buffer_service = __esm({
+  "src/services/event-buffer.service.ts"() {
+    "use strict";
+    buffer = [];
+    listeners = /* @__PURE__ */ new Set();
+  }
+});
+
 // src/repositories/mock/MockEventRepository.ts
 var MockEventRepository;
 var init_MockEventRepository = __esm({
   "src/repositories/mock/MockEventRepository.ts"() {
     "use strict";
     init_mock_data_service();
+    init_event_buffer_service();
     MockEventRepository = class {
       async getAll() {
-        return await fetchMockData("event.json");
+        const base = await fetchMockData("event.json");
+        const dynamic = getBufferedEvents();
+        return [...dynamic, ...base];
       }
       async getById(id) {
         const all = await this.getAll();
@@ -14298,6 +14345,280 @@ var init_mqtt_service = __esm({
   }
 });
 
+// ../node_modules/uuid/lib/rng-browser.js
+var require_rng_browser = __commonJS({
+  "../node_modules/uuid/lib/rng-browser.js"(exports, module) {
+    "use strict";
+    var getRandomValues = typeof crypto != "undefined" && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto != "undefined" && typeof window.msCrypto.getRandomValues == "function" && msCrypto.getRandomValues.bind(msCrypto);
+    if (getRandomValues) {
+      rnds8 = new Uint8Array(16);
+      module.exports = function whatwgRNG() {
+        getRandomValues(rnds8);
+        return rnds8;
+      };
+    } else {
+      rnds = new Array(16);
+      module.exports = function mathRNG() {
+        for (var i6 = 0, r6; i6 < 16; i6++) {
+          if ((i6 & 3) === 0) r6 = Math.random() * 4294967296;
+          rnds[i6] = r6 >>> ((i6 & 3) << 3) & 255;
+        }
+        return rnds;
+      };
+    }
+    var rnds8;
+    var rnds;
+  }
+});
+
+// ../node_modules/uuid/lib/bytesToUuid.js
+var require_bytesToUuid = __commonJS({
+  "../node_modules/uuid/lib/bytesToUuid.js"(exports, module) {
+    "use strict";
+    var byteToHex = [];
+    for (i6 = 0; i6 < 256; ++i6) {
+      byteToHex[i6] = (i6 + 256).toString(16).substr(1);
+    }
+    var i6;
+    function bytesToUuid(buf, offset) {
+      var i7 = offset || 0;
+      var bth = byteToHex;
+      return [
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        "-",
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        "-",
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        "-",
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        "-",
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]],
+        bth[buf[i7++]]
+      ].join("");
+    }
+    module.exports = bytesToUuid;
+  }
+});
+
+// ../node_modules/uuid/v1.js
+var require_v1 = __commonJS({
+  "../node_modules/uuid/v1.js"(exports, module) {
+    "use strict";
+    var rng = require_rng_browser();
+    var bytesToUuid = require_bytesToUuid();
+    var _nodeId;
+    var _clockseq;
+    var _lastMSecs = 0;
+    var _lastNSecs = 0;
+    function v1(options, buf, offset) {
+      var i6 = buf && offset || 0;
+      var b3 = buf || [];
+      options = options || {};
+      var node = options.node || _nodeId;
+      var clockseq = options.clockseq !== void 0 ? options.clockseq : _clockseq;
+      if (node == null || clockseq == null) {
+        var seedBytes = rng();
+        if (node == null) {
+          node = _nodeId = [
+            seedBytes[0] | 1,
+            seedBytes[1],
+            seedBytes[2],
+            seedBytes[3],
+            seedBytes[4],
+            seedBytes[5]
+          ];
+        }
+        if (clockseq == null) {
+          clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 16383;
+        }
+      }
+      var msecs = options.msecs !== void 0 ? options.msecs : (/* @__PURE__ */ new Date()).getTime();
+      var nsecs = options.nsecs !== void 0 ? options.nsecs : _lastNSecs + 1;
+      var dt = msecs - _lastMSecs + (nsecs - _lastNSecs) / 1e4;
+      if (dt < 0 && options.clockseq === void 0) {
+        clockseq = clockseq + 1 & 16383;
+      }
+      if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === void 0) {
+        nsecs = 0;
+      }
+      if (nsecs >= 1e4) {
+        throw new Error("uuid.v1(): Can't create more than 10M uuids/sec");
+      }
+      _lastMSecs = msecs;
+      _lastNSecs = nsecs;
+      _clockseq = clockseq;
+      msecs += 122192928e5;
+      var tl2 = ((msecs & 268435455) * 1e4 + nsecs) % 4294967296;
+      b3[i6++] = tl2 >>> 24 & 255;
+      b3[i6++] = tl2 >>> 16 & 255;
+      b3[i6++] = tl2 >>> 8 & 255;
+      b3[i6++] = tl2 & 255;
+      var tmh = msecs / 4294967296 * 1e4 & 268435455;
+      b3[i6++] = tmh >>> 8 & 255;
+      b3[i6++] = tmh & 255;
+      b3[i6++] = tmh >>> 24 & 15 | 16;
+      b3[i6++] = tmh >>> 16 & 255;
+      b3[i6++] = clockseq >>> 8 | 128;
+      b3[i6++] = clockseq & 255;
+      for (var n6 = 0; n6 < 6; ++n6) {
+        b3[i6 + n6] = node[n6];
+      }
+      return buf ? buf : bytesToUuid(b3);
+    }
+    module.exports = v1;
+  }
+});
+
+// ../node_modules/uuid/v4.js
+var require_v4 = __commonJS({
+  "../node_modules/uuid/v4.js"(exports, module) {
+    "use strict";
+    var rng = require_rng_browser();
+    var bytesToUuid = require_bytesToUuid();
+    function v4(options, buf, offset) {
+      var i6 = buf && offset || 0;
+      if (typeof options == "string") {
+        buf = options === "binary" ? new Array(16) : null;
+        options = null;
+      }
+      options = options || {};
+      var rnds = options.random || (options.rng || rng)();
+      rnds[6] = rnds[6] & 15 | 64;
+      rnds[8] = rnds[8] & 63 | 128;
+      if (buf) {
+        for (var ii = 0; ii < 16; ++ii) {
+          buf[i6 + ii] = rnds[ii];
+        }
+      }
+      return buf || bytesToUuid(rnds);
+    }
+    module.exports = v4;
+  }
+});
+
+// ../node_modules/uuid/index.js
+var require_uuid = __commonJS({
+  "../node_modules/uuid/index.js"(exports, module) {
+    "use strict";
+    var v1 = require_v1();
+    var v4 = require_v4();
+    var uuid = v4;
+    uuid.v1 = v1;
+    uuid.v4 = v4;
+    module.exports = uuid;
+  }
+});
+
+// src/components/events/event-logger.ts
+function createEvent(event) {
+  return {
+    ...event,
+    id: (0, import_uuid.v4)(),
+    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+var import_uuid;
+var init_event_logger = __esm({
+  "src/components/events/event-logger.ts"() {
+    "use strict";
+    import_uuid = __toESM(require_uuid());
+  }
+});
+
+// src/components/events/device-events.ts
+function checkDeviceAlarm(sourceId, field, newValue, threshold, prevValue) {
+  if (newValue < threshold.min || newValue > threshold.max) {
+    return createEvent({
+      sourceType: "device",
+      sourceId,
+      eventType: "alarm",
+      field,
+      prevValue,
+      newValue,
+      triggeredBy: "system",
+      description: `ALARM: ${newValue.toFixed(1)} is outside threshold [${threshold.min} - ${threshold.max}]`
+    });
+  }
+  return null;
+}
+function createDeviceEvent(params) {
+  return createEvent({
+    sourceType: "device",
+    sourceId: params.deviceId,
+    eventType: "create",
+    field: "all",
+    prevValue: void 0,
+    newValue: JSON.stringify(params.newValue),
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Perangkat baru dibuat: ${params.deviceId}`
+  });
+}
+function updateDeviceEvents(params) {
+  const { deviceId, prevValue = {}, newValue = {}, triggeredBy } = params;
+  const events = [];
+  const skipFields = ["meta", "status"];
+  Object.keys(newValue).forEach((key) => {
+    if (skipFields.includes(key)) {
+      console.log(`\u23ED\uFE0F Skip field: ${key}`);
+      return;
+    }
+    let before = prevValue[key];
+    let after = newValue[key];
+    const norm = (v2) => typeof v2 === "string" && v2.trim() !== "" && !isNaN(Number(v2)) ? Number(v2) : v2;
+    before = norm(before);
+    after = norm(after);
+    console.log(`\u{1F50D} Field=${key}`, "Before=", before, "After=", after);
+    if (before !== after) {
+      console.log(`\u2705 Changed: ${key}`);
+      const safeBefore = typeof before === "object" ? JSON.stringify(before) : before;
+      const safeAfter = typeof after === "object" ? JSON.stringify(after) : after;
+      events.push(
+        createEvent({
+          sourceType: "device",
+          sourceId: deviceId,
+          eventType: "update",
+          field: key,
+          prevValue: safeBefore,
+          newValue: safeAfter,
+          triggeredBy: triggeredBy ?? "system",
+          description: `Field "${key}" berubah dari "${safeBefore}" \u2192 "${safeAfter}"`
+        })
+      );
+    }
+  });
+  console.log("Generated Events:", events);
+  console.groupEnd();
+  return events;
+}
+function deleteDeviceEvent(params) {
+  return createEvent({
+    sourceType: "device",
+    sourceId: params.deviceId,
+    eventType: "delete",
+    field: "all",
+    prevValue: JSON.stringify(params.prevValue),
+    newValue: void 0,
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Perangkat dihapus: ${params.deviceId}`
+  });
+}
+var init_device_events = __esm({
+  "src/components/events/device-events.ts"() {
+    "use strict";
+    init_event_logger();
+  }
+});
+
 // src/services/devices-store.ts
 function parseValue(s7) {
   if (/^-?\d+(\.\d+)?$/.test(s7)) return Number(s7);
@@ -14318,6 +14639,9 @@ var init_devices_store = __esm({
     init_mqtt_service();
     init_mode();
     init_repository_factory();
+    init_device_events();
+    init_event_buffer_service();
+    init_event_logger();
     DevicesStore = class {
       constructor() {
         this.devices = /* @__PURE__ */ new Map();
@@ -14325,6 +14649,9 @@ var init_devices_store = __esm({
         this.ready = false;
         this.mqttClient = null;
         this.repo = getDeviceRepository();
+        this.lastStatus = /* @__PURE__ */ new Map();
+        this.lastValues = /* @__PURE__ */ new Map();
+        this.lastMode = null;
       }
       // ===== INIT =====
       async init(force = false) {
@@ -14332,6 +14659,20 @@ var init_devices_store = __esm({
         this.devices.clear();
         this.stopSimulation();
         const mode = getMode();
+        if (this.lastMode && this.lastMode !== mode) {
+          const ev = createEvent({
+            sourceType: "device",
+            sourceId: "DevicesStore",
+            eventType: "connection",
+            field: "mode",
+            prevValue: this.lastMode,
+            newValue: mode,
+            triggeredBy: "system",
+            description: `Perpindahan mode: ${this.lastMode.toUpperCase()} \u2192 ${mode.toUpperCase()}`
+          });
+          pushEvent(ev);
+        }
+        this.lastMode = mode;
         await this.loadFromRepository();
         if (mode === "mqtt") {
           await this.connectMqtt();
@@ -14386,7 +14727,7 @@ var init_devices_store = __esm({
               const low = dev.alarms_low ?? dev.ranges_low;
               const high = dev.alarms_high ?? dev.ranges_high;
               const mid = (low + high) / 2;
-              const deviation = 0.25 * mid;
+              const deviation = 0.165 * mid;
               const r6 = Math.random() * 2 - 1;
               const simulated = mid + r6 * deviation;
               dev.value = Number(simulated.toFixed(2));
@@ -14428,6 +14769,31 @@ var init_devices_store = __esm({
             lastSeen: now
           };
         }
+        const prevVal = this.lastValues.get(dev.tagNumber) ?? dev.value ?? 0;
+        const currVal = dev.value ?? 0;
+        const prevStatus = this.lastStatus.get(dev.tagNumber);
+        const currStatus = dev.status?.valueStatus;
+        if (currStatus === "low-alarm" || currStatus === "high-alarm") {
+          if (prevStatus !== currStatus) {
+            const alarmEvent = checkDeviceAlarm(
+              dev.tagNumber,
+              "sensor",
+              currVal,
+              {
+                min: dev.alarms_low ?? dev.ranges_low ?? 0,
+                max: dev.alarms_high ?? dev.ranges_high ?? 100
+              },
+              prevVal
+              // ✅ nilai lama, bukan current
+            );
+            if (alarmEvent) {
+              pushEvent(alarmEvent);
+              console.warn("[Event] \u{1F514} Alarm generated:", alarmEvent);
+            }
+          }
+        }
+        this.lastStatus.set(dev.tagNumber, currStatus);
+        this.lastValues.set(dev.tagNumber, currVal);
       }
       // ===== Public API =====
       onChange(cb2) {
@@ -16828,33 +17194,6 @@ var init_peternakan = __esm({
   }
 });
 
-// src/utils/color.utils.ts
-function getRowColor(eventType) {
-  switch (eventType.toUpperCase()) {
-    case "ALARM_HI":
-    case "ALARMHI":
-    case "ALARM-HI":
-      return "bg-red-100 text-red-800";
-    case "ALARM_LO":
-    case "ALARMLOW":
-    case "ALARM-LO":
-      return "bg-blue-100 text-blue-800";
-    case "STATUS":
-      return "bg-green-100 text-green-800";
-    case "ERROR":
-      return "bg-yellow-100 text-yellow-900";
-    case "INFO":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-white";
-  }
-}
-var init_color_utils = __esm({
-  "src/utils/color.utils.ts"() {
-    "use strict";
-  }
-});
-
 // src/services/event.service.ts
 var repo14, fetchAllEvents;
 var init_event_service = __esm({
@@ -16866,20 +17205,250 @@ var init_event_service = __esm({
   }
 });
 
-// src/components/event-table.ts
-var EventTable;
-var init_event_table = __esm({
-  "src/components/event-table.ts"() {
+// src/utils/color.utils.ts
+function getRowColor(eventType) {
+  switch (eventType) {
+    case "alarm":
+      return "bg-red-100 text-red-800";
+    case "update":
+      return "bg-yellow-50 text-yellow-800";
+    case "create":
+      return "bg-green-100 text-green-800";
+    case "delete":
+      return "bg-gray-300 text-gray-800";
+    case "action":
+      return "bg-blue-100 text-blue-800";
+    case "status":
+      return "bg-blue-50 text-blue-800";
+    case "error":
+      return "bg-pink-100 text-pink-800";
+    case "info":
+      return "bg-gray-100 text-gray-700";
+    default:
+      return "";
+  }
+}
+var init_color_utils = __esm({
+  "src/utils/color.utils.ts"() {
+    "use strict";
+  }
+});
+
+// src/schema/event-columns.ts
+var eventColumns;
+var init_event_columns = __esm({
+  "src/schema/event-columns.ts"() {
+    "use strict";
+    init_lit();
+    eventColumns = [
+      {
+        key: "timestamp",
+        label: "Time",
+        render: (e8) => new Date(e8.timestamp).toLocaleString("sv-SE").replace("T", " ")
+      },
+      {
+        key: "sourceId",
+        label: "Source",
+        render: (e8) => `${e8.sourceType}:${e8.sourceId}`
+      },
+      {
+        key: "eventType",
+        label: "Type",
+        render: (e8) => e8.eventType.toUpperCase()
+      },
+      {
+        key: "field",
+        label: "Field"
+      },
+      {
+        key: "valueChange",
+        label: "Change",
+        render: (e8) => e8.prevValue !== void 0 && e8.newValue !== void 0 ? x`<span class="font-mono">${e8.prevValue} → ${e8.newValue}</span>` : "-"
+      },
+      {
+        key: "triggeredBy",
+        label: "By"
+      },
+      {
+        key: "description",
+        label: "Description"
+      }
+    ];
+  }
+});
+
+// src/components/event-filter.ts
+var EventFilter;
+var init_event_filter = __esm({
+  "src/components/event-filter.ts"() {
     "use strict";
     init_lit();
     init_decorators();
-    init_color_utils();
+    EventFilter = class extends i4 {
+      constructor() {
+        super(...arguments);
+        this.filters = {
+          sourceType: "",
+          eventType: "",
+          startTime: "",
+          endTime: ""
+        };
+        this.internal = { ...this.filters };
+      }
+      createRenderRoot() {
+        return this;
+      }
+      updated(changed) {
+        if (changed.has("filters")) {
+          this.internal = { ...this.filters };
+        }
+      }
+      emitFilterChanged() {
+        this.dispatchEvent(
+          new CustomEvent("filter-changed", {
+            detail: { ...this.internal },
+            bubbles: true,
+            composed: true
+          })
+        );
+      }
+      handleInput(e8) {
+        const el2 = e8.target;
+        const name2 = el2.name;
+        const value = el2.value;
+        this.internal = { ...this.internal, [name2]: value };
+        this.emitFilterChanged();
+      }
+      resetTime() {
+        this.internal = {
+          ...this.internal,
+          startTime: "",
+          endTime: ""
+        };
+        this.emitFilterChanged();
+        const startInput = this.renderRoot.querySelector(
+          'input[name="startTime"]'
+        );
+        const endInput = this.renderRoot.querySelector(
+          'input[name="endTime"]'
+        );
+        if (startInput) startInput.value = "";
+        if (endInput) endInput.value = "";
+      }
+      render() {
+        return x`
+      <div class="mb-4 flex flex-wrap gap-4 items-end text-sm">
+        <!-- Source Type -->
+        <div class="flex flex-col min-w-[160px]">
+          <label class="text-xs font-bold text-gray-600 mb-1"
+            >Source Type</label
+          >
+          <select
+            name="sourceType"
+            class="border border-gray-300 px-3 py-1 rounded"
+            @change=${this.handleInput}
+            .value=${this.internal.sourceType}
+          >
+            <option value="">All Sources</option>
+            <option value="device">Device</option>
+            <option value="batch">Batch</option>
+            <option value="user">User</option>
+          </select>
+        </div>
+
+        <!-- Event Type -->
+        <div class="flex flex-col min-w-[160px]">
+          <label class="text-xs font-bold text-gray-600 mb-1">Event Type</label>
+          <select
+            name="eventType"
+            class="border border-gray-300 px-3 py-1 rounded"
+            @change=${this.handleInput}
+            .value=${this.internal.eventType}
+          >
+            <option value="">All Types</option>
+            <option value="create">Create</option>
+            <option value="update">Update</option>
+            <option value="delete">Delete</option>
+            <option value="alarm">Alarm</option>
+            <option value="connection">Connection</option>
+            <option value="action">Action</option>
+            <option value="status">Status</option>
+            <option value="error">Error</option>
+            <option value="info">Info</option>
+          </select>
+        </div>
+
+        <!-- Time Range -->
+        <div class="flex flex-row gap-4">
+          <!-- Start -->
+          <div class="flex flex-col min-w-[180px]">
+            <label class="text-xs font-bold text-gray-600 mb-1"
+              >Start Time</label
+            >
+            <input
+              name="startTime"
+              type="datetime-local"
+              class="border border-gray-300 px-3 py-1 rounded"
+              @change=${this.handleInput}
+              .value=${this.internal.startTime}
+            />
+          </div>
+
+          <!-- End -->
+          <div class="flex flex-col min-w-[180px]">
+            <label class="text-xs font-bold text-gray-600 mb-1">End Time</label>
+            <input
+              name="endTime"
+              type="datetime-local"
+              class="border border-gray-300 px-3 py-1 rounded"
+              @change=${this.handleInput}
+              .value=${this.internal.endTime}
+            />
+          </div>
+
+          <!-- Reset Button -->
+          <div class="flex flex-col justify-end">
+            <button
+              class="h-[38px] px-3 bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded"
+              @click=${this.resetTime}
+            >
+              Reset Time
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+      }
+    };
+    __decorateClass([
+      n4({ type: Object })
+    ], EventFilter.prototype, "filters", 2);
+    __decorateClass([
+      r5()
+    ], EventFilter.prototype, "internal", 2);
+    EventFilter = __decorateClass([
+      t3("event-filter")
+    ], EventFilter);
+  }
+});
+
+// src/components/events/event-table.ts
+var EventTable;
+var init_event_table = __esm({
+  "src/components/events/event-table.ts"() {
+    "use strict";
+    init_lit();
+    init_decorators();
     init_event_service();
+    init_color_utils();
+    init_event_columns();
+    init_event_buffer_service();
+    init_event_filter();
     EventTable = class extends i4 {
       constructor() {
         super(...arguments);
         this.events = [];
-        this.filterId = "";
+        this.filterSource = "";
         this.filterType = "";
         this.filterStartTime = "";
         this.filterEndTime = "";
@@ -16890,170 +17459,126 @@ var init_event_table = __esm({
       }
       async connectedCallback() {
         super.connectedCallback();
-        await this.loadMockEvents();
+        await this.loadEvents();
+        this.unsubscribe = onEvent((newEvent) => {
+          this.events = [newEvent, ...this.events];
+          this.highlightedKey = this.getKey(newEvent);
+          setTimeout(() => this.highlightedKey = "", 3e3);
+        });
       }
-      async loadMockEvents() {
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this.unsubscribe?.();
+      }
+      async loadEvents() {
         try {
           const data = await fetchAllEvents();
-          const prevKey = this.events[0] ? this.getEventKey(this.events[0]) : "";
-          const newKey = data[0] ? this.getEventKey(data[0]) : "";
+          const prevKey = this.events[0] ? this.getKey(this.events[0]) : "";
+          const newKey = data[0] ? this.getKey(data[0]) : "";
           this.events = data;
           if (newKey && newKey !== prevKey) {
             this.highlightedKey = newKey;
             setTimeout(() => this.highlightedKey = "", 3e3);
           }
         } catch (err) {
-          console.error("Load failed:", err);
+          console.error("Failed to load events:", err);
         }
       }
-      getEventKey(e8) {
+      getKey(e8) {
         return `${e8.timestamp}_${e8.id}`;
       }
       formatDateTime(ts) {
-        const date = new Date(ts);
-        return date.toLocaleString("sv-SE").replace("T", " ");
+        return new Date(ts).toLocaleString("sv-SE").replace("T", " ");
       }
       get filteredEvents() {
         const start = this.filterStartTime ? new Date(this.filterStartTime).getTime() : null;
         const end = this.filterEndTime ? new Date(this.filterEndTime).getTime() : null;
         return this.events.filter((e8) => {
-          const eventTime = new Date(e8.timestamp).getTime();
-          const matchId = !this.filterId || e8.id.toLowerCase().includes(this.filterId.trim().toLowerCase());
-          const matchType = !this.filterType || e8.event.toLowerCase() === this.filterType.trim().toLowerCase();
-          const matchStart = !start || eventTime >= start;
-          const matchEnd = !end || eventTime <= end;
-          return matchId && matchType && matchStart && matchEnd;
+          const t5 = new Date(e8.timestamp).getTime();
+          const matchSource = !this.filterSource || e8.sourceType === this.filterSource;
+          const matchType = !this.filterType || e8.eventType === this.filterType;
+          const matchStart = !start || t5 >= start;
+          const matchEnd = !end || t5 <= end;
+          return matchSource && matchType && matchStart && matchEnd;
         });
       }
       handleFilter(e8) {
-        const t5 = e8.target;
-        switch (t5.name) {
-          case "filterId":
-            this.filterId = t5.value;
+        const el2 = e8.target;
+        switch (el2.name) {
+          case "filterSource":
+            this.filterSource = el2.value;
             break;
           case "filterType":
-            this.filterType = t5.value;
+            this.filterType = el2.value;
             break;
           case "filterStart":
-            this.filterStartTime = t5.value;
+            this.filterStartTime = el2.value;
             break;
           case "filterEnd":
-            this.filterEndTime = t5.value;
+            this.filterEndTime = el2.value;
             break;
         }
       }
       resetTimeFilter() {
         this.filterStartTime = "";
         this.filterEndTime = "";
-        const startInput = this.renderRoot.querySelector(
+        this.renderRoot.querySelector(
           'input[name="filterStart"]'
-        );
-        const endInput = this.renderRoot.querySelector(
+        ).value = "";
+        this.renderRoot.querySelector(
           'input[name="filterEnd"]'
-        );
-        if (startInput) startInput.value = "";
-        if (endInput) endInput.value = "";
+        ).value = "";
       }
       render() {
         return x`
-      <div class="mb-4 flex flex-wrap gap-4 items-end">
-        <!-- Filter by ID -->
-        <div class="flex flex-col min-w-[160px]">
-          <label class="text-xs font-bold text-gray-600 mb-1"
-            >Filter by ID</label
-          >
-          <input
-            name="filterId"
-            type="text"
-            class="border border-gray-300 px-3 py-1 rounded text-sm"
-            placeholder="e.g. TANK01"
-            @input=${this.handleFilter}
-          />
-        </div>
+      <event-filter
+        .filters=${{
+          sourceType: this.filterSource,
+          eventType: this.filterType,
+          startTime: this.filterStartTime,
+          endTime: this.filterEndTime
+        }}
+        @filter-changed=${(e8) => {
+          const f3 = e8.detail;
+          this.filterSource = f3.sourceType;
+          this.filterType = f3.eventType;
+          this.filterStartTime = f3.startTime;
+          this.filterEndTime = f3.endTime;
+        }}
+      ></event-filter>
 
-        <!-- Filter by Event -->
-        <div class="flex flex-col min-w-[160px]">
-          <label class="text-xs font-bold text-gray-600 mb-1">Event Type</label>
-          <select
-            name="filterType"
-            class="border border-gray-300 px-3 py-1 rounded text-sm"
-            @change=${this.handleFilter}
-          >
-            <option value="">All Events</option>
-            <option>ALARM_HI</option>
-            <option>ALARM_LO</option>
-            <option>STATUS</option>
-            <option>ERROR</option>
-            <option>INFO</option>
-          </select>
-        </div>
-        <div class="flex flex-row gap-4">
-          <!-- Start Time -->
-          <div class="flex flex-col min-w-[180px]">
-            <label class="text-xs font-bold text-gray-600 mb-1"
-              >Start Time</label
-            >
-            <input
-              name="filterStart"
-              type="datetime-local"
-              class="border border-gray-300 px-3 py-1 rounded text-sm"
-              @change=${this.handleFilter}
-            />
-          </div>
-
-          <!-- End Time -->
-          <div class="flex flex-col min-w-[180px]">
-            <label class="text-xs font-bold text-gray-600 mb-1">End Time</label>
-            <input
-              name="filterEnd"
-              type="datetime-local"
-              class="border border-gray-300 px-3 py-1 rounded text-sm"
-              @change=${this.handleFilter}
-            />
-          </div>
-
-          <!-- Reset Time Button -->
-          <div class="flex flex-col justify-end">
-            <button
-              class="h-[38px] px-3 text-sm bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded flex items-center"
-              @click=${this.resetTimeFilter}
-            >
-              Reset Time
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
-          <table class="table-auto w-full text-sm">
-            <thead
-              class="bg-gray-100 text-left text-gray-700 uppercase tracking-wider"
-            >
-              <tr>
-                <th class="px-4 py-2">Timestamp</th>
-                <th class="px-4 py-2">ID</th>
-                <th class="px-4 py-2">Event</th>
-                <th class="px-4 py-2">Description</th>
-                <th class="px-4 py-2">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.filteredEvents.map((e8) => {
-          const highlight = this.getEventKey(e8) === this.highlightedKey ? "animate-pulse ring-2 ring-yellow-400" : "";
+      <!-- Event Table -->
+      <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
+        <table class="table-auto w-full text-sm">
+          <thead>
+            <tr>
+              ${eventColumns.map(
+          (col) => x`
+                  <th class="px-4 py-2 text-xs font-bold uppercase text-left">
+                    ${col.label}
+                  </th>
+                `
+        )}
+            </tr>
+          </thead>
+          <tbody>
+            ${this.filteredEvents.map((e8) => {
+          const rowColor = getRowColor(e8.eventType);
+          const highlight = this.getKey(e8) === this.highlightedKey ? "animate-pulse ring-2 ring-yellow-400" : "";
           return x`
-                  <tr class="${getRowColor(e8.event)} ${highlight}">
-                    <td class="px-4 py-2">
-                      ${this.formatDateTime(e8.timestamp)}
-                    </td>
-                    <td class="px-4 py-2">${e8.id}</td>
-                    <td class="px-4 py-2 font-bold uppercase">${e8.event}</td>
-                    <td class="px-4 py-2">${e8.description}</td>
-                    <td class="px-4 py-2">${e8.value}</td>
-                  </tr>
-                `;
+                <tr class="${rowColor} ${highlight}">
+                  ${eventColumns.map(
+            (col) => x`
+                      <td class="px-4 py-2 whitespace-nowrap">
+                        ${col.render ? col.render(e8) : e8[col.key] ?? "-"}
+                      </td>
+                    `
+          )}
+                </tr>
+              `;
         })}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     `;
       }
@@ -17063,7 +17588,7 @@ var init_event_table = __esm({
     ], EventTable.prototype, "events", 2);
     __decorateClass([
       r5()
-    ], EventTable.prototype, "filterId", 2);
+    ], EventTable.prototype, "filterSource", 2);
     __decorateClass([
       r5()
     ], EventTable.prototype, "filterType", 2);
@@ -17305,7 +17830,7 @@ var init_devices_config_service = __esm({
 
 // src/components/device-events.ts
 var DeviceEvents;
-var init_device_events = __esm({
+var init_device_events2 = __esm({
   "src/components/device-events.ts"() {
     "use strict";
     init_devices_config_service();
@@ -18076,15 +18601,19 @@ var init_device_config = __esm({
     init_device_ui();
     init_device_config_fields();
     init_device_state_handler();
+    init_device_events2();
+    init_event_buffer_service();
     init_device_events();
     DeviceConfig = class extends i4 {
       constructor() {
         super(...arguments);
         this.model = {};
+        this.original = {};
         this.errors = {};
         this.tags = [];
         this.dirty = false;
         this.mode = "edit";
+        this.originalData = {};
         this.handleFieldChange = (e8, key) => {
           const target = e8.target;
           const raw = target.value;
@@ -18096,6 +18625,7 @@ var init_device_config = __esm({
         this.handleSave = async () => {
           this.revalidate();
           if (Object.keys(this.errors).length) return;
+          const prevSnapshot = structuredClone(this.originalData);
           const success = await DeviceEvents.handleSave(
             this.model,
             this.mode,
@@ -18103,6 +18633,24 @@ var init_device_config = __esm({
             (saved, updatedTags, mode) => {
               this.tags = updatedTags;
               this.setDevice(saved, mode);
+              const deviceId = saved.tagNumber || "UNKNOWN";
+              if (this.mode === "new") {
+                const ev = createDeviceEvent({
+                  deviceId,
+                  newValue: saved,
+                  triggeredBy: "currentUser"
+                });
+                pushEvent(ev);
+              } else {
+                const events = updateDeviceEvents({
+                  deviceId,
+                  prevValue: prevSnapshot,
+                  newValue: structuredClone(saved),
+                  triggeredBy: "currentUser"
+                });
+                events.forEach(pushEvent);
+                this.originalData = structuredClone(saved);
+              }
             }
           );
           if (success) DeviceUI.showToast("Saved \u2705");
@@ -18122,7 +18670,15 @@ var init_device_config = __esm({
               }
             }
           );
-          if (success) DeviceUI.showToast("Deleted \u{1F5D1}\uFE0F");
+          if (success) {
+            const ev = deleteDeviceEvent({
+              deviceId: this.model.tagNumber,
+              prevValue: this.original,
+              triggeredBy: "currentUser"
+            });
+            pushEvent(ev);
+            DeviceUI.showToast("Deleted \u{1F5D1}\uFE0F");
+          }
         };
         this.handleCancel = () => {
           if (this.dirty && !confirm("Perubahan belum disimpan. Tetap keluar?"))
@@ -18133,20 +18689,10 @@ var init_device_config = __esm({
       createRenderRoot() {
         return this;
       }
+      // immutable snapshot sebelum edit
       async connectedCallback() {
         super.connectedCallback();
         await this.loadDevicesAndInit();
-        const list = await DeviceEvents.loadAllDevices();
-        this.tags = list.map((d3) => d3.tagNumber).filter(Boolean).sort();
-        const tagParam = new URL(location.href).searchParams.get("tag");
-        const picked = tagParam && this.tags.includes(tagParam) ? tagParam : this.tags[0] ?? "";
-        const found = picked ? list.find((d3) => d3.tagNumber === picked) : void 0;
-        if (found) {
-          this.setDevice(found, "edit");
-        } else {
-          const fresh = DeviceStateHandler.newTemplate();
-          this.setDevice(fresh, "new");
-        }
       }
       async loadDevicesAndInit() {
         const list = await DeviceEvents.loadAllDevices();
@@ -18164,6 +18710,7 @@ var init_device_config = __esm({
       }
       setDevice(device, mode) {
         this.model = structuredClone(device);
+        this.originalData = structuredClone(device);
         this.mode = mode;
         this.revalidate();
         this.dirty = false;
@@ -18229,6 +18776,9 @@ var init_device_config = __esm({
     ], DeviceConfig.prototype, "model", 2);
     __decorateClass([
       r5()
+    ], DeviceConfig.prototype, "original", 2);
+    __decorateClass([
+      r5()
     ], DeviceConfig.prototype, "errors", 2);
     __decorateClass([
       r5()
@@ -18239,6 +18789,9 @@ var init_device_config = __esm({
     __decorateClass([
       r5()
     ], DeviceConfig.prototype, "mode", 2);
+    __decorateClass([
+      r5()
+    ], DeviceConfig.prototype, "originalData", 2);
     DeviceConfig = __decorateClass([
       t3("device-config")
     ], DeviceConfig);
@@ -18907,6 +19460,67 @@ var init_plant_fields = __esm({
   }
 });
 
+// src/components/events/entity-events.ts
+function createEntityEvent(params) {
+  return createEvent({
+    sourceType: "user",
+    // atau 'entity' kalau mau dibedakan
+    sourceId: `${params.kind}:${params.entityId}`,
+    eventType: "create",
+    field: "all",
+    prevValue: void 0,
+    newValue: JSON.stringify(params.newValue),
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Entitas baru dibuat: ${params.kind} ${params.entityId}`
+  });
+}
+function updateEntityEvents(params) {
+  const { kind, entityId, prevValue = {}, newValue = {}, triggeredBy } = params;
+  const events = [];
+  const skipFields = ["id", "createdAt", "updatedAt"];
+  Object.keys(newValue).forEach((key) => {
+    if (skipFields.includes(key)) return;
+    let before = prevValue[key];
+    let after = newValue[key];
+    const norm = (v2) => typeof v2 === "string" && v2.trim() !== "" && !isNaN(Number(v2)) ? Number(v2) : v2;
+    before = norm(before);
+    after = norm(after);
+    if (before !== after) {
+      events.push(
+        createEvent({
+          sourceType: "user",
+          sourceId: `${kind}:${entityId}`,
+          eventType: "update",
+          field: key,
+          prevValue: typeof before === "object" ? JSON.stringify(before) : before,
+          newValue: typeof after === "object" ? JSON.stringify(after) : after,
+          triggeredBy: triggeredBy ?? "system",
+          description: `Entitas ${kind} field "${key}" berubah dari "${before}" \u2192 "${after}"`
+        })
+      );
+    }
+  });
+  return events;
+}
+function deleteEntityEvent(params) {
+  return createEvent({
+    sourceType: "user",
+    sourceId: `${params.kind}:${params.entityId}`,
+    eventType: "delete",
+    field: "all",
+    prevValue: JSON.stringify(params.prevValue),
+    newValue: void 0,
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Entitas dihapus: ${params.kind} ${params.entityId}`
+  });
+}
+var init_entity_events = __esm({
+  "src/components/events/entity-events.ts"() {
+    "use strict";
+    init_event_logger();
+  }
+});
+
 // src/pages/konfigurasi/entitas/form-entitas.ts
 var FormEntitas;
 var init_form_entitas = __esm({
@@ -18917,8 +19531,11 @@ var init_form_entitas = __esm({
     init_livestock_fields();
     init_aquatic_fields();
     init_plant_fields();
+    init_device_ui();
     init_form_builder_section();
     init_form_builder_buttons();
+    init_event_buffer_service();
+    init_entity_events();
     FormEntitas = class extends i4 {
       constructor() {
         super(...arguments);
@@ -18926,6 +19543,7 @@ var init_form_entitas = __esm({
         this.value = {};
         this.draft = {};
         this.errors = {};
+        this.originalData = {};
         this.handleFieldChange = (e8, key) => {
           const target = e8.target;
           const field = this.allFields.find((f3) => f3.key === key);
@@ -18953,6 +19571,26 @@ var init_form_entitas = __esm({
             alert(res.message);
             return;
           }
+          const entityId = this.draft.id || this.draft.name || "UNKNOWN";
+          if (this.mode === "new") {
+            const ev = createEntityEvent({
+              kind: this.kind ?? "unknown",
+              entityId,
+              newValue: this.draft,
+              triggeredBy: "currentUser"
+            });
+            pushEvent(ev);
+          } else {
+            const events = updateEntityEvents({
+              kind: this.kind ?? "unknown",
+              entityId,
+              prevValue: this.originalData,
+              newValue: this.draft,
+              triggeredBy: "currentUser"
+            });
+            events.forEach(pushEvent);
+            this.originalData = structuredClone(this.draft);
+          }
           this.dispatchEvent(
             new CustomEvent("submit", {
               detail: this.draft,
@@ -18960,6 +19598,7 @@ var init_form_entitas = __esm({
               composed: true
             })
           );
+          DeviceUI.showToast("Saved \u2705");
         };
         this.handleCancel = () => {
           this.dispatchEvent(new CustomEvent("cancel"));
@@ -18967,12 +19606,17 @@ var init_form_entitas = __esm({
         };
         this.handleDelete = () => {
           if (!confirm("Yakin ingin menghapus data ini?")) return;
+          const entityId = this.value?.id ?? this.value?.name ?? "UNKNOWN";
+          const ev = deleteEntityEvent({
+            kind: this.kind ?? "unknown",
+            entityId,
+            prevValue: this.originalData,
+            triggeredBy: "currentUser"
+          });
+          pushEvent(ev);
           this.dispatchEvent(
             new CustomEvent("delete", {
-              detail: {
-                kind: this.kind,
-                id: this.value?.id ?? this.value?.name
-              },
+              detail: { kind: this.kind, id: entityId },
               bubbles: true,
               composed: true
             })
@@ -19017,6 +19661,7 @@ var init_form_entitas = __esm({
       updated(changed) {
         if (changed.has("value")) {
           this.draft = { ...this.value };
+          this.originalData = structuredClone(this.value);
         }
       }
       validate() {
@@ -19091,6 +19736,9 @@ var init_form_entitas = __esm({
     __decorateClass([
       r5()
     ], FormEntitas.prototype, "errors", 2);
+    __decorateClass([
+      r5()
+    ], FormEntitas.prototype, "originalData", 2);
     FormEntitas = __decorateClass([
       t3("form-entitas")
     ], FormEntitas);
@@ -19255,6 +19903,61 @@ var init_all_batch_services = __esm({
     init_hydroponic_batch_service();
     init_horti_batch_service();
     init_livestock_batch_service();
+  }
+});
+
+// src/components/events/batch-events.ts
+function createBatchEvent(params) {
+  return createEvent({
+    sourceType: "batch",
+    sourceId: params.batchId,
+    eventType: "create",
+    field: "all",
+    prevValue: void 0,
+    newValue: JSON.stringify(params.newValue),
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Batch baru dibuat: ${params.batchId}`
+  });
+}
+function updateBatchEvents(params) {
+  const { batchId, prevValue = {}, newValue = {}, triggeredBy } = params;
+  const events = [];
+  Object.keys(newValue).forEach((key) => {
+    const before = prevValue[key];
+    const after = newValue[key];
+    if (before !== after) {
+      events.push(
+        createEvent({
+          sourceType: "batch",
+          sourceId: batchId,
+          eventType: "update",
+          field: key,
+          prevValue: before,
+          newValue: after,
+          triggeredBy: triggeredBy ?? "system",
+          description: `Field "${key}" berubah dari "${before}" \u2192 "${after}"`
+        })
+      );
+    }
+  });
+  return events;
+}
+function deleteBatchEvent(params) {
+  return createEvent({
+    sourceType: "batch",
+    sourceId: params.batchId,
+    eventType: "delete",
+    field: "all",
+    prevValue: JSON.stringify(params.prevValue),
+    newValue: void 0,
+    triggeredBy: params.triggeredBy ?? "system",
+    description: `Batch dihapus: ${params.batchId}`
+  });
+}
+var init_batch_events = __esm({
+  "src/components/events/batch-events.ts"() {
+    "use strict";
+    init_event_logger();
   }
 });
 
@@ -19707,6 +20410,8 @@ var init_form_batch = __esm({
     "use strict";
     init_lit();
     init_decorators();
+    init_event_buffer_service();
+    init_batch_events();
     init_all_batch_fields();
     init_form_builder_section();
     init_form_builder_buttons();
@@ -19744,6 +20449,23 @@ var init_form_batch = __esm({
             alert(res.message);
             return;
           }
+          const batchId = this.draft.id || this.draft.code || "UNKNOWN";
+          if (this.mode === "edit") {
+            const events = updateBatchEvents({
+              batchId,
+              prevValue: this.value,
+              newValue: this.draft,
+              triggeredBy: "currentUser"
+            });
+            events.forEach(pushEvent);
+          } else if (this.mode === "new") {
+            const ev = createBatchEvent({
+              batchId,
+              newValue: this.draft,
+              triggeredBy: "currentUser"
+            });
+            pushEvent(ev);
+          }
           this.dispatchEvent(
             new CustomEvent("submit", {
               detail: this.draft,
@@ -19758,11 +20480,18 @@ var init_form_batch = __esm({
         };
         this.handleDelete = () => {
           if (!confirm("Yakin ingin menghapus data ini?")) return;
+          const batchId = this.value?.id || this.value?.code || "UNKNOWN";
+          const ev = deleteBatchEvent({
+            batchId,
+            prevValue: this.value,
+            triggeredBy: "currentUser"
+          });
+          pushEvent(ev);
           this.dispatchEvent(
             new CustomEvent("delete", {
               detail: {
                 kind: this.kind,
-                id: this.value?.id ?? this.value?.code
+                id: batchId
               },
               bubbles: true,
               composed: true
@@ -20173,7 +20902,7 @@ var init_config = __esm({
     "use strict";
     init_lit();
     init_decorators();
-    init_device_events();
+    init_device_events2();
     init_ui_tabs();
     init_event_table();
     init_device_config();
@@ -21005,7 +21734,7 @@ var AppFooter = class extends i4 {
       <footer>
         <div class="container">
           <div>
-            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.3"}. All
+            © ${(/* @__PURE__ */ new Date()).getFullYear()} Taniverse v${"1.0.4"}. All
             rights reserved.
           </div>
           <div>
