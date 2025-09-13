@@ -1,6 +1,6 @@
 {
   "name": "taniverse",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Platform for building and running agro apps",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^24.2.1",
+    "@types/uuid": "^10.0.0",
     "concurrently": "^9.2.0",
     "cross-env": "^10.0.0",
     "esbuild": "^0.25.8",

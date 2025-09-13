@@ -1,142 +1,242 @@
 [
   {
-    "timestamp": "2025-09-01T12:00:00Z",
     "id": "TANK01",
-    "description": "High temperature alarm",
-    "event": "ALARM_HI",
-    "value": 87.4
+    "timestamp": "2025-09-01T12:00:00Z",
+    "sourceType": "device",
+    "sourceId": "TANK01",
+    "eventType": "alarm",
+    "field": "temperature",
+    "prevValue": 82.0,
+    "newValue": 87.4,
+    "triggeredBy": "system",
+    "description": "High temperature alarm"
   },
   {
-    "timestamp": "2025-09-01T12:05:00Z",
     "id": "BATCH0925",
-    "description": "Hidroponik NFT",
-    "event": "Panen",
-    "value": 235
+    "timestamp": "2025-09-01T12:05:00Z",
+    "sourceType": "batch",
+    "sourceId": "BATCH0925",
+    "eventType": "action",
+    "field": "status",
+    "prevValue": "berkembang",
+    "newValue": "panen",
+    "triggeredBy": "operator01",
+    "description": "Hidroponik NFT"
   },
   {
-    "timestamp": "2025-09-01T12:10:00Z",
     "id": "TI-001",
-    "description": "Temperature ruangan",
-    "event": "alarmHi",
-    "value": 34
+    "timestamp": "2025-09-01T12:10:00Z",
+    "sourceType": "device",
+    "sourceId": "TI-001",
+    "eventType": "alarm",
+    "field": "temperature",
+    "prevValue": 30,
+    "newValue": 34,
+    "triggeredBy": "system",
+    "description": "Temperature ruangan"
   },
   {
-    "timestamp": "2025-09-01T12:15:00Z",
     "id": "AI-001",
-    "description": "Humidity tanah",
-    "event": "alarmLow",
-    "value": 25
+    "timestamp": "2025-09-01T12:15:00Z",
+    "sourceType": "device",
+    "sourceId": "AI-001",
+    "eventType": "alarm",
+    "field": "humidity",
+    "prevValue": 40,
+    "newValue": 25,
+    "triggeredBy": "system",
+    "description": "Humidity tanah"
   },
   {
-    "timestamp": "2025-09-01T12:20:00Z",
     "id": "VALVE01",
-    "description": "Valve dibuka otomatis",
-    "event": "STATUS",
-    "value": "OPEN"
+    "timestamp": "2025-09-01T12:20:00Z",
+    "sourceType": "device",
+    "sourceId": "VALVE01",
+    "eventType": "connection",
+    "field": "state",
+    "prevValue": "CLOSED",
+    "newValue": "OPEN",
+    "triggeredBy": "system",
+    "description": "Valve dibuka otomatis"
   },
   {
-    "timestamp": "2025-09-01T12:22:00Z",
     "id": "PUMP01",
-    "description": "Pompa start manual",
-    "event": "INFO",
-    "value": "ON"
+    "timestamp": "2025-09-01T12:22:00Z",
+    "sourceType": "device",
+    "sourceId": "PUMP01",
+    "eventType": "action",
+    "field": "state",
+    "prevValue": "OFF",
+    "newValue": "ON",
+    "triggeredBy": "manual",
+    "description": "Pompa start manual"
   },
   {
-    "timestamp": "2025-09-01T12:25:00Z",
     "id": "TI-002",
-    "description": "Suhu nutrisi",
-    "event": "ALARM_LO",
-    "value": 17.6
+    "timestamp": "2025-09-01T12:25:00Z",
+    "sourceType": "device",
+    "sourceId": "TI-002",
+    "eventType": "alarm",
+    "field": "temperature",
+    "prevValue": 20.5,
+    "newValue": 17.6,
+    "triggeredBy": "system",
+    "description": "Suhu nutrisi"
   },
   {
-    "timestamp": "2025-09-01T12:28:00Z",
     "id": "PH-001",
-    "description": "pH terlalu tinggi",
-    "event": "ERROR",
-    "value": 8.1
+    "timestamp": "2025-09-01T12:28:00Z",
+    "sourceType": "device",
+    "sourceId": "PH-001",
+    "eventType": "alarm",
+    "field": "pH",
+    "prevValue": 7.0,
+    "newValue": 8.1,
+    "triggeredBy": "system",
+    "description": "pH terlalu tinggi"
   },
   {
-    "timestamp": "2025-09-01T12:30:00Z",
     "id": "EC-001",
-    "description": "Electrical Conductivity normal",
-    "event": "STATUS",
-    "value": 1.9
+    "timestamp": "2025-09-01T12:30:00Z",
+    "sourceType": "device",
+    "sourceId": "EC-001",
+    "eventType": "status",
+    "field": "EC",
+    "prevValue": 2.0,
+    "newValue": 1.9,
+    "triggeredBy": "system",
+    "description": "Electrical Conductivity normal"
   },
   {
-    "timestamp": "2025-09-01T12:35:00Z",
     "id": "TANK01-BATCH0930",
-    "description": "Monitoring suhu saat fermentasi",
-    "event": "INFO",
-    "value": 42.2
+    "timestamp": "2025-09-01T12:35:00Z",
+    "sourceType": "batch",
+    "sourceId": "BATCH0930",
+    "eventType": "info",
+    "field": "temperature",
+    "prevValue": 41.0,
+    "newValue": 42.2,
+    "triggeredBy": "system",
+    "description": "Monitoring suhu saat fermentasi"
   },
   {
-    "timestamp": "2025-09-01T12:40:00Z",
     "id": "TI-003",
-    "description": "Sensor suhu tidak terdeteksi",
-    "event": "ERROR",
-    "value": "N/A"
+    "timestamp": "2025-09-01T12:40:00Z",
+    "sourceType": "device",
+    "sourceId": "TI-003",
+    "eventType": "error",
+    "field": "temperature",
+    "prevValue": 36,
+    "newValue": "N/A",
+    "triggeredBy": "system",
+    "description": "Sensor suhu tidak terdeteksi"
   },
   {
-    "timestamp": "2025-09-01T12:45:00Z",
     "id": "AI-002",
-    "description": "Kelembaban tanah kembali normal",
-    "event": "STATUS",
-    "value": 35
+    "timestamp": "2025-09-01T12:45:00Z",
+    "sourceType": "device",
+    "sourceId": "AI-002",
+    "eventType": "status",
+    "field": "humidity",
+    "prevValue": 25,
+    "newValue": 35,
+    "triggeredBy": "system",
+    "description": "Kelembaban tanah kembali normal"
   },
   {
-    "timestamp": "2025-09-01T12:50:00Z",
     "id": "LINE01-MIX01",
-    "description": "Batch mixing selesai",
-    "event": "INFO",
-    "value": "OK"
+    "timestamp": "2025-09-01T12:50:00Z",
+    "sourceType": "batch",
+    "sourceId": "MIX01",
+    "eventType": "action",
+    "field": "status",
+    "prevValue": "MIXING",
+    "newValue": "DONE",
+    "triggeredBy": "system",
+    "description": "Batch mixing selesai"
   },
   {
-    "timestamp": "2025-09-01T12:55:00Z",
     "id": "BATCH0926",
-    "description": "Pindah ke tangki fermentasi",
-    "event": "STATUS",
-    "value": "PROGRESS"
+    "timestamp": "2025-09-01T12:55:00Z",
+    "sourceType": "batch",
+    "sourceId": "BATCH0926",
+    "eventType": "status",
+    "field": "status",
+    "prevValue": "STANDBY",
+    "newValue": "PROGRESS",
+    "triggeredBy": "system",
+    "description": "Pindah ke tangki fermentasi"
   },
   {
-    "timestamp": "2025-09-01T13:00:00Z",
     "id": "TI-004",
-    "description": "Suhu ruang pengeringan",
-    "event": "ALARM_HI",
-    "value": 61.4
+    "timestamp": "2025-09-01T13:00:00Z",
+    "sourceType": "device",
+    "sourceId": "TI-004",
+    "eventType": "alarm",
+    "field": "temperature",
+    "prevValue": 55,
+    "newValue": 61.4,
+    "triggeredBy": "system",
+    "description": "Suhu ruang pengeringan"
   },
   {
-    "timestamp": "2025-09-01T13:05:00Z",
     "id": "PUMP02",
-    "description": "Pompa gagal start",
-    "event": "ERROR",
-    "value": "OFF"
+    "timestamp": "2025-09-01T13:05:00Z",
+    "sourceType": "device",
+    "sourceId": "PUMP02",
+    "eventType": "error",
+    "field": "state",
+    "prevValue": "ON",
+    "newValue": "OFF",
+    "triggeredBy": "system",
+    "description": "Pompa gagal start"
   },
   {
-    "timestamp": "2025-09-01T13:10:00Z",
     "id": "TANK02",
-    "description": "Level nutrisi minimum tercapai",
-    "event": "ALARM_LO",
-    "value": 13.2
+    "timestamp": "2025-09-01T13:10:00Z",
+    "sourceType": "device",
+    "sourceId": "TANK02",
+    "eventType": "alarm",
+    "field": "level",
+    "prevValue": 18.0,
+    "newValue": 13.2,
+    "triggeredBy": "system",
+    "description": "Level nutrisi minimum tercapai"
   },
   {
-    "timestamp": "2025-09-01T13:15:00Z",
     "id": "BATCH0927",
-    "description": "Sterilisasi selesai",
-    "event": "INFO",
-    "value": "DONE"
+    "timestamp": "2025-09-01T13:15:00Z",
+    "sourceType": "batch",
+    "sourceId": "BATCH0927",
+    "eventType": "status",
+    "field": "status",
+    "prevValue": "STERILIZING",
+    "newValue": "DONE",
+    "triggeredBy": "system",
+    "description": "Sterilisasi selesai"
   },
   {
-    "timestamp": "2025-09-01T13:20:00Z",
     "id": "AI-003",
-    "description": "Sensor kelembaban error",
-    "event": "ERROR",
-    "value": "Disconnected"
+    "timestamp": "2025-09-01T13:20:00Z",
+    "sourceType": "device",
+    "sourceId": "AI-003",
+    "eventType": "error",
+    "field": "humidity",
+    "prevValue": 20,
+    "newValue": "Disconnected",
+    "triggeredBy": "system",
+    "description": "Sensor kelembaban error"
   },
   {
-    "timestamp": "2025-09-01T13:25:00Z",
     "id": "TANK03-BATCH0928",
-    "description": "Suhu fermentasi stabil",
-    "event": "STATUS",
-    "value": 38.5
+    "timestamp": "2025-09-01T13:25:00Z",
+    "sourceType": "batch",
+    "sourceId": "BATCH0928",
+    "eventType": "status",
+    "field": "temperature",
+    "prevValue": 37.5,
+    "newValue": 38.5,
+    "triggeredBy": "system",
+    "description": "Suhu fermentasi stabil"
   }
 ]

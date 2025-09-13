@@ -1,9 +1,11 @@
 // frontend/src/components/event-table.ts
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { EventHistory } from '@models/event.model';
-import { getRowColor } from 'src/utils/color.utils';
+import type { EventHistory, SourceType, EventType } from '@models/event.model';
 import { fetchAllEvents } from 'src/services/event.service';
+import { getRowColor } from 'src/utils/color.utils';
+import { eventColumns } from 'src/schema/event-columns';
+import './event-filter';
 
 @customElement('event-table')
 export class EventTable extends LitElement {
@@ -12,23 +14,22 @@ export class EventTable extends LitElement {
   }
 
   @state() private events: EventHistory[] = [];
-  @state() private filterId: string = '';
-  @state() private filterType: string = '';
-  @state() private filterStartTime: string = '';
-  @state() private filterEndTime: string = '';
-  @state() private highlightedKey: string = '';
+  @state() private filterSource: SourceType | '' = '';
+  @state() private filterType: EventType | '' = '';
+  @state() private filterStartTime = '';
+  @state() private filterEndTime = '';
+  @state() private highlightedKey = '';
 
   async connectedCallback() {
     super.connectedCallback();
-    await this.loadMockEvents();
+    await this.loadEvents();
   }
 
-  async loadMockEvents() {
+  async loadEvents() {
     try {
-      const data: EventHistory[] = await fetchAllEvents();
-
-      const prevKey = this.events[0] ? this.getEventKey(this.events[0]) : '';
-      const newKey = data[0] ? this.getEventKey(data[0]) : '';
+      const data = await fetchAllEvents();
+      const prevKey = this.events[0] ? this.getKey(this.events[0]) : '';
+      const newKey = data[0] ? this.getKey(data[0]) : '';
 
       this.events = data;
 
@@ -37,17 +38,16 @@ export class EventTable extends LitElement {
         setTimeout(() => (this.highlightedKey = ''), 3000);
       }
     } catch (err) {
-      console.error('Load failed:', err);
+      console.error('Failed to load events:', err);
     }
   }
 
-  getEventKey(e: EventHistory): string {
+  getKey(e: EventHistory) {
     return `${e.timestamp}_${e.id}`;
   }
 
-  formatDateTime(ts: string): string {
-    const date = new Date(ts);
-    return date.toLocaleString('sv-SE').replace('T', ' ');
+  formatDateTime(ts: string) {
+    return new Date(ts).toLocaleString('sv-SE').replace('T', ' ');
   }
 
   get filteredEvents(): EventHistory[] {
@@ -59,38 +59,30 @@ export class EventTable extends LitElement {
       : null;
 
     return this.events.filter((e) => {
-      const eventTime = new Date(e.timestamp).getTime();
-
-      const matchId =
-        !this.filterId ||
-        e.id.toLowerCase().includes(this.filterId.trim().toLowerCase());
-
-      const matchType =
-        !this.filterType ||
-        e.event.toLowerCase() === this.filterType.trim().toLowerCase();
-
-      const matchStart = !start || eventTime >= start;
-      const matchEnd = !end || eventTime <= end;
-
-      return matchId && matchType && matchStart && matchEnd;
+      const t = new Date(e.timestamp).getTime();
+      const matchSource =
+        !this.filterSource || e.sourceType === this.filterSource;
+      const matchType = !this.filterType || e.eventType === this.filterType;
+      const matchStart = !start || t >= start;
+      const matchEnd = !end || t <= end;
+      return matchSource && matchType && matchStart && matchEnd;
     });
   }
 
   handleFilter(e: Event) {
-    const t = e.target as HTMLInputElement | HTMLSelectElement;
-
-    switch (t.name) {
-      case 'filterId':
-        this.filterId = t.value;
+    const el = e.target as HTMLInputElement | HTMLSelectElement;
+    switch (el.name) {
+      case 'filterSource':
+        this.filterSource = el.value as SourceType;
         break;
       case 'filterType':
-        this.filterType = t.value;
+        this.filterType = el.value as EventType;
         break;
       case 'filterStart':
-        this.filterStartTime = t.value;
+        this.filterStartTime = el.value;
         break;
       case 'filterEnd':
-        this.filterEndTime = t.value;
+        this.filterEndTime = el.value;
         break;
     }
   }
@@ -98,122 +90,74 @@ export class EventTable extends LitElement {
   resetTimeFilter() {
     this.filterStartTime = '';
     this.filterEndTime = '';
-
-    // Clear inputs in DOM
-    const startInput = this.renderRoot.querySelector<HTMLInputElement>(
-      'input[name="filterStart"]'
-    );
-    const endInput = this.renderRoot.querySelector<HTMLInputElement>(
-      'input[name="filterEnd"]'
-    );
-    if (startInput) startInput.value = '';
-    if (endInput) endInput.value = '';
+    (
+      this.renderRoot.querySelector(
+        'input[name="filterStart"]'
+      ) as HTMLInputElement
+    ).value = '';
+    (
+      this.renderRoot.querySelector(
+        'input[name="filterEnd"]'
+      ) as HTMLInputElement
+    ).value = '';
   }
 
   render() {
     return html`
-      <div class="mb-4 flex flex-wrap gap-4 items-end">
-        <!-- Filter by ID -->
-        <div class="flex flex-col min-w-[160px]">
-          <label class="text-xs font-bold text-gray-600 mb-1"
-            >Filter by ID</label
-          >
-          <input
-            name="filterId"
-            type="text"
-            class="border border-gray-300 px-3 py-1 rounded text-sm"
-            placeholder="e.g. TANK01"
-            @input=${this.handleFilter}
-          />
-        </div>
+      <event-filter
+        .filters=${{
+          sourceType: this.filterSource,
+          eventType: this.filterType,
+          startTime: this.filterStartTime,
+          endTime: this.filterEndTime,
+        }}
+        @filter-changed=${(e: CustomEvent) => {
+          const f = e.detail;
+          this.filterSource = f.sourceType;
+          this.filterType = f.eventType;
+          this.filterStartTime = f.startTime;
+          this.filterEndTime = f.endTime;
+        }}
+      ></event-filter>
 
-        <!-- Filter by Event -->
-        <div class="flex flex-col min-w-[160px]">
-          <label class="text-xs font-bold text-gray-600 mb-1">Event Type</label>
-          <select
-            name="filterType"
-            class="border border-gray-300 px-3 py-1 rounded text-sm"
-            @change=${this.handleFilter}
-          >
-            <option value="">All Events</option>
-            <option>ALARM_HI</option>
-            <option>ALARM_LO</option>
-            <option>STATUS</option>
-            <option>ERROR</option>
-            <option>INFO</option>
-          </select>
-        </div>
-        <div class="flex flex-row gap-4">
-          <!-- Start Time -->
-          <div class="flex flex-col min-w-[180px]">
-            <label class="text-xs font-bold text-gray-600 mb-1"
-              >Start Time</label
-            >
-            <input
-              name="filterStart"
-              type="datetime-local"
-              class="border border-gray-300 px-3 py-1 rounded text-sm"
-              @change=${this.handleFilter}
-            />
-          </div>
+      <!-- Event Table -->
+      <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
+        <table class="table-auto w-full text-sm">
+          <thead>
+            <tr>
+              ${eventColumns.map(
+                (col) => html`
+                  <th class="px-4 py-2 text-xs font-bold uppercase text-left">
+                    ${col.label}
+                  </th>
+                `
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            ${this.filteredEvents.map((e) => {
+              const rowColor = getRowColor(e.eventType);
+              const highlight =
+                this.getKey(e) === this.highlightedKey
+                  ? 'animate-pulse ring-2 ring-yellow-400'
+                  : '';
 
-          <!-- End Time -->
-          <div class="flex flex-col min-w-[180px]">
-            <label class="text-xs font-bold text-gray-600 mb-1">End Time</label>
-            <input
-              name="filterEnd"
-              type="datetime-local"
-              class="border border-gray-300 px-3 py-1 rounded text-sm"
-              @change=${this.handleFilter}
-            />
-          </div>
-
-          <!-- Reset Time Button -->
-          <div class="flex flex-col justify-end">
-            <button
-              class="h-[38px] px-3 text-sm bg-gray-200 hover:bg-gray-300 border border-gray-400 rounded flex items-center"
-              @click=${this.resetTimeFilter}
-            >
-              Reset Time
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto rounded-lg shadow border border-gray-200">
-          <table class="table-auto w-full text-sm">
-            <thead
-              class="bg-gray-100 text-left text-gray-700 uppercase tracking-wider"
-            >
-              <tr>
-                <th class="px-4 py-2">Timestamp</th>
-                <th class="px-4 py-2">ID</th>
-                <th class="px-4 py-2">Event</th>
-                <th class="px-4 py-2">Description</th>
-                <th class="px-4 py-2">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${this.filteredEvents.map((e) => {
-                const highlight =
-                  this.getEventKey(e) === this.highlightedKey
-                    ? 'animate-pulse ring-2 ring-yellow-400'
-                    : '';
-
-                return html`
-                  <tr class="${getRowColor(e.event)} ${highlight}">
-                    <td class="px-4 py-2">
-                      ${this.formatDateTime(e.timestamp)}
-                    </td>
-                    <td class="px-4 py-2">${e.id}</td>
-                    <td class="px-4 py-2 font-bold uppercase">${e.event}</td>
-                    <td class="px-4 py-2">${e.description}</td>
-                    <td class="px-4 py-2">${e.value}</td>
-                  </tr>
-                `;
-              })}
-            </tbody>
-          </table>
-        </div>
+              return html`
+                <tr class="${rowColor} ${highlight}">
+                  ${eventColumns.map(
+                    (col) => html`
+                      <td class="px-4 py-2 whitespace-nowrap">
+                        ${col.render
+                          ? col.render(e)
+                          : e[col.key as keyof EventHistory] ?? '-'}
+                      </td>
+                    `
+                  )}
+                </tr>
+              `;
+            })}
+          </tbody>
+        </table>
       </div>
     `;
   }

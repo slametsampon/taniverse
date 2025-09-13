@@ -5,6 +5,8 @@ import { getMode, isMockMode, isSimMode, isMqttMode } from './mode';
 import { getDeviceRepository } from '../repositories/repository-factory';
 import type { DeviceRepository } from '../repositories/interfaces/DeviceRepository';
 import type { DeviceModel, DeviceStatus } from '@models/device.model';
+import { checkDeviceAlarm } from 'src/components/events/device-events';
+import { pushEvent } from 'src/services/event-buffer.service';
 // Tambahkan ini di awal file:
 
 type Device = DeviceModel & {
@@ -21,6 +23,8 @@ class DevicesStore {
   private mqttClient: any | null = null;
   private simulationInterval?: number;
   private repo: DeviceRepository = getDeviceRepository();
+  private lastStatus = new Map<string, DeviceStatus['valueStatus']>();
+  private lastValues = new Map<string, number>();
 
   // ===== INIT =====
   async init(force = false) {
@@ -150,6 +154,35 @@ class DevicesStore {
         lastSeen: now,
       };
     }
+
+    const prevVal = this.lastValues.get(dev.tagNumber) ?? dev.value ?? 0;
+    const currVal = dev.value ?? 0;
+    const prevStatus = this.lastStatus.get(dev.tagNumber);
+    const currStatus = dev.status?.valueStatus;
+
+    if (currStatus === 'low-alarm' || currStatus === 'high-alarm') {
+      if (prevStatus !== currStatus) {
+        const alarmEvent = checkDeviceAlarm(
+          dev.tagNumber,
+          'sensor',
+          currVal,
+          {
+            min: dev.alarms_low ?? dev.ranges_low ?? 0,
+            max: dev.alarms_high ?? dev.ranges_high ?? 100,
+          },
+          prevVal // ✅ nilai lama, bukan current
+        );
+
+        if (alarmEvent) {
+          pushEvent(alarmEvent);
+          console.warn('[Event] 🔔 Alarm generated:', alarmEvent);
+        }
+      }
+    }
+
+    // Update cache
+    this.lastStatus.set(dev.tagNumber, currStatus);
+    this.lastValues.set(dev.tagNumber, currVal);
   }
 
   // ===== Public API =====
