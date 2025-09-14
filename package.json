@@ -13,7 +13,11 @@
     "deploy:github": "npm run build:frontend && gh-pages -d build/frontend",
     "server": "tsx watch backend/src/main.ts",
     "build:backend": "tsc -p backend/tsconfig.json",
-    "start:backend": "node build/backend/main.js"
+    "start:backend": "node build/backend/main.js",
+    "seed": "node backend/seeder/seed.js --mode replace --force --backup",
+    "seed:safe": "node backend/seeder/seed.js --mode safe",
+    "seed:users": "node backend/seeder/seed.js --only users --mode append",
+    "seed:assess": "node backend/seeder/seed.js --assess"
   },
   "keywords": [],
   "author": "",

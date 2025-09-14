@@ -1,0 +1,46 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" version="28.2.1">
+  <diagram name="Agri ERD dengan Atribut" id="AgriERDProps">
+    <mxGraphModel dx="1032" dy="784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="GP" value="GrowProfile ------------------------- PK id: string name: string image: string growthDaysMin: number growthDaysMax: number heightMinCm: number heightMaxCm: number spacingRowCm: number spacingColCm: number pricePerKg: number avgWeightG?: number costPerUnit: number tempMinC?: number tempMaxC?: number phMin?: number phMax?: number salinityMinPpt?: number salinityMaxPpt?: number ecMin?: number ecMax?: number lightHourMin?: number lightHourMax?: number humidityMinPct?: number humidityMaxPct?: number mediaType: string location: string areaSqM?: number growSystemNote?: string" style="shape=swimlane;whiteSpace=wrap;startSize=280;" parent="1" vertex="1">
+          <mxGeometry x="90" y="80" width="220" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="BP" value="BatchProfile ------------------------- PK id: string FK growProfileId: string code: string name?: string startDate: date endDate?: date sector: string location: string mediaType?: string areaSqM?: number volumeM3?: number initialCount?: number source?: string targetHarvestDate?: date notes?: string" style="shape=swimlane;whiteSpace=wrap;startSize=180;" parent="1" vertex="1">
+          <mxGeometry x="400" y="80" width="200" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="PAL" value="PlantActivityLog ------------------------- PK id: string FK batchProfileId: string date: date activityType: string actionVolume?: number actionUnit?: string inputName?: string stage?: string condition?: string pestOrDisease?: string symptom?: string treatmentApplied?: string treatmentResult?: string tempC?: number humidityPct?: number ec?: number ph?: number lightLux?: number notes?: string photoUrl?: string" style="shape=swimlane;whiteSpace=wrap;startSize=225;" parent="1" vertex="1">
+          <mxGeometry x="90" y="395" width="220" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="LAL" value="LivestockActivityLog ------------------------- PK id: string FK batchProfileId: string date: date activityType: string feedType?: string feedAmountGr?: number medicationName?: string medicationDose?: string weightG?: number healthStatus?: string diseaseName?: string treatmentGiven?: string tempC?: number humidityPct?: number notes?: string photoUrl?: string" style="shape=swimlane;whiteSpace=wrap;startSize=205;" parent="1" vertex="1">
+          <mxGeometry x="400" y="395" width="200" height="205" as="geometry" />
+        </mxCell>
+        <mxCell id="AAL" value="AquacultureActivityLog ------------------------- PK id: string FK batchProfileId: string date: date activityType: string feedType?: string feedAmountGr?: number medicationName?: string medicationDose?: string stockingDensity?: number mortalityCount?: number averageWeightG?: number tempC?: number ph?: number ec?: number doMgL?: number ammoniaMgL?: number nitriteMgL?: number notes?: string photoUrl?: string" style="shape=swimlane;whiteSpace=wrap;startSize=280;" parent="1" vertex="1">
+          <mxGeometry x="680" y="80" width="180" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="YL" value="YieldLog ------------------------- PK id: string FK batchProfileId: string harvestDate: date totalHarvestKg: number unitPerPlantKg?: number gradeAWeightKg?: number gradeBWeightKg?: number rejectedWeightKg?: number productivityRating: number issueFaced?: string correctiveAction?: string successFactors?: string improvementPlan?: string notes?: string" style="shape=swimlane;whiteSpace=wrap;startSize=225;" parent="1" vertex="1">
+          <mxGeometry x="680" y="395" width="180" height="225" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" parent="1" source="GP" target="BP" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" parent="1" source="BP" target="PAL" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" parent="1" source="BP" target="LAL" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" parent="1" source="BP" target="AAL" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" parent="1" source="BP" target="YL" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="satAu6EpUHmrmE75q6qy-1" value="&lt;font style=&quot;font-size: 16px; color: rgb(0, 0, 255);&quot;&gt;&lt;b&gt;ERD Agricultural&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;imageHeight=24;" vertex="1" parent="1">
+          <mxGeometry x="430" y="30" width="140" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

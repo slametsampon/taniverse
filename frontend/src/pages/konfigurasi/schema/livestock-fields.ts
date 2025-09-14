@@ -30,8 +30,7 @@ export const livestockFormFields: FieldSection[] = [
         key: 'breed',
         label: 'Ras / Jenis',
         type: 'text',
-        widthClass: 'w-full',
-        colSpan: 2,
+        widthClass: 'w-full max-w-md',
       },
       {
         key: 'growthDaysMin',

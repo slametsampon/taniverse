@@ -1,0 +1,179 @@
+<!-- frontend/src/assets/ERD/agri-erd-adv.xml -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net">
+  <diagram name="Agri ERD Final" id="AgriERDComplete">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" connect="1"
+                  arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="800">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="GP" value="GrowProfile
+-------------------------
+PK id: string
+name: string
+image: string
+growthDaysMin: number
+growthDaysMax: number
+heightMinCm: number
+heightMaxCm: number
+spacingRowCm: number
+spacingColCm: number
+pricePerKg: number
+avgWeightG?: number
+costPerUnit: number
+tempMinC?: number
+tempMaxC?: number
+phMin?: number
+phMax?: number
+salinityMinPpt?: number
+salinityMaxPpt?: number
+ecMin?: number
+ecMax?: number
+lightHourMin?: number
+lightHourMax?: number
+humidityMinPct?: number
+humidityMaxPct?: number
+mediaType: string
+location: string
+areaSqM?: number
+growSystemNote?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="300" height="620" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="BP" value="BatchProfile
+-------------------------
+PK id: string
+FK growProfileId: string
+code: string
+name?: string
+startDate: date
+endDate?: date
+sector: string
+location: string
+mediaType?: string
+areaSqM?: number
+volumeM3?: number
+initialCount?: number
+source?: string
+targetHarvestDate?: date
+notes?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="20" width="300" height="400" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="PAL" value="PlantActivityLog
+-------------------------
+PK id: string
+FK batchProfileId: string
+date: date
+activityType: string
+actionVolume?: number
+actionUnit?: string
+inputName?: string
+stage?: string
+condition?: string
+pestOrDisease?: string
+symptom?: string
+treatmentApplied?: string
+treatmentResult?: string
+tempC?: number
+humidityPct?: number
+ec?: number
+ph?: number
+lightLux?: number
+notes?: string
+photoUrl?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="20" y="660" width="300" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="LAL" value="LivestockActivityLog
+-------------------------
+PK id: string
+FK batchProfileId: string
+date: date
+activityType: string
+feedType?: string
+feedAmountGr?: number
+medicationName?: string
+medicationDose?: string
+weightG?: number
+healthStatus?: string
+diseaseName?: string
+treatmentGiven?: string
+tempC?: number
+humidityPct?: number
+notes?: string
+photoUrl?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="340" y="460" width="300" height="420" as="geometry"/>
+        </mxCell>
+        <mxCell id="AAL" value="AquacultureActivityLog
+-------------------------
+PK id: string
+FK batchProfileId: string
+date: date
+activityType: string
+feedType?: string
+feedAmountGr?: number
+medicationName?: string
+medicationDose?: string
+stockingDensity?: number
+mortalityCount?: number
+averageWeightG?: number
+tempC?: number
+ph?: number
+ec?: number
+doMgL?: number
+ammoniaMgL?: number
+nitriteMgL?: number
+notes?: string
+photoUrl?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="20" width="300" height="500" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="YL" value="YieldLog
+-------------------------
+PK id: string
+FK batchProfileId: string
+harvestDate: date
+totalHarvestKg: number
+unitPerPlantKg?: number
+gradeAWeightKg?: number
+gradeBWeightKg?: number
+rejectedWeightKg?: number
+productivityRating: number
+issueFaced?: string
+correctiveAction?: string
+successFactors?: string
+improvementPlan?: string
+notes?: string" 
+style="shape=rectangle;whiteSpace=nowrap;html=1;align=left;verticalAlign=top;fontSize=11;autosize=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="560" width="300" height="420" as="geometry"/>
+        </mxCell>
+
+        <!-- Relationships -->
+        <mxCell id="r1" style="endArrow=block;edgeStyle=elbowEdge;" edge="1" parent="1" source="GP" target="BP">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" style="endArrow=block;edgeStyle=elbowEdge;" edge="1" parent="1" source="BP" target="PAL">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" style="endArrow=block;edgeStyle=elbowEdge;" edge="1" parent="1" source="BP" target="LAL">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" style="endArrow=block;edgeStyle=elbowEdge;" edge="1" parent="1" source="BP" target="AAL">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="r5" style="endArrow=block;edgeStyle=elbowEdge;" edge="1" parent="1" source="BP" target="YL">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,49 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36" version="28.2.1">
+  <diagram name="Page-1" id="fgL5W2plbls5O4LXVi0j">
+    <mxGraphModel dx="1031" dy="802" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SlhOiosz6YEpd-eUALrn-1" value="&#xa;  &#xa;    &#xa;      &#xa;        &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;      &#xa;    &#xa;  &#xa;" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry width="30" height="840" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-2" value="&#xa;  &#xa;    &#xa;      &#xa;        &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;        &#xa;          &#xa;        &#xa;&#xa;      &#xa;    &#xa;  &#xa;" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="140" y="180" width="230" height="480" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-3" value="GrowProfile ------------------------- PK id name image growthDaysMin, growthDaysMax heightMinCm, heightMaxCm spacingRowCm, spacingColCm pricePerKg, avgWeightG, costPerUnit tempMinC, tempMaxC phMin, phMax salinityMinPpt, salinityMaxPpt ecMin, ecMax lightHourMin, lightHourMax humidityMinPct, humidityMaxPct mediaType location areaSqM growSystemNote" style="shape=swimlane;whiteSpace=wrap;startSize=180;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="260" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-4" value="BatchProfile ------------------------- PK id FK growProfileId code name startDate, endDate sector location mediaType areaSqM, volumeM3 initialCount source targetHarvestDate notes" style="shape=swimlane;whiteSpace=wrap;startSize=90;" vertex="1" parent="1">
+          <mxGeometry x="400" y="220" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-5" value="PlantActivityLog ------------------------- PK id FK batchProfileId date activityType actionVolume, actionUnit inputName stage condition pestOrDisease, symptom treatmentApplied, treatmentResult tempC, humidityPct, ec, ph, lightLux notes photoUrl" style="shape=swimlane;whiteSpace=wrap;startSize=120;" vertex="1" parent="1">
+          <mxGeometry x="20" y="260" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-6" value="LivestockActivityLog ------------------------- PK id FK batchProfileId date activityType feedType, feedAmountGr medicationName, medicationDose weightG healthStatus diseaseName, treatmentGiven tempC, humidityPct notes photoUrl" style="shape=swimlane;whiteSpace=wrap;startSize=120;" vertex="1" parent="1">
+          <mxGeometry x="160" y="430" width="260" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-7" value="AquacultureActivityLog ------------------------- PK id FK batchProfileId date activityType feedType, feedAmountGr medicationName, medicationDose stockingDensity mortalityCount averageWeightG tempC, ph, ec, doMgL, ammoniaMgL, nitriteMgL notes photoUrl" style="shape=swimlane;whiteSpace=wrap;startSize=110;" vertex="1" parent="1">
+          <mxGeometry x="560" y="20" width="260" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-8" value="YieldLog ------------------------- PK id FK batchProfileId harvestDate totalHarvestKg unitPerPlantKg gradeAWeightKg, gradeBWeightKg rejectedWeightKg productivityRating issueFaced correctiveAction successFactors improvementPlan notes" style="shape=swimlane;whiteSpace=wrap;startSize=100;" vertex="1" parent="1">
+          <mxGeometry x="560" y="430" width="260" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-9" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" edge="1" parent="1" source="SlhOiosz6YEpd-eUALrn-3" target="SlhOiosz6YEpd-eUALrn-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-10" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" edge="1" parent="1" source="SlhOiosz6YEpd-eUALrn-4" target="SlhOiosz6YEpd-eUALrn-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-11" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" edge="1" parent="1" source="SlhOiosz6YEpd-eUALrn-4" target="SlhOiosz6YEpd-eUALrn-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-12" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" edge="1" parent="1" source="SlhOiosz6YEpd-eUALrn-4" target="SlhOiosz6YEpd-eUALrn-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="SlhOiosz6YEpd-eUALrn-13" style="endArrow=block;edgeStyle=elbowEdge;rounded=0;" edge="1" parent="1" source="SlhOiosz6YEpd-eUALrn-4" target="SlhOiosz6YEpd-eUALrn-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
