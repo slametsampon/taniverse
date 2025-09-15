@@ -24,6 +24,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
+    "@types/chart.js": "^4.0.1",
     "@types/node": "^24.2.1",
     "@types/uuid": "^10.0.0",
     "concurrently": "^9.2.0",
@@ -43,6 +44,7 @@
     "@vaadin/router": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.2.0",
+    "chart": "^0.1.2",
     "fastify": "^5.5.0",
     "lit": "^3.3.1",
     "lucide": "^0.542.0",

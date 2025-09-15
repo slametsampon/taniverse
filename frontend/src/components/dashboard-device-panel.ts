@@ -1,30 +1,31 @@
-// frontend/src/pages/produksi/views/hortikultura-devices.ts
-
-// 🌾 Hortikultura Devices View – Dashboard Komponen Perangkat
+// frontend/src/components/dashboard-device-panel.ts
 
 import { LitElement, html } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { devicesStore } from 'src/services/devices-store';
-
-import 'src/components/cards/dashboard-device-card';
 import { formatDeviceValue } from 'src/utils/format-display';
 
-@customElement('hortikultura-devices')
-export class DashboardHortikultura extends LitElement {
+import 'src/components/cards/dashboard-device-card';
+
+@customElement('dashboard-device-panel')
+export class DashboardDevicePanel extends LitElement {
   createRenderRoot() {
-    return this;
+    return this; // gunakan Light DOM agar styling global tetap aktif
   }
 
-  private off?: () => void;
+  // Props dari luar (domain)
+  @property({ type: Array }) deviceTags: string[] = [];
+  @property({ type: String }) title: string = '📟 Devices';
+  @property({ type: Boolean }) forceInit: boolean = false;
+  @property({ type: String }) gridClass: string =
+    'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
 
   @state() private statusMap: Record<string, string> = {};
-
-  // 🌱 Daftar TAG perangkat hortikultura
-  private deviceTags = ['TI-401', 'AI-401', 'AI-402', 'P-401', 'P-402'];
+  private off?: () => void;
 
   async connectedCallback() {
     super.connectedCallback();
-    await devicesStore.init();
+    await devicesStore.init(this.forceInit);
     this.pull();
     this.off = devicesStore.onChange(() => this.pull());
   }
@@ -58,11 +59,11 @@ export class DashboardHortikultura extends LitElement {
           <h2
             class="text-xl font-semibold text-gray-800 flex items-center gap-3"
           >
-            🌾 Hortikultura Sensor & Aktuator
+            ${this.title}
           </h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid ${this.gridClass} gap-4">
           ${this.deviceTags.map((tag) => {
             const device = devicesStore.get(tag);
             if (!device) return null;

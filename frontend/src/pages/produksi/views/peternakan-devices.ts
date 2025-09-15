@@ -2,10 +2,10 @@
 
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { devicesStore } from '../../../services/devices-store';
 import { formatDeviceValue } from 'src/utils/format-display';
+import { devicesStore } from 'src/services/devices-store';
 
-import '../../../components/cards/dashboard-device-card';
+import 'src/components/cards/dashboard-device-card';
 
 @customElement('peternakan-devices')
 export class PeternakanDevices extends LitElement {
